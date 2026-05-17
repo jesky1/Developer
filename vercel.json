@@ -1,9 +1,7 @@
 {
   "framework": "nextjs",
   "buildCommand": "bun run build",
-  "regions": ["sin1"],
-  "env": {
-    "NEXTAUTH_SECRET": "@nextauth-secret",
-    "JWT_SECRET": "@jwt-secret"
-  }
+  "regions": [
+    "sin1"
+  ]
 }
