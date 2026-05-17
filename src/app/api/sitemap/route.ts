@@ -1,14 +1,17 @@
-import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const news = await db.newsItem.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    })
+    // Dynamic import to avoid Prisma initialization crash at module level
+    const { db } = await import('@/lib/db')
 
-    const matches = await db.match.findMany()
+    const [news, matches] = await Promise.all([
+      db.newsItem.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }).catch(() => []),
+      db.match.findMany().catch(() => []),
+    ])
 
     const baseUrl = 'https://goalzone.app'
     const now = new Date().toISOString()
@@ -62,9 +65,24 @@ ${newsUrls}
     })
   } catch (error) {
     console.error('Error generating sitemap:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate sitemap' },
-      { status: 500 }
-    )
+
+    // Return a minimal valid sitemap instead of crashing
+    const now = new Date().toISOString()
+    const fallbackSitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://goalzone.app</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>always</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`
+
+    return new NextResponse(fallbackSitemap, {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    })
   }
 }

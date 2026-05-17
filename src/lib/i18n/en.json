@@ -359,6 +359,22 @@
   "splash": {
     "subtitle": "Live Football Scores"
   },
+  "players": {
+    "title": "Player Statistics",
+    "subtitle": "Powered by API-Football • Current Season Stats",
+    "search": "Search players...",
+    "noData": "No player data available",
+    "syncHint": "Use the Sync panel above to import player data from API-Football",
+    "configHint": "Configure API-Football to sync real player data",
+    "showing": "Showing top 50 players by rating. Use search or filters to find more.",
+    "pos": {
+      "all": "All",
+      "FW": "Forward",
+      "MF": "Midfielder",
+      "DF": "Defender",
+      "GK": "Goalkeeper"
+    }
+  },
   "tabs": {
     "overview": "Overview",
     "lineup": "Lineup",

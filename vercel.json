@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "bun run build",
-  "regions": ["sin1"]
+  "buildCommand": "bash scripts/prisma-switch.sh && prisma generate && next build",
+  "installCommand": "bun install",
+  "regions": [
+    "sin1"
+  ]
 }

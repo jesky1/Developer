@@ -358,6 +358,22 @@
   "splash": {
     "subtitle": "Skor Sepak Bola Live"
   },
+  "players": {
+    "title": "Statistik Pemain",
+    "subtitle": "Didukung API-Football • Statistik Musim Ini",
+    "search": "Cari pemain...",
+    "noData": "Data pemain tidak tersedia",
+    "syncHint": "Gunakan panel Sync di atas untuk mengimpor data pemain dari API-Football",
+    "configHint": "Konfigurasi API-Football untuk menyinkronkan data pemain asli",
+    "showing": "Menampilkan 50 pemain teratas berdasarkan rating. Gunakan pencarian atau filter untuk menemukan lebih banyak.",
+    "pos": {
+      "all": "Semua",
+      "FW": "Penyerang",
+      "MF": "Gelandang",
+      "DF": "Bek",
+      "GK": "Kiper"
+    }
+  },
   "tabs": {
     "overview": "Ringkasan",
     "lineup": "Susunan",
