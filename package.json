@@ -3,18 +3,18 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "bash scripts/prisma-switch.sh && next dev -p 3000",
-    "build": "bash scripts/prisma-switch.sh && prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "dev": "node scripts/prisma-switch.js && next dev -p 3000",
+    "build": "node scripts/prisma-switch.js && prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
-    "postinstall": "bash scripts/prisma-switch.sh && prisma generate",
-    "db:push": "bash scripts/prisma-switch.sh && prisma db push",
-    "db:generate": "bash scripts/prisma-switch.sh && prisma generate",
-    "db:migrate": "bash scripts/prisma-switch.sh && prisma migrate dev",
-    "db:reset": "bash scripts/prisma-switch.sh && prisma migrate reset",
-    "db:switch": "bash scripts/prisma-switch.sh",
-    "db:seed": "bash scripts/prisma-switch.sh && bun run prisma/seed.ts",
-    "db:seed:admin": "bash scripts/prisma-switch.sh && bun run prisma/admin-seed-v2.ts"
+    "postinstall": "node scripts/prisma-switch.js && prisma generate",
+    "db:push": "node scripts/prisma-switch.js && prisma db push",
+    "db:generate": "node scripts/prisma-switch.js && prisma generate",
+    "db:migrate": "node scripts/prisma-switch.js && prisma migrate dev",
+    "db:reset": "node scripts/prisma-switch.js && prisma migrate reset",
+    "db:switch": "node scripts/prisma-switch.js",
+    "db:seed": "node scripts/prisma-switch.js && bun run prisma/seed.ts",
+    "db:seed:admin": "node scripts/prisma-switch.js && bun run prisma/admin-seed-v2.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

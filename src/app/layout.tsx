@@ -6,27 +6,56 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { I18nProvider } from "@/lib/i18n";
 
-// JSON-LD structured data rendered server-side to avoid React 19 script-tag warnings
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://goalzone-live.vercel.app";
+
+// JSON-LD structured data — Organization schema for Google Knowledge Panel
+const organizationLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "GOALZONE",
+  url: SITE_URL,
+  logo: `${SITE_URL}/goalzone-logo.png`,
+  description: "Real-time live football scores, standings, and match updates from top leagues worldwide.",
+  sameAs: [
+    "https://twitter.com/goalzone",
+    "https://facebook.com/goalzone",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    url: `${SITE_URL}/contact`,
+  },
+};
+
+// WebSite schema with SearchAction for Google Sitelinks Search Box
 const websiteLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "GOALZONE",
-  url: "https://goalzone.app",
+  url: SITE_URL,
   description: "Real-time live football scores, standings, and match updates.",
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://goalzone.app/search?q={search_term_string}",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/?q={search_term_string}`,
+    },
     "query-input": "required name=search_term_string",
   },
 };
 
+// SportsEvent schema for live matches
 const sportsDataLd = {
   "@context": "https://schema.org",
   "@type": "SportsEvent",
   name: "Live Football Matches",
   description: "Live football match scores and updates from top leagues worldwide",
   sport: "Football",
-  organizer: { "@type": "Organization", name: "GOALZONE" },
+  organizer: {
+    "@type": "Organization",
+    name: "GOALZONE",
+    url: SITE_URL,
+  },
 };
 
 const geistSans = Geist({
@@ -40,7 +69,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://goalzone.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "GOALZONE - Live Football Scores, Standings & Real-Time Updates",
     template: "%s | GOALZONE",
@@ -48,25 +77,28 @@ export const metadata: Metadata = {
   description:
     "Real-time live football scores, standings, top scorers, and match updates. Your premium football dashboard for Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and more.",
   keywords: [
-    "football",
-    "live scores",
-    "soccer",
+    "live football scores",
+    "live soccer scores",
     "goalzone",
-    "match updates",
-    "premier league",
-    "la liga",
-    "serie a",
-    "bundesliga",
-    "ligue 1",
-    "standings",
-    "top scorers",
-    "live football",
     "football results",
-    "soccer scores",
+    "soccer results",
+    "premier league scores",
+    "la liga standings",
+    "serie a results",
+    "bundesliga scores",
+    "ligue 1 table",
+    "champions league",
+    "europa league",
     "match highlights",
     "football stats",
+    "top scorers",
+    "football standings",
+    "live match updates",
+    "skor bola live",
+    "hasil pertandingan",
+    "klasemen liga",
   ],
-  authors: [{ name: "GOALZONE", url: "https://goalzone.app" }],
+  authors: [{ name: "GOALZONE", url: SITE_URL }],
   creator: "GOALZONE",
   publisher: "GOALZONE",
   robots: {
@@ -83,7 +115,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://goalzone.app",
+    url: SITE_URL,
     siteName: "GOALZONE",
     title: "GOALZONE - Live Football Scores, Standings & Real-Time Updates",
     description:
@@ -105,12 +137,18 @@ export const metadata: Metadata = {
     images: ["/goalzone-logo.png"],
     creator: "@goalzone",
   },
+  alternates: {
+    canonical: SITE_URL,
+  },
   icons: {
     icon: "/goalzone-logo.png",
     apple: "/goalzone-logo.png",
   },
   category: "sports",
   classification: "Sports & Entertainment",
+  verification: {
+    google: "google82271afd81b42e09",
+  },
 };
 
 export const viewport: Viewport = {
@@ -137,9 +175,13 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="view-transition" content="same-origin" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone.app/api/news/rss" />
-        <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone.app/api/sitemap" />
-        {/* JSON-LD structured data — rendered server-side in <head> to avoid React script-tag warnings */}
+        <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href={`${SITE_URL}/api/news/rss`} />
+
+        {/* JSON-LD structured data — rendered server-side in <head> */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
