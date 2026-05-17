@@ -34,6 +34,21 @@ interface LoginModalProps {
   onSwitchToRegister: () => void;
 }
 
+/**
+ * Check if an error message indicates a database configuration error
+ */
+function isDbConfigErrorMessage(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes("file:") ||
+    lower.includes("protocol") ||
+    lower.includes("prisma") ||
+    lower.includes("db_config") ||
+    lower.includes("database configuration") ||
+    lower.includes("service temporarily unavailable")
+  );
+}
+
 function GoogleIcon() {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -77,38 +92,94 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
 
     setLoading(true);
     try {
+      const trimmedUsername = username.trim();
+
+      // If username looks like "admin", try admin auth FIRST
+      if (trimmedUsername.toLowerCase() === "admin") {
+        try {
+          const res = await fetch("/api/admin/auth?action=login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: trimmedUsername, password }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            toast.success(t("auth.welcomeBack"), {
+              icon: <LogIn className="w-4 h-4 text-neon" />,
+            });
+            onLoginSuccess(data.user, data.token);
+            // Reset form
+            setUsername("");
+            setPassword("");
+            setError("");
+            return;
+          }
+
+          // Check for DB config error
+          if (data.errorType === "DB_CONFIG_ERROR" || isDbConfigErrorMessage(data.error || "")) {
+            setError(t("auth.configError"));
+            return;
+          }
+
+          // Admin auth failed, try NextAuth as fallback
+        } catch {
+          // Admin auth request failed, try NextAuth as fallback
+        }
+      }
+
       // Try NextAuth credentials login
       const result = await signIn("credentials", {
         redirect: false,
-        email: username.trim(),
+        email: trimmedUsername,
         password,
       });
 
       if (result?.error) {
+        // Check for DB config error in NextAuth response
+        if (isDbConfigErrorMessage(result.error)) {
+          setError(t("auth.configError"));
+          return;
+        }
         setError(result.error === "Configuration" ? t("auth.configError") : result.error);
+
+        // If not admin-first path, try admin auth as fallback
+        if (trimmedUsername.toLowerCase() !== "admin") {
+          try {
+            const res = await fetch("/api/admin/auth?action=login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: trimmedUsername, password }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+              toast.success(t("auth.welcomeBack"), {
+                icon: <LogIn className="w-4 h-4 text-neon" />,
+              });
+              onLoginSuccess(data.user, data.token);
+              setUsername("");
+              setPassword("");
+              setError("");
+              return;
+            }
+
+            // Check for DB config error
+            if (data.errorType === "DB_CONFIG_ERROR" || isDbConfigErrorMessage(data.error || "")) {
+              setError(t("auth.configError"));
+              return;
+            }
+          } catch {
+            // Admin fallback failed too, keep the NextAuth error
+          }
+        }
+
         return;
       }
 
-      // Also try admin login as fallback for admin users
-      if (!result?.ok) {
-        const res = await fetch("/api/admin/auth?action=login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: username.trim(), password }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || t("auth.loginFailed"));
-        }
-
-        toast.success(t("auth.welcomeBack"), {
-          icon: <LogIn className="w-4 h-4 text-neon" />,
-        });
-
-        onLoginSuccess(data.user, data.token);
-      } else {
+      if (result?.ok) {
         toast.success(t("auth.loginSuccess"), {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
@@ -122,7 +193,8 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       setPassword("");
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.loginFailed"));
+      const msg = err instanceof Error ? err.message : t("auth.loginFailed");
+      setError(isDbConfigErrorMessage(msg) ? t("auth.configError") : msg);
     } finally {
       setLoading(false);
     }
