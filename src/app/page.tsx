@@ -26,6 +26,7 @@ import type { NewsArticle } from "@/components/news-section";
 import { useSocket } from "@/hooks/use-socket";
 import type { GoalEvent } from "@/services/socket";
 import { PlayerDetailModal } from "@/components/player-detail-modal";
+import { AdSenseBanner, AdSenseInFeed, AdSenseSidebar, AdSenseFooter } from "@/components/adsense-ad";
 import { Wifi, WifiOff, RefreshCw, Loader2, Radio, Zap } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
@@ -227,6 +228,8 @@ function LiveScoresView({
 
         <main className="flex-1 pt-20 pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+            {/* AdSense — Top Banner */}
+            <AdSenseBanner />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {isConnected ? (
@@ -359,14 +362,22 @@ function LiveScoresView({
 
                   <div className="space-y-5">
                     <Sidebar scorers={scorers} standings={standings} onPlayerClick={handlePlayerClick} onTeamClick={handleTeamClick} />
+                    {/* AdSense — Sidebar Ad */}
+                    <AdSenseSidebar />
                   </div>
                 </div>
 
                 <StandingsSection selectedLeague={footerSelectedLeague} />
 
+                {/* AdSense — In-Feed Ad (between sections) */}
+                <AdSenseInFeed />
+
                 <PlayerStatsSection onPlayerClick={handlePlayerClick} />
 
                 <NewsSection onArticleClick={handleArticleClick} />
+
+                {/* AdSense — Footer Leaderboard Ad */}
+                <AdSenseFooter />
               </>
             )}
           </div>
