@@ -1,83 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import { createHmac, randomBytes } from 'crypto';
 
 const prisma = new PrismaClient();
 
-// Inlined password hashing from src/lib/auth.ts
-// Uses HMAC-SHA256 with a salt, format: salt:hash (both hex encoded)
-// This MUST match the auth.ts implementation exactly for passwords to work
-
-const HMAC_KEY = 'goalzone-hmac-key-for-passwords';
-
-function generateSalt(): string {
-  return randomBytes(16).toString('hex');
-}
-
-function hmacHash(password: string, salt: string): string {
-  const hmac = createHmac('sha256', HMAC_KEY);
-  hmac.update(salt + password);
-  return hmac.digest('hex');
-}
-
-function hashPassword(password: string): string {
-  const salt = generateSalt();
-  const hash = hmacHash(password, salt);
-  return `${salt}:${hash}`;
-}
-
-function comparePassword(password: string, storedHash: string): boolean {
-  try {
-    const colonIndex = storedHash.indexOf(':');
-    if (colonIndex === -1) return false;
-    const salt = storedHash.substring(0, colonIndex);
-    const hash = storedHash.substring(colonIndex + 1);
-    const computedHash = hmacHash(password, salt);
-    return computedHash === hash;
-  } catch {
-    return false;
-  }
-}
-
 async function main() {
-  // Clear admin-related data first (before re-creating admin users)
-  await prisma.activityLog.deleteMany();
-  await prisma.adminUser.deleteMany();
-
-  // === ADMIN USERS ===
-  const superadminPassword = 'Goalzone2024!';
-  const editorPassword = 'Editor2024!';
-
-  const superadmin = await prisma.adminUser.create({
-    data: {
-      username: 'admin',
-      email: 'admin@goalzone.id',
-      passwordHash: hashPassword(superadminPassword),
-      displayName: 'Super Admin',
-      role: 'superadmin',
-      isActive: true,
-    },
-  });
-
-  const editor = await prisma.adminUser.create({
-    data: {
-      username: 'editor',
-      email: 'editor@goalzone.id',
-      passwordHash: hashPassword(editorPassword),
-      displayName: 'Editor',
-      role: 'editor',
-      isActive: true,
-    },
-  });
-
-  console.log('✅ Admin users created:');
-  console.log(`  - superadmin: ${superadmin.username} (${superadmin.email})`);
-  console.log(`  - editor: ${editor.username} (${editor.email})`);
-
-  // Verify passwords work with comparePassword
-  const verifySuperadmin = comparePassword(superadminPassword, superadmin.passwordHash);
-  const verifyEditor = comparePassword(editorPassword, editor.passwordHash);
-  console.log(`  - Password verification: superadmin=${verifySuperadmin}, editor=${verifyEditor}`);
-
   // Clear existing data in correct order (respect foreign keys)
   await prisma.transfer.deleteMany();
   await prisma.playerStats.deleteMany();
@@ -854,7 +779,6 @@ async function main() {
   }
 
   console.log('✅ Seed completed successfully!');
-  console.log(`  - 2 admin users (superadmin + editor)`);
   console.log(`  - ${playerData.length} players`);
   console.log(`  - ${Object.keys(statsData).length} player stats (detailed)`);
   console.log(`  - ${matches.length} matches`);

@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
 
 interface SplashScreenProps {
   onFinished: () => void;
@@ -30,7 +29,6 @@ function getParticleConfig(index: number) {
 const PARTICLE_COUNT = 20;
 
 export function SplashScreen({ onFinished }: SplashScreenProps) {
-  const { t } = useTranslation();
   const [phase, setPhase] = useState<"enter" | "hold" | "exit">("enter");
 
   // Stable callback ref to avoid re-triggering effect
@@ -153,7 +151,7 @@ export function SplashScreen({ onFinished }: SplashScreenProps) {
             transition={{ delay: 0.8, duration: 0.5 }}
             className="text-xs sm:text-sm text-muted-foreground tracking-[0.3em] uppercase"
           >
-            {t('splash.subtitle')}
+            Live Football Scores
           </motion.p>
         </motion.div>
 

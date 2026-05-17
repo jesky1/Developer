@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { MatchCard } from "@/components/match-card";
 import type { MatchCardProps } from "@/components/match-card";
-import { useTranslation } from "@/lib/i18n";
 
 interface FeaturedMatchesGridProps {
   matches: MatchCardProps['match'][];
@@ -13,7 +12,6 @@ interface FeaturedMatchesGridProps {
 }
 
 export function FeaturedMatchesGrid({ matches, onMatchClick, goalMatchIds, isLoading }: FeaturedMatchesGridProps) {
-  const { t } = useTranslation();
   // Loading skeleton
   if (isLoading || matches.length === 0) {
     return (
@@ -35,7 +33,7 @@ export function FeaturedMatchesGrid({ matches, onMatchClick, goalMatchIds, isLoa
         animate={{ opacity: 1, y: 0 }}
         className="text-lg font-bold text-foreground mb-4"
       >
-        {t('match.moreMatches')}
+        More Matches
       </motion.h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

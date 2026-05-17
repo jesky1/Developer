@@ -15,7 +15,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useTranslation } from "@/lib/i18n";
 
 interface LoginUser {
   id: string;
@@ -32,21 +31,6 @@ interface LoginModalProps {
   onClose: () => void;
   onLoginSuccess: (user: LoginUser, token: string) => void;
   onSwitchToRegister: () => void;
-}
-
-/**
- * Check if an error message indicates a database configuration error
- */
-function isDbConfigErrorMessage(msg: string): boolean {
-  const lower = msg.toLowerCase();
-  return (
-    lower.includes("file:") ||
-    lower.includes("protocol") ||
-    lower.includes("prisma") ||
-    lower.includes("db_config") ||
-    lower.includes("database configuration") ||
-    lower.includes("service temporarily unavailable")
-  );
 }
 
 function GoogleIcon() {
@@ -73,7 +57,6 @@ function GoogleIcon() {
 }
 
 export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }: LoginModalProps) {
-  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -86,101 +69,45 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
     setError("");
 
     if (!username.trim() || !password.trim()) {
-      setError(t("auth.fillCredentials"));
+      setError("Masukkan username/email dan password");
       return;
     }
 
     setLoading(true);
     try {
-      const trimmedUsername = username.trim();
-
-      // If username looks like "admin", try admin auth FIRST
-      if (trimmedUsername.toLowerCase() === "admin") {
-        try {
-          const res = await fetch("/api/admin/auth?action=login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: trimmedUsername, password }),
-          });
-
-          const data = await res.json();
-
-          if (res.ok) {
-            toast.success(t("auth.welcomeBack"), {
-              icon: <LogIn className="w-4 h-4 text-neon" />,
-            });
-            onLoginSuccess(data.user, data.token);
-            // Reset form
-            setUsername("");
-            setPassword("");
-            setError("");
-            return;
-          }
-
-          // Check for DB config error
-          if (data.errorType === "DB_CONFIG_ERROR" || isDbConfigErrorMessage(data.error || "")) {
-            setError(t("auth.configError"));
-            return;
-          }
-
-          // Admin auth failed, try NextAuth as fallback
-        } catch {
-          // Admin auth request failed, try NextAuth as fallback
-        }
-      }
-
       // Try NextAuth credentials login
       const result = await signIn("credentials", {
         redirect: false,
-        email: trimmedUsername,
+        email: username.trim(),
         password,
       });
 
       if (result?.error) {
-        // Check for DB config error in NextAuth response
-        if (isDbConfigErrorMessage(result.error)) {
-          setError(t("auth.configError"));
-          return;
-        }
-        setError(result.error === "Configuration" ? t("auth.configError") : result.error);
-
-        // If not admin-first path, try admin auth as fallback
-        if (trimmedUsername.toLowerCase() !== "admin") {
-          try {
-            const res = await fetch("/api/admin/auth?action=login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username: trimmedUsername, password }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-              toast.success(t("auth.welcomeBack"), {
-                icon: <LogIn className="w-4 h-4 text-neon" />,
-              });
-              onLoginSuccess(data.user, data.token);
-              setUsername("");
-              setPassword("");
-              setError("");
-              return;
-            }
-
-            // Check for DB config error
-            if (data.errorType === "DB_CONFIG_ERROR" || isDbConfigErrorMessage(data.error || "")) {
-              setError(t("auth.configError"));
-              return;
-            }
-          } catch {
-            // Admin fallback failed too, keep the NextAuth error
-          }
-        }
-
+        setError(result.error === "Configuration" ? "Terjadi kesalahan konfigurasi" : result.error);
         return;
       }
 
-      if (result?.ok) {
-        toast.success(t("auth.loginSuccess"), {
+      // Also try admin login as fallback for admin users
+      if (!result?.ok) {
+        const res = await fetch("/api/admin/auth?action=login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username.trim(), password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Username atau password salah");
+        }
+
+        toast.success(`Selamat datang, ${data.user?.displayName || data.user?.username || "Admin"}!`, {
+          icon: <LogIn className="w-4 h-4 text-neon" />,
+        });
+
+        onLoginSuccess(data.user, data.token);
+      } else {
+        toast.success("Login berhasil!", {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
 
@@ -193,8 +120,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       setPassword("");
       setError("");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t("auth.loginFailed");
-      setError(isDbConfigErrorMessage(msg) ? t("auth.configError") : msg);
+      setError(err instanceof Error ? err.message : "Login gagal");
     } finally {
       setLoading(false);
     }
@@ -206,7 +132,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
     try {
       await signIn("google", { callbackUrl: "/" });
     } catch {
-      setError(t("auth.googleFailed"));
+      setError("Gagal login dengan Google");
       setGoogleLoading(false);
     }
   };
@@ -252,7 +178,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
                   GOAL<span className="text-neon">ZONE</span>
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground mt-1">
-                  {t("auth.loginTitle")}
+                  Masuk ke akun Anda
                 </DialogDescription>
               </div>
             </div>
@@ -274,7 +200,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             ) : (
               <GoogleIcon />
             )}
-            {t("auth.signInWithGoogle")}
+            Masuk dengan Google
           </Button>
 
           {/* Divider */}
@@ -283,7 +209,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               <div className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-background text-muted-foreground">{t("auth.or")}</span>
+              <span className="px-3 bg-background text-muted-foreground">atau</span>
             </div>
           </div>
 
@@ -305,12 +231,12 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Username/Email field */}
             <div className="space-y-2">
               <Label htmlFor="login-username" className="text-sm font-medium text-foreground">
-                {t("auth.usernameEmail")}
+                Username / Email
               </Label>
               <Input
                 id="login-username"
                 type="text"
-                placeholder={t("auth.enterUsername")}
+                placeholder="Masukkan username atau email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loading || googleLoading}
@@ -323,13 +249,13 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Password field */}
             <div className="space-y-2">
               <Label htmlFor="login-password" className="text-sm font-medium text-foreground">
-                {t("auth.password")}
+                Password
               </Label>
               <div className="relative">
                 <Input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={t("auth.enterPassword")}
+                  placeholder="Masukkan password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading || googleLoading}
@@ -360,12 +286,12 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("auth.signingIn")}
+                  Masuk...
                 </>
               ) : (
                 <>
                   <LogIn className="h-4 w-4" />
-                  {t("auth.signIn")}
+                  Masuk
                 </>
               )}
             </Button>
@@ -373,13 +299,13 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Switch to Register */}
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">
-                {t("auth.noAccount")}{" "}
+                Belum punya akun?{" "}
                 <button
                   type="button"
                   onClick={handleSwitchToRegister}
                   className="text-neon hover:underline font-medium"
                 >
-                  {t("auth.registerHere")}
+                  Daftar di sini
                 </button>
               </p>
             </div>

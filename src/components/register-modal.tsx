@@ -15,7 +15,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useTranslation } from "@/lib/i18n";
 
 function GoogleIcon() {
   return (
@@ -58,7 +57,6 @@ export interface RegisterUser {
 }
 
 export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSuccess }: RegisterModalProps) {
-  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,10 +79,10 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
     const checks = Object.values(passwordChecks);
     const passed = checks.filter(Boolean).length;
     if (passed === 0) return { level: 0, label: "", color: "" };
-    if (passed <= 2) return { level: 1, label: t("auth.weak"), color: "text-red-500" };
-    if (passed <= 3) return { level: 2, label: t("auth.medium"), color: "text-yellow-500" };
-    return { level: 3, label: t("auth.strong"), color: "text-green-500" };
-  }, [passwordChecks, t]);
+    if (passed <= 2) return { level: 1, label: "Lemah", color: "text-red-500" };
+    if (passed <= 3) return { level: 2, label: "Sedang", color: "text-yellow-500" };
+    return { level: 3, label: "Kuat", color: "text-green-500" };
+  }, [passwordChecks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,28 +90,28 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
 
     // Client-side validation
     if (!name.trim()) {
-      setError(t("auth.nameRequired"));
+      setError("Nama lengkap harus diisi");
       return;
     }
 
     if (name.trim().length < 2) {
-      setError(t("auth.nameMinLength"));
+      setError("Nama minimal 2 karakter");
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError(t("auth.invalidEmail"));
+      setError("Format email tidak valid");
       return;
     }
 
     if (!passwordChecks.minLength || !passwordChecks.hasUppercase || !passwordChecks.hasLowercase || !passwordChecks.hasNumber) {
-      setError(t("auth.passwordRequirements"));
+      setError("Password tidak memenuhi syarat keamanan");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(t("auth.confirmMismatch"));
+      setError("Konfirmasi password tidak cocok");
       return;
     }
 
@@ -133,10 +131,10 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || t("auth.registerFailed"));
+        throw new Error(data.error || "Registrasi gagal");
       }
 
-      toast.success(t("auth.registerSuccess"), {
+      toast.success("Registrasi berhasil! Selamat datang!", {
         icon: <UserPlus className="w-4 h-4 text-neon" />,
         duration: 4000,
       });
@@ -149,7 +147,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
       setConfirmPassword("");
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.registerFailed"));
+      setError(err instanceof Error ? err.message : "Registrasi gagal");
     } finally {
       setLoading(false);
     }
@@ -161,7 +159,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
     try {
       await signIn("google", { callbackUrl: "/" });
     } catch {
-      setError(t("auth.googleRegisterFailed"));
+      setError("Gagal mendaftar dengan Google");
       setGoogleLoading(false);
     }
   };
@@ -211,10 +209,10 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
               </motion.div>
               <div className="text-center">
                 <DialogTitle className="text-xl font-bold tracking-wide">
-                  {t("auth.registerTitle")}<span className="text-neon">ZONE</span>
+                  Daftar di GOAL<span className="text-neon">ZONE</span>
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground mt-1">
-                  {t("auth.registerSubtitle")}
+                  Buat akun baru untuk pengalaman terbaik
                 </DialogDescription>
               </div>
             </div>
@@ -236,7 +234,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             ) : (
               <GoogleIcon />
             )}
-            {t("auth.signUpWithGoogle")}
+            Daftar dengan Google
           </Button>
 
           {/* Divider */}
@@ -245,7 +243,7 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
               <div className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-background text-muted-foreground">{t("auth.or")}</span>
+              <span className="px-3 bg-background text-muted-foreground">atau</span>
             </div>
           </div>
 
@@ -267,12 +265,12 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             {/* Full Name field */}
             <div className="space-y-2">
               <Label htmlFor="register-name" className="text-sm font-medium text-foreground">
-                {t("auth.fullName")}
+                Nama Lengkap
               </Label>
               <Input
                 id="register-name"
                 type="text"
-                placeholder={t("auth.enterFullName")}
+                placeholder="Masukkan nama lengkap"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading || googleLoading}
@@ -285,12 +283,12 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             {/* Email field */}
             <div className="space-y-2">
               <Label htmlFor="register-email" className="text-sm font-medium text-foreground">
-                {t("auth.email")}
+                Email
               </Label>
               <Input
                 id="register-email"
                 type="email"
-                placeholder={t("auth.enterEmail")}
+                placeholder="contoh@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading || googleLoading}
@@ -302,13 +300,13 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             {/* Password field */}
             <div className="space-y-2">
               <Label htmlFor="register-password" className="text-sm font-medium text-foreground">
-                {t("auth.password")}
+                Password
               </Label>
               <div className="relative">
                 <Input
                   id="register-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={t("auth.minChars")}
+                  placeholder="Minimal 8 karakter"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading || googleLoading}
@@ -349,10 +347,10 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                    <CheckItem passed={passwordChecks.minLength} label={t("auth.minChars")} />
-                    <CheckItem passed={passwordChecks.hasUppercase} label={t("auth.uppercase")} />
-                    <CheckItem passed={passwordChecks.hasLowercase} label={t("auth.lowercase")} />
-                    <CheckItem passed={passwordChecks.hasNumber} label={t("auth.number")} />
+                    <CheckItem passed={passwordChecks.minLength} label="Min. 8 karakter" />
+                    <CheckItem passed={passwordChecks.hasUppercase} label="Huruf besar" />
+                    <CheckItem passed={passwordChecks.hasLowercase} label="Huruf kecil" />
+                    <CheckItem passed={passwordChecks.hasNumber} label="Angka" />
                   </div>
                 </motion.div>
               )}
@@ -361,13 +359,13 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             {/* Confirm Password field */}
             <div className="space-y-2">
               <Label htmlFor="register-confirm-password" className="text-sm font-medium text-foreground">
-                {t("auth.confirmPassword")}
+                Konfirmasi Password
               </Label>
               <div className="relative">
                 <Input
                   id="register-confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder={t("auth.repeatPassword")}
+                  placeholder="Ulangi password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading || googleLoading}
@@ -387,10 +385,10 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
                 </button>
               </div>
               {confirmPassword && confirmPassword !== password && (
-                <p className="text-[11px] text-red-500">{t("auth.passwordMismatch")}</p>
+                <p className="text-[11px] text-red-500">Password tidak cocok</p>
               )}
               {confirmPassword && confirmPassword === password && (
-                <p className="text-[11px] text-green-500">{t("auth.passwordMatch")}</p>
+                <p className="text-[11px] text-green-500">Password cocok</p>
               )}
             </div>
 
@@ -403,12 +401,12 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("auth.signingUp")}
+                  Mendaftar...
                 </>
               ) : (
                 <>
                   <UserPlus className="h-4 w-4" />
-                  {t("auth.signUp")}
+                  Daftar Sekarang
                 </>
               )}
             </Button>
@@ -416,13 +414,13 @@ export function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             {/* Switch to Login */}
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">
-                {t("auth.hasAccount")}{" "}
+                Sudah punya akun?{" "}
                 <button
                   type="button"
                   onClick={handleSwitchToLogin}
                   className="text-neon hover:underline font-medium"
                 >
-                  {t("auth.loginHere")}
+                  Masuk di sini
                 </button>
               </p>
             </div>

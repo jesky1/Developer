@@ -10,7 +10,6 @@ import { LineupTab } from "@/components/lineup-tab";
 import { StatsTab } from "@/components/stats-tab";
 import { PlayerDetailModal } from "@/components/player-detail-modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslation } from "@/lib/i18n";
 
 /* ================================================================== */
 /*  INTERFACES                                                        */
@@ -90,8 +89,6 @@ function StatusBadge({
   minute: number;
   kickoff: string;
 }) {
-  const { t } = useTranslation();
-
   if (status === "LIVE") {
     return (
       <motion.div
@@ -101,7 +98,7 @@ function StatusBadge({
       >
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         <span className="text-xs font-bold text-green-400">
-          {t('status.liveMinute', { minute })}
+          LIVE {minute}&apos;
         </span>
       </motion.div>
     );
@@ -110,7 +107,7 @@ function StatusBadge({
   if (status === "HT") {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-500/15 border border-yellow-500/30 rounded-full">
-        <span className="text-xs font-bold text-yellow-400">{t('status.halfTime')}</span>
+        <span className="text-xs font-bold text-yellow-400">Half Time</span>
       </div>
     );
   }
@@ -118,7 +115,7 @@ function StatusBadge({
   if (status === "FT") {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1 bg-surface-light border border-white/10 rounded-full">
-        <span className="text-xs font-bold text-muted-foreground">{t('status.fullTime')}</span>
+        <span className="text-xs font-bold text-muted-foreground">Full Time</span>
       </div>
     );
   }
@@ -202,7 +199,6 @@ function MatchPageSkeleton() {
 
 function MatchNotFound() {
   const router = useRouter();
-  const { t } = useTranslation();
 
   const handleBack = useCallback(() => {
     router.replace("/");
@@ -229,15 +225,15 @@ function MatchNotFound() {
           <div className="w-20 h-20 rounded-full bg-surface-light border border-white/10 flex items-center justify-center mx-auto">
             <Trophy className="w-8 h-8 text-white/20" />
           </div>
-          <h2 className="text-xl font-bold text-foreground">{t('errors.matchNotFound')}</h2>
+          <h2 className="text-xl font-bold text-foreground">Match Not Found</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            {t('errors.matchNotFoundDesc')}
+            The match you&apos;re looking for doesn&apos;t exist or may have been removed.
           </p>
           <button
             onClick={handleBack}
             className="px-4 py-2 rounded-lg bg-neon/10 border border-neon/30 text-neon text-sm font-semibold hover:bg-neon/20 transition-colors"
           >
-            {t('common.goBack')}
+            Go Back
           </button>
         </motion.div>
       </div>
@@ -251,7 +247,6 @@ function MatchNotFound() {
 
 function MatchError({ onRetry }: { onRetry: () => void }) {
   const router = useRouter();
-  const { t } = useTranslation();
 
   const handleBack = useCallback(() => {
     router.replace("/");
@@ -278,22 +273,22 @@ function MatchError({ onRetry }: { onRetry: () => void }) {
           <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
             <span className="text-3xl">⚠️</span>
           </div>
-          <h2 className="text-xl font-bold text-foreground">{t('errors.somethingWrong')}</h2>
+          <h2 className="text-xl font-bold text-foreground">Something Went Wrong</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            {t('errors.matchLoadFailed')}
+            Failed to load match details. Please try again.
           </p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={handleBack}
               className="px-4 py-2 rounded-lg bg-surface-light border border-white/10 text-muted-foreground text-sm font-semibold hover:bg-white/5 transition-colors"
             >
-              {t('common.goBack')}
+              Go Back
             </button>
             <button
               onClick={onRetry}
               className="px-4 py-2 rounded-lg bg-neon/10 border border-neon/30 text-neon text-sm font-semibold hover:bg-neon/20 transition-colors"
             >
-              {t('common.retry')}
+              Retry
             </button>
           </div>
         </motion.div>
@@ -313,7 +308,6 @@ export default function MatchDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { t } = useTranslation();
 
   const [match, setMatch] = useState<MatchData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -485,7 +479,7 @@ export default function MatchDetailPage({
           >
             <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-neon transition-colors" />
             <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-              {t('common.back')}
+              Back
             </span>
           </button>
           <div className="flex items-center gap-2">
@@ -496,13 +490,13 @@ export default function MatchDetailPage({
             >
               <Home className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon transition-colors" />
               <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-                {t('common.home')}
+                Home
               </span>
             </button>
             {match.isHot && (
               <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-red-500/20 text-red-400 rounded-md uppercase">
                 <Flame className="w-3 h-3" />
-                {t('match.hotMatch')}
+                Hot Match
               </span>
             )}
             {/* Player lookup loading indicator */}
@@ -588,7 +582,7 @@ export default function MatchDetailPage({
               {match.status === "LIVE" && (
                 <div className="flex items-center gap-1.5 mt-2">
                   <Play className="w-3 h-3 text-neon" />
-                  <span className="text-[10px] text-muted-foreground">{t('match.inProgress')}</span>
+                  <span className="text-[10px] text-muted-foreground">Match in progress</span>
                 </div>
               )}
             </div>
@@ -611,7 +605,7 @@ export default function MatchDetailPage({
           <div className="flex items-center justify-center gap-4 pt-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <MapPin className="w-3 h-3 text-neon/50" />
-              <span>{match.stadium || t('match.tbd')}</span>
+              <span>{match.stadium || "TBD"}</span>
             </div>
             <div className="w-px h-3 bg-white/10" />
             <div className="flex items-center gap-1.5">
@@ -632,7 +626,7 @@ export default function MatchDetailPage({
                 className="flex-1 h-10 rounded-lg data-[state=active]:bg-neon/10 data-[state=active]:text-neon data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neon/50 transition-all text-xs sm:text-sm"
               >
                 <Trophy className="w-3.5 h-3.5 mr-1.5" />
-                {t('tabs.overview')}
+                Overview
               </TabsTrigger>
               <TabsTrigger
                 value="lineup"
@@ -642,7 +636,7 @@ export default function MatchDetailPage({
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
-                {t('tabs.lineup')}
+                Lineup
               </TabsTrigger>
               <TabsTrigger
                 value="stats"
@@ -651,7 +645,7 @@ export default function MatchDetailPage({
                 <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 20V10M12 20V4M6 20v-6" />
                 </svg>
-                {t('tabs.stats')}
+                Stats
               </TabsTrigger>
             </TabsList>
           </div>
@@ -668,7 +662,7 @@ export default function MatchDetailPage({
                     transition={{ duration: 0.4 }}
                   >
                     <div className="text-xs font-medium text-muted-foreground mb-2">
-                      {t('match.matchTimeline')}
+                      Match Timeline
                     </div>
                     <div className="relative h-2 bg-surface-light rounded-full overflow-hidden">
                       <div className="absolute inset-0 flex">
@@ -708,7 +702,7 @@ export default function MatchDetailPage({
                     transition={{ duration: 0.4, delay: 0.1 }}
                   >
                     <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                      {t('match.matchEvents')}
+                      Match Events
                     </div>
                     <div className="space-y-1.5 max-h-96 overflow-y-auto pr-1">
                       {match.events.map((event, i) => (
@@ -758,11 +752,11 @@ export default function MatchDetailPage({
                   <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
                     <Trophy className="w-6 h-6 text-white/20" />
                   </div>
-                  <p className="text-white/40 text-sm font-medium">{t('match.noEvents')}</p>
+                  <p className="text-white/40 text-sm font-medium">No events yet</p>
                   <p className="text-white/20 text-xs mt-1">
                     {match.status === "UPCOMING"
-                      ? t('match.eventsWhenLive')
-                      : t('match.eventsWillAppear')}
+                      ? "Events will appear once the match starts"
+                      : "Match events will be displayed here"}
                   </p>
                 </motion.div>
               )}

@@ -457,11 +457,10 @@ export function AdminUsers() {
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`size-2 rounded-full ${
-                              user.isActive
+                            className={`size-2 rounded-full ${user.isActive
                                 ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]'
                                 : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]'
-                            }`}
+                              }`}
                           />
                           <span className="text-xs text-muted-foreground">
                             {user.isActive ? 'Active' : 'Inactive'}

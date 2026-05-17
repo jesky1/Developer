@@ -1,9 +1,8 @@
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const { db } = await import('@/lib/db')
-
     const news = await db.newsItem.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -51,26 +50,9 @@ ${items}
     })
   } catch (error) {
     console.error('Error generating RSS feed:', error)
-
-    // Return a minimal valid RSS feed instead of crashing
-    const baseUrl = 'https://goalzone.app'
-    const fallbackRss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>GOALZONE - Latest Football News</title>
-    <link>${baseUrl}</link>
-    <description>Real-time football news, match reports, transfer updates, and analysis powered by AI</description>
-    <language>en</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="${baseUrl}/api/news/rss" rel="self" type="application/rss+xml" />
-  </channel>
-</rss>`
-
-    return new NextResponse(fallbackRss, {
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
-      },
-    })
+    return NextResponse.json(
+      { error: 'Failed to generate RSS feed' },
+      { status: 500 }
+    )
   }
 }

@@ -5,7 +5,6 @@ import { ChevronRight, Clock, Flame } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ClubLogo } from '@/components/ui/club-logo';
 import { useCallback } from 'react';
-import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,8 +31,6 @@ interface MatchCardProps {
 // ─── Status Badge Component ─────────────────────────────────────────────────
 
 function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minute: number; isHot: boolean; kickoff?: string }) {
-  const { t } = useTranslation();
-
   if (isHot && status === 'LIVE') {
     return (
       <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30 text-[10px] px-1.5 py-0 h-5 gap-0.5">
@@ -53,14 +50,14 @@ function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minut
   if (status === 'HT') {
     return (
       <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 text-[10px] px-1.5 py-0 h-5">
-        {t('status.ht')}
+        HT
       </Badge>
     );
   }
   if (status === 'FT') {
     return (
       <Badge className="bg-surface-light text-muted-foreground border-border text-[10px] px-1.5 py-0 h-5">
-        {t('status.ft')}
+        FT
       </Badge>
     );
   }
@@ -68,7 +65,7 @@ function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minut
   return (
     <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] px-1.5 py-0 h-5 gap-0.5">
       <Clock className="w-2.5 h-2.5" />
-      {kickoff || t('status.upcoming')}
+      {kickoff || 'Upcoming'}
     </Badge>
   );
 }
@@ -92,8 +89,6 @@ function GoalFlashOverlay({ variant }: { variant: 'list' | 'card' }) {
 // ─── Goal Badge ─────────────────────────────────────────────────────────────
 
 function GoalBadge({ variant }: { variant: 'list' | 'card' }) {
-  const { t } = useTranslation();
-
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0, rotate: -12 }}
@@ -113,7 +108,7 @@ function GoalBadge({ variant }: { variant: 'list' | 'card' }) {
             '0 0 8px color-mix(in oklch, var(--neon) 60%, transparent), 0 0 16px color-mix(in oklch, var(--neon) 30%, transparent)',
         }}
       >
-        ⚽ {t('match.goal')}
+        ⚽ GOAL!
       </span>
     </motion.div>
   );
@@ -173,7 +168,6 @@ function getLeftBorderStyle(status: string, isHot: boolean): string {
 // ─── List Variant ───────────────────────────────────────────────────────────
 
 function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
-  const { t } = useTranslation();
   const handleClick = useCallback(() => {
     onClick?.(match);
   }, [onClick, match]);
@@ -192,7 +186,7 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
     <motion.div
       role="button"
       tabIndex={0}
-      aria-label={`${match.homeTeam} ${match.homeScore}, ${match.awayTeam} ${match.awayScore}, ${match.status === 'LIVE' ? `${match.minute} ${t('match.minutes')}` : match.status}${hasGoal ? `, ${t('match.goalScored')}` : ''}`}
+      aria-label={`${match.homeTeam} ${match.homeScore}, ${match.awayTeam} ${match.awayScore}, ${match.status === 'LIVE' ? `${match.minute} minutes` : match.status}${hasGoal ? ', Goal scored!' : ''}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       initial={{ opacity: 0, x: -10 }}
@@ -267,8 +261,6 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
 // ─── Card Variant ───────────────────────────────────────────────────────────
 
 function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
-  const { t } = useTranslation();
-
   const handleClick = useCallback(() => {
     onClick?.(match);
   }, [onClick, match]);
@@ -287,7 +279,7 @@ function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
     <motion.div
       role="button"
       tabIndex={0}
-      aria-label={`${match.homeTeam} ${match.homeScore}, ${match.awayTeam} ${match.awayScore}, ${match.league}, ${match.status === 'LIVE' ? `${match.minute} ${t('match.minutes')}` : match.status}${hasGoal ? `, ${t('match.goalScored')}` : ''}`}
+      aria-label={`${match.homeTeam} ${match.homeScore}, ${match.awayTeam} ${match.awayScore}, ${match.league}, ${match.status === 'LIVE' ? `${match.minute} minutes` : match.status}${hasGoal ? ', Goal scored!' : ''}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       initial={{ opacity: 0, y: 15 }}
@@ -389,7 +381,7 @@ function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
         <div className="mt-3 pt-2 border-t border-orange-500/20 relative z-[1]">
           <div className="flex items-center gap-1 text-[9px] text-orange-400 font-semibold uppercase tracking-wider">
             <Flame className="w-2.5 h-2.5" />
-            {t('match.hotMatch')}
+            Hot Match
           </div>
         </div>
       )}

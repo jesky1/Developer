@@ -2,26 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { signToken, comparePassword, hashPassword, getAuthUser } from '@/lib/auth'
 
-/**
- * Check if an error is a Prisma/DB configuration error
- * (e.g., schema provider mismatch with DATABASE_URL)
- */
-function isDbConfigError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const msg = error.message.toLowerCase()
-    return (
-      msg.includes('url must start with the protocol') ||
-      (msg.includes('prisma') && msg.includes('protocol')) ||
-      (msg.includes('schema') && msg.includes('mismatch')) ||
-      (msg.includes('connection') && msg.includes('refused')) ||
-      (msg.includes('does not exist') && msg.includes('database')) ||
-      (msg.includes('tenant') && msg.includes('not found')) ||
-      msg.includes("can't reach database server")
-    )
-  }
-  return false
-}
-
 export async function GET(request: NextRequest) {
   const action = request.nextUrl.searchParams.get('action') || 'me'
 
@@ -55,17 +35,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error(`Auth GET (${action}) error:`, error)
-
-    if (isDbConfigError(error)) {
-      return NextResponse.json(
-        {
-          error: 'Database configuration error. Please ensure DATABASE_URL matches the Prisma schema provider.',
-          errorType: 'DB_CONFIG_ERROR',
-        },
-        { status: 503 }
-      )
-    }
-
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -86,22 +55,7 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        let user
-        try {
-          user = await db.adminUser.findUnique({ where: { username } })
-        } catch (dbError) {
-          console.error('Auth POST login - DB error:', dbError)
-          if (isDbConfigError(dbError)) {
-            return NextResponse.json(
-              {
-                error: 'Database configuration error. Please ensure DATABASE_URL matches the Prisma schema provider.',
-                errorType: 'DB_CONFIG_ERROR',
-              },
-              { status: 503 }
-            )
-          }
-          throw dbError
-        }
+        const user = await db.adminUser.findUnique({ where: { username } })
 
         if (!user) {
           return NextResponse.json(
@@ -187,22 +141,7 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        let user
-        try {
-          user = await db.adminUser.findUnique({ where: { id: userId } })
-        } catch (dbError) {
-          console.error('Auth POST change-password - DB error:', dbError)
-          if (isDbConfigError(dbError)) {
-            return NextResponse.json(
-              {
-                error: 'Database configuration error. Please ensure DATABASE_URL matches the Prisma schema provider.',
-                errorType: 'DB_CONFIG_ERROR',
-              },
-              { status: 503 }
-            )
-          }
-          throw dbError
-        }
+        const user = await db.adminUser.findUnique({ where: { id: userId } })
 
         if (!user) {
           return NextResponse.json(
@@ -249,17 +188,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error(`Auth POST (${action}) error:`, error)
-
-    if (isDbConfigError(error)) {
-      return NextResponse.json(
-        {
-          error: 'Database configuration error. Please ensure DATABASE_URL matches the Prisma schema provider.',
-          errorType: 'DB_CONFIG_ERROR',
-        },
-        { status: 503 }
-      )
-    }
-
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

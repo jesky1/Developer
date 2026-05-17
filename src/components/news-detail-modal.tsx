@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Share2, Link2, Twitter, Facebook, MessageCircle, Tag, Newspaper, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NewsArticle } from '@/components/news-section';
-import { useTranslation } from '@/lib/i18n';
 
 // === Types ===
 
@@ -94,7 +93,6 @@ function buildJsonLd(article: NewsArticle) {
 // === Social Sharing ===
 
 function SocialShareBar({ article }: { article: NewsArticle }) {
-  const { t } = useTranslation();
   const url = getArticleUrl(article);
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(article.title);
@@ -102,11 +100,11 @@ function SocialShareBar({ article }: { article: NewsArticle }) {
   const copyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast.success(t('news.linkCopied'));
+      toast.success('Link copied to clipboard!');
     } catch {
-      toast.error(t('news.linkCopyFailed'));
+      toast.error('Failed to copy link');
     }
-  }, [url, t]);
+  }, [url]);
 
   const shareTwitter = useCallback(() => {
     window.open(
@@ -133,10 +131,10 @@ function SocialShareBar({ article }: { article: NewsArticle }) {
   }, [encodedTitle, encodedUrl]);
 
   const shareButtons = [
-    { icon: Link2, label: t('news.copyLink'), action: copyLink, color: 'text-muted-foreground hover:text-foreground' },
-    { icon: Twitter, label: t('news.shareOnX'), action: shareTwitter, color: 'text-sky-400 hover:text-sky-300' },
-    { icon: Facebook, label: t('news.shareOnFacebook'), action: shareFacebook, color: 'text-blue-400 hover:text-blue-300' },
-    { icon: MessageCircle, label: t('news.shareOnWhatsApp'), action: shareWhatsApp, color: 'text-green-400 hover:text-green-300' },
+    { icon: Link2, label: 'Copy Link', action: copyLink, color: 'text-muted-foreground hover:text-foreground' },
+    { icon: Twitter, label: 'Share on X', action: shareTwitter, color: 'text-sky-400 hover:text-sky-300' },
+    { icon: Facebook, label: 'Share on Facebook', action: shareFacebook, color: 'text-blue-400 hover:text-blue-300' },
+    { icon: MessageCircle, label: 'Share on WhatsApp', action: shareWhatsApp, color: 'text-green-400 hover:text-green-300' },
   ];
 
   return (
@@ -160,7 +158,6 @@ function SocialShareBar({ article }: { article: NewsArticle }) {
 // === Article Content Renderer ===
 
 function ArticleContent({ content }: { content: string }) {
-  const { t } = useTranslation();
   const paragraphs = useMemo(() => {
     if (!content) return [];
     return content.split('\n\n').filter((p) => p.trim().length > 0);
@@ -169,7 +166,7 @@ function ArticleContent({ content }: { content: string }) {
   if (paragraphs.length === 0) {
     return (
       <p className="text-sm text-muted-foreground italic">
-        {t('news.contentComingSoon')}
+        Full article content coming soon...
       </p>
     );
   }
@@ -188,7 +185,6 @@ function ArticleContent({ content }: { content: string }) {
 // === Main Modal Component ===
 
 export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalProps) {
-  const { t } = useTranslation();
   if (!article) return null;
 
   const color = getCategoryColor(article.category);
@@ -225,7 +221,7 @@ export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalPro
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-muted/30 border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                aria-label={t('common.close')}
+                aria-label="Close article"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -243,7 +239,7 @@ export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalPro
                     {article.isAiGenerated && (
                       <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-semibold bg-neon/10 text-neon border border-neon/20 rounded-md">
                         <Zap className="w-2 h-2" />
-                        {t('news.aiGenerated')}
+                        AI Generated
                       </span>
                     )}
                   </div>
@@ -269,7 +265,7 @@ export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalPro
                       </span>
                     )}
                     <span className="text-muted-foreground/60">
-                      {t('news.minRead', { time: readingTime })}
+                      {readingTime} min read
                     </span>
                   </div>
                 </div>
@@ -288,7 +284,7 @@ export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalPro
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Tag className="w-3 h-3" />
-                        {t('news.tags')}
+                        Tags
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {[...new Set(article.tags)].map((tag, i) => (
@@ -309,7 +305,7 @@ export function NewsDetailModal({ article, isOpen, onClose }: NewsDetailModalPro
 
                 {/* Social Sharing */}
                 <div className="space-y-2">
-                  <span className="text-xs font-medium text-muted-foreground">{t('news.shareArticle')}</span>
+                  <span className="text-xs font-medium text-muted-foreground">Share this article</span>
                   <SocialShareBar article={article} />
                 </div>
 

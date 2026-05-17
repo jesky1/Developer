@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ClubLogo } from "@/components/ui/club-logo";
-import { useTranslation } from "@/lib/i18n";
-import { LanguageSelector } from "@/components/language-selector";
 
 export interface LoginUser {
   id: string;
@@ -40,19 +38,18 @@ interface NavbarProps {
   }>;
 }
 
+const navLinks = [
+  { label: "Home", href: "/", isRoute: true },
+  { label: "Live", href: "#live" },
+  { label: "Scores", href: "#scores" },
+  { label: "News", href: "#news" },
+  { label: "Standings", href: "#standings" },
+];
+
 const ADMIN_ROLES = ["superadmin", "admin", "editor"];
 
 export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, matches = [] }: NavbarProps) {
   const { navigate } = useNavigation();
-  const { t } = useTranslation();
-
-  const navLinks = [
-    { label: t("nav.home"), href: "/", isRoute: true, key: "home" },
-    { label: t("nav.live"), href: "#live", key: "live" },
-    { label: t("nav.scores"), href: "#scores", key: "scores" },
-    { label: t("nav.news"), href: "#news", key: "news" },
-    { label: t("nav.standings"), href: "#standings", key: "standings" },
-  ];
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,10 +161,10 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              const isHome = link.key === "home";
+              const isHome = link.label === "Home";
               return (
                 <motion.a
-                  key={link.key}
+                  key={link.label}
                   href={link.href}
                   onClick={(e) => {
                     e.preventDefault();
@@ -199,7 +196,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                     <Input
-                      placeholder={t("nav.search")}
+                      placeholder="Search clubs, leagues..."
                       className="h-9 pl-8 pr-3 bg-surface-light border-neon/20 focus:border-neon/50 text-sm"
                       autoFocus
                       value={searchQuery}
@@ -254,7 +251,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                         exit={{ opacity: 0, y: -4 }}
                         className="absolute top-full left-0 right-0 mt-1 bg-background/95 backdrop-blur-lg border border-white/10 rounded-xl shadow-xl shadow-black/30 z-50 p-4 text-center"
                       >
-                        <p className="text-xs text-muted-foreground">{t("nav.noMatchesFound")} &ldquo;{searchQuery}&rdquo;</p>
+                        <p className="text-xs text-muted-foreground">No matches found for &ldquo;{searchQuery}&rdquo;</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -274,7 +271,6 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
             >
               <Search className="w-4 h-4" />
             </Button>
-            <LanguageSelector />
             <ThemeToggle />
 
             {/* Login Button / User Dropdown */}
@@ -333,7 +329,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-neon/10 transition-colors text-left"
                           >
                             <ShieldCheck className="w-4 h-4 text-neon" />
-                            <span className="text-sm text-foreground">{t("nav.admin")}</span>
+                            <span className="text-sm text-foreground">Admin Panel</span>
                           </button>
                         )}
                         <button
@@ -341,7 +337,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors text-left"
                         >
                           <LogOut className="w-4 h-4 text-red-500" />
-                          <span className="text-sm text-red-500">{t("nav.logout")}</span>
+                          <span className="text-sm text-red-500">Keluar</span>
                         </button>
                       </div>
                     </motion.div>
@@ -354,10 +350,10 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                 size="sm"
                 className="gap-1.5 text-muted-foreground hover:text-neon hover:bg-neon/10"
                 onClick={onLoginClick}
-                title={t("nav.login")}
+                title="Login"
               >
                 <LogIn className="w-4 h-4" />
-                <span className="hidden sm:inline text-xs font-medium">{t("nav.login")}</span>
+                <span className="hidden sm:inline text-xs font-medium">Login</span>
               </Button>
             )}
 
@@ -384,10 +380,10 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
           >
             <div className="px-4 py-3 space-y-1">
               {navLinks.map((link) => {
-                const isHome = link.key === "home";
+                const isHome = link.label === "Home";
                 return (
                   <a
-                    key={link.key}
+                    key={link.label}
                     href={link.href}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-white/5"
                     onClick={(e) => {
@@ -439,7 +435,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                       className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-neon hover:bg-neon/10"
                     >
                       <ShieldCheck className="w-4 h-4" />
-                      {t("nav.admin")}
+                      Admin Panel
                     </button>
                   )}
                   <button
@@ -450,7 +446,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                     className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-red-500 hover:bg-red-500/10"
                   >
                     <LogOut className="w-4 h-4" />
-                    {t("nav.logout")}
+                    Keluar
                   </button>
                 </>
               ) : (
@@ -464,7 +460,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                     className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-neon hover:bg-neon/10"
                   >
                     <LogIn className="w-4 h-4" />
-                    {t("nav.login")}
+                    Login
                   </button>
                 </>
               )}
@@ -475,7 +471,7 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <Input
-                  placeholder={t("nav.search")}
+                  placeholder="Search clubs, leagues..."
                   className="h-9 pl-8 pr-3 bg-surface-light border-white/10 focus:border-neon/50 text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

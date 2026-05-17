@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Zap, Trophy, MapPin } from "lucide-react";
 import { LegalPagesModal, type LegalPage } from "@/components/legal-pages-modal";
-import { useTranslation } from "@/lib/i18n";
 
 // === League Config ===
 
@@ -24,6 +23,24 @@ const LEAGUES: LeagueInfo[] = [
   { name: "Liga 1 Indonesia", code: "IDN", country: "Indonesia" },
 ];
 
+// === Legal Links ===
+
+const LEGAL_LINKS: { label: string; page: LegalPage }[] = [
+  { label: "About Us", page: "about" },
+  { label: "Contact", page: "contact" },
+  { label: "Privacy Policy", page: "privacy" },
+  { label: "Terms of Service", page: "terms" },
+];
+
+// === Navigation Links ===
+
+const NAV_LINKS = [
+  { label: "Live Scores", href: "#live" },
+  { label: "Fixtures", href: "#live" },
+  { label: "Results", href: "#live" },
+  { label: "Standings", href: "#standings" },
+];
+
 // === Props ===
 
 interface FooterProps {
@@ -33,22 +50,7 @@ interface FooterProps {
 // === Main Component ===
 
 export function Footer({ onLeagueClick }: FooterProps) {
-  const { t } = useTranslation();
   const [openPage, setOpenPage] = useState<LegalPage | null>(null);
-
-  const LEGAL_LINKS: { label: string; page: LegalPage }[] = [
-    { label: t("footer.aboutUs"), page: "about" },
-    { label: t("footer.contact"), page: "contact" },
-    { label: t("footer.privacyPolicy"), page: "privacy" },
-    { label: t("footer.termsOfService"), page: "terms" },
-  ];
-
-  const NAV_LINKS = [
-    { label: t("footer.liveScores"), href: "#live" },
-    { label: t("footer.fixtures"), href: "#live" },
-    { label: t("footer.results"), href: "#live" },
-    { label: t("footer.standings"), href: "#standings" },
-  ];
 
   const handleLeagueClick = useCallback(
     (leagueName: string) => {
@@ -87,14 +89,14 @@ export function Footer({ onLeagueClick }: FooterProps) {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
-                {t("footer.description")}
+                Your premium destination for live football scores, real-time match updates, and comprehensive statistics.
               </p>
             </div>
 
             {/* Navigation */}
             <div>
               <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
-                {t("footer.navigation")}
+                Navigation
               </h4>
               <ul className="space-y-2">
                 {NAV_LINKS.map((item) => (
@@ -115,7 +117,7 @@ export function Footer({ onLeagueClick }: FooterProps) {
             <div>
               <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <Trophy className="w-3 h-3 text-neon" />
-                {t("footer.leagues")}
+                Leagues
               </h4>
               <ul className="space-y-2">
                 {LEAGUES.map((league) => (
@@ -136,7 +138,7 @@ export function Footer({ onLeagueClick }: FooterProps) {
             {/* Legal */}
             <div>
               <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
-                {t("footer.legal")}
+                Legal
               </h4>
               <ul className="space-y-2">
                 {LEGAL_LINKS.map((item) => (
@@ -156,10 +158,10 @@ export function Footer({ onLeagueClick }: FooterProps) {
 
           <div className="mt-8 pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-[10px] text-muted-foreground">
-              {t("footer.copyright")}
+              © 2025 GOALZONE. All rights reserved.
             </p>
             <p className="text-[10px] text-muted-foreground">
-              {t("footer.dataRefresh")}
+              Data refreshes every 10 seconds · Powered by real-time APIs
             </p>
           </div>
         </div>

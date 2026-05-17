@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
 
 interface HotMatch {
   id: string;
@@ -30,7 +29,6 @@ interface HotMatchHighlightProps {
  * - Clicking scrolls to the #live section
  */
 export function HotMatchHighlight({ matches }: HotMatchHighlightProps) {
-  const { t } = useTranslation();
   // Derive the hottest live match from props
   const hottestMatch = useMemo<HotMatch | null>(
     () => matches.find((m) => m.isHot === true && m.status === "LIVE") ?? null,
@@ -109,7 +107,7 @@ export function HotMatchHighlight({ matches }: HotMatchHighlightProps) {
                 handleClose();
               }}
               className="hot-match-close"
-              aria-label={t('common.dismiss')}
+              aria-label="Dismiss hot match notification"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -122,7 +120,7 @@ export function HotMatchHighlight({ matches }: HotMatchHighlightProps) {
               <span className="text-xl leading-none">🔥</span>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">
-                  {t('match.hotMatch')}
+                  Hot Match
                 </span>
                 <span className="text-sm font-bold text-white leading-tight">
                   {hottestMatch.homeTeam}{" "}
@@ -139,7 +137,7 @@ export function HotMatchHighlight({ matches }: HotMatchHighlightProps) {
 
             {/* Click hint */}
             <span className="text-[9px] text-orange-400/50 mt-1.5 block">
-              {t('match.clickToJump')}
+              Click to jump to live section
             </span>
           </div>
         </motion.div>

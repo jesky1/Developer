@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { MapPin, Clock, Play } from "lucide-react";
 import { ClubLogo } from "@/components/ui/club-logo";
-import { useTranslation } from "@/lib/i18n";
 
 interface MatchEvent {
   type: string;
@@ -34,8 +33,6 @@ interface FeaturedMatchProps {
 }
 
 export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
-  const { t } = useTranslation();
-
   if (!match) {
     return (
       <div className="glass-card neon-glow rounded-2xl p-6 space-y-6 animate-pulse">
@@ -81,7 +78,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
           </span>
           {match.isHot && (
             <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500/20 text-red-400 rounded-md uppercase">
-              🔥 {t('match.hot')}
+              🔥 Hot
             </span>
           )}
           {goalFlash && (
@@ -90,7 +87,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
               animate={{ scale: 1, opacity: 1 }}
               className="px-1.5 py-0.5 text-[10px] font-black bg-neon/20 text-neon border border-neon/30 rounded-md uppercase goal-pulse-text"
             >
-              ⚽ {t('match.goalExclamation')}
+              ⚽ GOAL!
             </motion.span>
           )}
         </div>
@@ -102,18 +99,18 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
           >
             <span className="w-2 h-2 rounded-full bg-green-500 live-pulse" />
             <span className="text-xs font-bold text-green-400">
-              {t('status.liveMinute', { minute: match.minute })}
+              LIVE {match.minute}&apos;
             </span>
           </motion.div>
         )}
         {match.status === "HT" && (
           <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-500/15 border border-yellow-500/30 rounded-full">
-            <span className="text-xs font-bold text-yellow-400">{t('status.halfTime')}</span>
+            <span className="text-xs font-bold text-yellow-400">Half Time</span>
           </div>
         )}
         {match.status === "FT" && (
           <div className="flex items-center gap-1.5 px-3 py-1 bg-surface-light border border-white/10 rounded-full">
-            <span className="text-xs font-bold text-muted-foreground">{t('status.fullTime')}</span>
+            <span className="text-xs font-bold text-muted-foreground">Full Time</span>
           </div>
         )}
         {match.status === "UPCOMING" && (
@@ -165,7 +162,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
               <div className="flex items-center gap-2">
                 <Play className="w-3 h-3 text-neon" />
                 <span className="text-xs text-muted-foreground">
-                  {t('match.inProgress')}
+                  Match in progress
                 </span>
               </div>
             )}
@@ -190,7 +187,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
       {goalEvents.length > 0 && (
         <div className="px-6 pb-4">
           <div className="text-xs font-medium text-muted-foreground mb-2">
-            {t('match.matchTimeline')}
+            Match Timeline
           </div>
           <div className="relative h-2 bg-surface-light rounded-full overflow-hidden">
             <div className="absolute inset-0 flex">

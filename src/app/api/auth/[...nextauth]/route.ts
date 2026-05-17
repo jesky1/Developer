@@ -4,22 +4,6 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { comparePassword, getUserByEmail, createUser, signUserToken } from '@/lib/user-auth'
 import { db } from '@/lib/db'
 
-/**
- * Check if an error is a Prisma/DB configuration error
- */
-function isDbConfigError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const msg = error.message.toLowerCase()
-    return (
-      msg.includes('url must start with the protocol') ||
-      (msg.includes('prisma') && msg.includes('protocol')) ||
-      (msg.includes('schema') && msg.includes('mismatch')) ||
-      msg.includes("can't reach database server")
-    )
-  }
-  return false
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
     // ===== Google OAuth Provider =====
@@ -48,17 +32,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const email = credentials.email.trim().toLowerCase()
-
-        let user
-        try {
-          user = await getUserByEmail(email)
-        } catch (dbError) {
-          console.error('NextAuth authorize - DB error:', dbError)
-          if (isDbConfigError(dbError)) {
-            throw new Error('Service temporarily unavailable. Please try again later.')
-          }
-          throw new Error('Service temporarily unavailable. Please try again later.')
-        }
+        const user = await getUserByEmail(email)
 
         if (!user) {
           throw new Error('Email atau password salah')
@@ -83,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         db.user.update({
           where: { id: user.id },
           data: { lastLoginAt: new Date() },
-        }).catch(() => { })
+        }).catch(() => {})
 
         return {
           id: user.id,
@@ -102,18 +76,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google' && profile?.email) {
         try {
-          let existingUser
-          try {
-            existingUser = await getUserByEmail(profile.email)
-          } catch (dbError) {
-            console.error('Google sign-in - DB error:', dbError)
-            if (isDbConfigError(dbError)) {
-              // Return a URL with error param instead of false
-              // so user sees a meaningful error
-              return '/?error=db_config'
-            }
-            return false
-          }
+          const existingUser = await getUserByEmail(profile.email)
 
           if (!existingUser) {
             // Create new user from Google profile
@@ -167,15 +130,12 @@ export const authOptions: NextAuthOptions = {
             await db.user.update({
               where: { id: dbUser.id },
               data: { lastLoginAt: new Date() },
-            }).catch(() => { })
+            }).catch(() => {})
           }
 
           return true
         } catch (error) {
           console.error('Google sign-in error:', error)
-          if (isDbConfigError(error)) {
-            return '/?error=db_config'
-          }
           return false
         }
       }
@@ -194,18 +154,12 @@ export const authOptions: NextAuthOptions = {
 
       // Look up user from DB on subsequent requests to ensure role is fresh
       if (token.email) {
-        try {
-          const dbUser = await getUserByEmail(token.email as string)
-          if (dbUser) {
-            token.userId = dbUser.id
-            token.role = dbUser.role
-            token.provider = dbUser.provider
-            token.picture = dbUser.image || token.picture
-          }
-        } catch (error) {
-          console.error('JWT callback - DB lookup error:', error)
-          // Don't invalidate the session if DB is temporarily down
-          // Keep existing token data
+        const dbUser = await getUserByEmail(token.email as string)
+        if (dbUser) {
+          token.userId = dbUser.id
+          token.role = dbUser.role
+          token.provider = dbUser.provider
+          token.picture = dbUser.image || token.picture
         }
       }
 

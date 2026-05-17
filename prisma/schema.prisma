@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -13,7 +13,7 @@ model Match {
   awayTeam     String
   homeScore    Int      @default(0)
   awayScore    Int      @default(0)
-  status       String   @default("UPCOMING")
+  status       String   @default("UPCOMING") // LIVE, FT, HT, UPCOMING
   minute       Int      @default(0)
   league       String
   leagueLogo   String   @default("")
@@ -22,9 +22,9 @@ model Match {
   stadium      String   @default("")
   kickoff      String   @default("")
   isHot        Boolean  @default(false)
-  events       String   @default("[]")
-  homeForm     String   @default("[]")
-  awayForm     String   @default("[]")
+  events       String   @default("[]") // JSON string of match events
+  homeForm     String   @default("[]") // JSON array of W/D/L
+  awayForm     String   @default("[]") // JSON array of W/D/L
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -45,7 +45,7 @@ model Standing {
   gd       Int      @default(0)
   points   Int      @default(0)
   league   String
-  form     String   @default("[]")
+  form     String   @default("[]") // JSON array of W/D/L
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -81,16 +81,16 @@ model NewsItem {
   title          String
   slug           String?  @unique
   summary        String
-  content        String   @default("")
-  category       String   @default("Transfer")
+  content        String   @default("")   // Full article body (markdown)
+  category       String   @default("Transfer") // Transfer, Match Report, Preview, Analysis, Breaking, Rumor
   imageUrl       String   @default("")
   source         String   @default("GOALZONE AI")
-  tags           String   @default("[]")
+  tags           String   @default("[]") // JSON array of tags
   seoTitle       String   @default("")
   seoDescription String   @default("")
-  keywords       String   @default("")
-  league         String   @default("")
-  matchId        String?
+  keywords       String   @default("")   // SEO keywords comma-separated
+  league         String   @default("")   // Related league
+  matchId        String?                // Related match ID (nullable)
   isAiGenerated  Boolean  @default(true)
   publishedAt    DateTime @default(now())
   createdAt      DateTime @default(now())
@@ -108,18 +108,11 @@ model Player {
   nationality  String   @default("")
   height       String   @default("")
   weight       String   @default("")
-  position     String   @default("")
+  position     String   @default("") // FW, MF, DF, GK
   shirtNumber  Int      @default(0)
   currentClub  String   @default("")
   clubLogo     String   @default("")
   rating       Float    @default(0)
-  apiFootballId Int     @default(0)
-  birthPlace   String   @default("")
-  birthCountry String   @default("")
-  injured      Boolean  @default(false)
-  teamId       Int      @default(0)
-  teamLogo     String   @default("")
-  leagueId     Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -143,35 +136,7 @@ model PlayerStats {
   redCards        Int      @default(0)
   rating          Float    @default(0)
   season          String   @default("2024/2025")
-  matchRatings    String   @default("[]")
-  leagueId        Int      @default(0)
-  leagueName      String   @default("")
-  leagueSeason    Int      @default(0)
-  teamName        String   @default("")
-  lineups         Int      @default(0)
-  minutes         Int      @default(0)
-  goalsConceded   Int      @default(0)
-  saves           Int      @default(0)
-  passesTotal     Int      @default(0)
-  passesKey       Int      @default(0)
-  tacklesBlocks   Int      @default(0)
-  duelsTotal      Int      @default(0)
-  duelsWon        Int      @default(0)
-  dribblesAttempts Int     @default(0)
-  dribblesSuccess Int      @default(0)
-  dribblesPast    Int      @default(0)
-  foulsDrawn      Int      @default(0)
-  foulsCommitted  Int      @default(0)
-  yellowRedCards  Int      @default(0)
-  penaltyWon      Int      @default(0)
-  penaltyCommitted Int     @default(0)
-  penaltyScored   Int      @default(0)
-  penaltyMissed   Int      @default(0)
-  penaltySaved    Int      @default(0)
-  isCaptain       Boolean  @default(false)
-  substitutesIn   Int      @default(0)
-  substitutesOut  Int      @default(0)
-  substitutesBench Int     @default(0)
+  matchRatings    String   @default("[]") // JSON array of {match, rating, opponent}
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -187,7 +152,7 @@ model Transfer {
   toLogo     String   @default("")
   date       String
   fee        String   @default("")
-  type       String   @default("Transfer")
+  type       String   @default("Transfer") // Transfer, Loan, Free, Youth
   createdAt  DateTime @default(now())
 
   player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
@@ -196,11 +161,11 @@ model Transfer {
 model MatchLineup {
   id          String   @id @default(cuid())
   matchId     String
-  team        String
+  team        String   // home or away
   teamName    String
   formation   String   @default("4-3-3")
-  startXI     String   @default("[]")
-  substitutes String   @default("[]")
+  startXI     String   @default("[]") // JSON array of player lineup data
+  substitutes String   @default("[]") // JSON array of substitute data
   coach       String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -231,16 +196,18 @@ model MatchStats {
   updatedAt       DateTime @updatedAt
 }
 
+// ===== USER AUTH MODELS =====
+
 model User {
   id              String   @id @default(cuid())
   name            String
   email           String   @unique
   emailVerified   DateTime?
-  passwordHash    String?
+  passwordHash    String?  // null for OAuth users
   image           String   @default("")
-  provider        String   @default("credentials")
-  providerAccountId String @default("")
-  role            String   @default("user")
+  provider        String   @default("credentials") // credentials, google
+  providerAccountId String @default("") // Google sub ID etc.
+  role            String   @default("user") // user, admin, superadmin
   isActive        Boolean  @default(true)
   lastLoginAt     DateTime?
   createdAt       DateTime @default(now())
@@ -253,8 +220,8 @@ model User {
 model Account {
   id                String   @id @default(cuid())
   userId            String
-  providerType      String
-  provider          String
+  providerType      String   // oauth, credentials
+  provider          String   // google, credentials
   providerAccountId String
   refreshToken      String?  @default("")
   accessToken       String?  @default("")
@@ -291,6 +258,8 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ===== ADMIN PANEL MODELS =====
+
 model AdminUser {
   id           String   @id @default(cuid())
   username     String   @unique
@@ -298,7 +267,7 @@ model AdminUser {
   passwordHash String   @default("")
   displayName  String   @default("")
   avatarUrl    String   @default("")
-  role         String   @default("editor")
+  role         String   @default("editor") // superadmin, admin, editor, viewer
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
@@ -311,19 +280,19 @@ model SiteSetting {
   id          String   @id @default(cuid())
   key         String   @unique
   value       String   @default("")
-  category    String   @default("general")
+  category    String   @default("general") // general, branding, features, notifications, seo
   description String   @default("")
-  isPublic    Boolean  @default(false)
+  isPublic    Boolean  @default(false) // Whether visible to frontend
   updatedAt   DateTime @updatedAt
 }
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  userId    String?
-  action    String
-  resource  String
+  userId    String?  // nullable for system-generated actions
+  action    String   // create, update, delete, login, logout, generate
+  resource  String   // match, news, user, setting, player, etc.
   resourceId String  @default("")
-  details   String   @default("{}")
+  details   String   @default("{}") // JSON details of the action
   ip        String   @default("")
   createdAt DateTime @default(now())
 
@@ -335,10 +304,10 @@ model PageView {
   path      String   @default("/")
   referrer  String   @default("")
   country   String   @default("")
-  device    String   @default("")
+  device    String   @default("") // desktop, mobile, tablet
   browser   String   @default("")
   os        String   @default("")
-  duration  Int      @default(0)
+  duration  Int      @default(0) // seconds on page
   createdAt DateTime @default(now())
 }
 
@@ -348,18 +317,20 @@ model ContactMessage {
   email     String
   subject   String   @default("")
   message   String
-  status    String   @default("unread")
+  status    String   @default("unread") // unread, read, replied, archived
   reply     String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+// ===== AD TRACKING & MONETIZATION =====
+
 model AdUnit {
   id          String   @id @default(cuid())
-  name        String
-  slotId      String   @unique
-  placement   String
-  adType      String   @default("display")
+  name        String   // e.g. "Homepage Banner", "Article Sidebar"
+  slotId      String   @unique // Google AdSense slot ID
+  placement   String   // header, sidebar, article_top, article_bottom, footer, in_feed
+  adType      String   @default("display") // display, native, in_feed, in_article, anchor
   isActive    Boolean  @default(true)
   impressions Int      @default(0)
   clicks      Int      @default(0)
@@ -373,12 +344,12 @@ model AdUnit {
 model AdEvent {
   id        String   @id @default(cuid())
   adUnitId  String
-  eventType String
-  page      String   @default("")
+  eventType String   // impression, click
+  page      String   @default("") // URL where ad was shown
   ip        String   @default("")
   userAgent String   @default("")
   country   String   @default("")
-  revenue   Float    @default(0)
+  revenue   Float    @default(0) // estimated revenue per event
   createdAt DateTime @default(now())
 
   adUnit    AdUnit   @relation(fields: [adUnitId], references: [id], onDelete: Cascade)
@@ -386,55 +357,59 @@ model AdEvent {
 
 model AdSenseReport {
   id            String   @id @default(cuid())
-  date          String   @unique
+  date          String   @unique // YYYY-MM-DD
   impressions   Int      @default(0)
   clicks        Int      @default(0)
   revenue       Float    @default(0)
-  ctr           Float    @default(0)
-  cpc           Float    @default(0)
-  rpm           Float    @default(0)
+  ctr           Float    @default(0) // Click-through rate
+  cpc           Float    @default(0) // Cost per click
+  rpm           Float    @default(0) // Revenue per mille
   pageViews     Int      @default(0)
   activeViewCtr Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
+// ===== TRAFFIC & SEO =====
+
 model TrafficLog {
   id        String   @id @default(cuid())
   path      String   @default("/")
   referrer  String   @default("")
   country   String   @default("")
-  device    String   @default("")
+  device    String   @default("") // desktop, mobile, tablet
   browser   String   @default("")
   os        String   @default("")
   utmSource String   @default("")
   utmMedium String   @default("")
   utmCampaign String @default("")
-  sessionId String   @default("")
-  duration  Int      @default(0)
+  sessionId String   @default("") // to track unique sessions
+  duration  Int      @default(0) // seconds on page
   createdAt DateTime @default(now())
 }
 
 model TrendingTopic {
   id          String   @id @default(cuid())
   keyword     String
-  source      String   @default("google")
-  volume      Int      @default(0)
-  category    String   @default("football")
+  source      String   @default("google") // google, twitter, reddit
+  volume      Int      @default(0) // search volume / tweet count
+  category    String   @default("football") // football, transfer, match, etc.
   region      String   @default("global")
-  isProcessed Boolean  @default(false)
+  isProcessed Boolean  @default(false) // whether an article was generated from this
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
+// ===== SCHEDULER & AUTOMATION =====
+
 model ScheduledTask {
   id          String   @id @default(cuid())
-  type        String
-  status      String   @default("pending")
-  schedule    String   @default("")
+  type        String   // auto_article, trending_scrape, telegram_post, adsense_sync
+  status      String   @default("pending") // pending, running, completed, failed
+  schedule    String   @default("") // cron expression or interval
   lastRunAt   DateTime?
   nextRunAt   DateTime?
-  result      String   @default("{}")
+  result      String   @default("{}") // JSON result of last run
   isEnabled   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -442,10 +417,10 @@ model ScheduledTask {
 
 model TelegramPost {
   id           String   @id @default(cuid())
-  newsId       String?
+  newsId       String?  // linked news article
   chatId       String   @default("")
   message      String
-  status       String   @default("pending")
+  status       String   @default("pending") // pending, sent, failed
   sentAt       DateTime?
   error        String   @default("")
   createdAt    DateTime @default(now())
@@ -454,8 +429,8 @@ model TelegramPost {
 
 model InternalLink {
   id           String   @id @default(cuid())
-  sourceSlug   String
-  targetSlug   String
+  sourceSlug   String   // article that contains the link
+  targetSlug   String   // article being linked to
   anchorText   String   @default("")
   createdAt    DateTime @default(now())
 

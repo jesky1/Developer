@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Medal, ChevronDown, Loader2 } from "lucide-react";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "@/lib/i18n";
 
 // === Types ===
 
@@ -70,7 +69,6 @@ function TopScorers({
   const [leagueScorers, setLeagueScorers] = useState<Scorer[]>(scorers);
   const [isLeagueLoading, setIsLeagueLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { t } = useTranslation();
 
   // Fetch scorers filtered by league
   const fetchScorers = useCallback(async (league: string) => {
@@ -119,7 +117,6 @@ function TopScorers({
 
   const activeLeagueLabel =
     SCORER_LEAGUES.find((l) => l.value === selectedLeague)?.name || "All";
-  const displayLeagueLabel = activeLeagueLabel === "All" ? t("scorers.all") : activeLeagueLabel;
 
   return (
     <motion.div
@@ -132,7 +129,7 @@ function TopScorers({
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("scorers.title")}
+            Top Goalscorers
           </h3>
         </div>
 
@@ -142,7 +139,7 @@ function TopScorers({
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-lg bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer"
           >
-            <span>{displayLeagueLabel}</span>
+            <span>{activeLeagueLabel}</span>
             <ChevronDown
               className={cn(
                 "w-3 h-3 transition-transform",
@@ -180,7 +177,7 @@ function TopScorers({
                             : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
                         )}
                       >
-                        {league.name === "All" ? t("scorers.all") : league.name}
+                        {league.name}
                       </button>
                     ))}
                   </div>
@@ -212,7 +209,7 @@ function TopScorers({
               exit={{ opacity: 0 }}
               className="text-center py-6 text-xs text-muted-foreground"
             >
-              {t("scorers.noScorers")}
+              No scorers found
             </motion.div>
           ) : (
             <motion.div
@@ -290,7 +287,7 @@ function TopScorers({
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-neon">{scorer.goals}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {scorer.matches} {t("scorers.apps")}
+                      {scorer.matches} apps
                     </p>
                   </div>
                 </motion.div>
@@ -312,7 +309,6 @@ function LeagueTable({
   standings: Standing[];
   onTeamClick?: (teamName: string) => void;
 }) {
-  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -322,7 +318,7 @@ function LeagueTable({
     >
       <div className="flex items-center gap-2 mb-4">
         <Medal className="w-4 h-4 text-neon" />
-        <h3 className="text-sm font-semibold text-foreground">{t("sidebar.leagueTable")}</h3>
+        <h3 className="text-sm font-semibold text-foreground">League Table</h3>
       </div>
 
       <div className="overflow-x-auto">
@@ -330,14 +326,14 @@ function LeagueTable({
           <thead>
             <tr className="text-[10px] text-muted-foreground uppercase tracking-wider border-b border-white/5">
               <th className="text-left py-2 w-6">#</th>
-              <th className="text-left py-2">{t("standings.team")}</th>
-              <th className="text-center py-2 w-7">{t("standings.played")}</th>
-              <th className="text-center py-2 w-7">{t("standings.won")}</th>
-              <th className="text-center py-2 w-7">{t("standings.drawn")}</th>
-              <th className="text-center py-2 w-7">{t("standings.lost")}</th>
-              <th className="text-center py-2 w-8">{t("standings.goalDiff")}</th>
-              <th className="text-center py-2 w-8 font-bold">{t("standings.points")}</th>
-              <th className="text-center py-2 w-16">{t("standings.form")}</th>
+              <th className="text-left py-2">Team</th>
+              <th className="text-center py-2 w-7">P</th>
+              <th className="text-center py-2 w-7">W</th>
+              <th className="text-center py-2 w-7">D</th>
+              <th className="text-center py-2 w-7">L</th>
+              <th className="text-center py-2 w-8">GD</th>
+              <th className="text-center py-2 w-8 font-bold">Pts</th>
+              <th className="text-center py-2 w-16">Form</th>
             </tr>
           </thead>
           <tbody>

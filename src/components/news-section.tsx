@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, Zap, Clock, Tag, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
 
 // === Types ===
 
@@ -64,20 +63,9 @@ function getCategoryColor(category: string): CategoryColor {
 const FILTER_TABS = ['All', 'Breaking', 'Match Report', 'Analysis', 'Transfer'] as const;
 type FilterTab = (typeof FILTER_TABS)[number];
 
-const FILTER_TAB_TRANSLATION_KEYS: Record<FilterTab, string> = {
-  'All': 'news.all',
-  'Breaking': 'news.breaking',
-  'Match Report': 'news.matchReport',
-  'Analysis': 'news.analysis',
-  'Transfer': 'news.transfer',
-};
-
 // === Helpers ===
 
-function getRelativeTime(
-  dateStr: string,
-  t: (key: string, params?: Record<string, string | number>) => string
-): string {
+function getRelativeTime(dateStr: string): string {
   try {
     const date = new Date(dateStr);
     const now = new Date();
@@ -87,10 +75,10 @@ function getRelativeTime(
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return t('news.justNow');
-    if (diffMin < 60) return `${diffMin} ${t('news.minAgo')}`;
-    if (diffHour < 24) return `${diffHour} ${diffHour > 1 ? t('news.hoursAgoPlural') : t('news.hoursAgo')}`;
-    if (diffDay < 7) return `${diffDay} ${diffDay > 1 ? t('news.daysAgo') : t('news.dayAgo')}`;
+    if (diffSec < 60) return 'just now';
+    if (diffMin < 60) return `${diffMin} min ago`;
+    if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
     return date.toLocaleDateString();
   } catch {
     return '';
@@ -110,11 +98,10 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 function AiBadge() {
-  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-semibold bg-neon/10 text-neon border border-neon/20 rounded-md">
       <Zap className="w-2 h-2" />
-      {t('news.aiGenerated')}
+      AI
     </span>
   );
 }
@@ -137,8 +124,6 @@ function NewsCard({
   index: number;
   onClick: () => void;
 }) {
-  const { t } = useTranslation();
-
   const isNew = (() => {
     try {
       const d = new Date(article.publishedAt || article.createdAt)
@@ -177,7 +162,7 @@ function NewsCard({
           {isNew && (
             <div className="absolute top-2 right-2">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold bg-neon text-neon-foreground rounded-md shadow-md">
-                {t('news.new')}
+                NEW
               </span>
             </div>
           )}
@@ -190,7 +175,7 @@ function NewsCard({
         {article.isAiGenerated && <AiBadge />}
         {!article.imageUrl && isNew && (
           <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold bg-neon text-neon-foreground rounded-md shadow-sm">
-            {t('news.new')}
+            NEW
           </span>
         )}
       </div>
@@ -210,7 +195,7 @@ function NewsCard({
         <LeagueBadge league={article.league} />
         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
           <Clock className="w-2.5 h-2.5" />
-          {getRelativeTime(article.publishedAt || article.createdAt, t)}
+          {getRelativeTime(article.publishedAt || article.createdAt)}
         </span>
         <span className="text-[10px] text-muted-foreground/70 ml-auto">
           {article.source}
@@ -257,8 +242,6 @@ function NewsSkeleton() {
 }
 
 function EmptyState() {
-  const { t } = useTranslation();
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -269,8 +252,8 @@ function EmptyState() {
         <Newspaper className="w-8 h-8 text-muted-foreground/50" />
       </div>
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-foreground">{t('news.noArticles')}</p>
-        <p className="text-xs text-muted-foreground">{t('news.noArticlesDesc')}</p>
+        <p className="text-sm font-medium text-foreground">No news articles yet</p>
+        <p className="text-xs text-muted-foreground">Articles will appear here when generated from the admin panel</p>
       </div>
     </motion.div>
   );
@@ -279,7 +262,6 @@ function EmptyState() {
 // === Main Component ===
 
 export function NewsSection({ onArticleClick }: NewsSectionProps) {
-  const { t } = useTranslation();
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
@@ -345,14 +327,14 @@ export function NewsSection({ onArticleClick }: NewsSectionProps) {
           className="flex items-center gap-2 text-lg font-bold text-foreground"
         >
           <Newspaper className="w-5 h-5 text-neon" />
-          {t('news.title')}
+          Latest News
         </motion.h2>
 
         <div className="flex items-center gap-2">
           {/* Auto-refresh indicator */}
           <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
             <RefreshCw className="w-3 h-3" />
-            {t('news.autoRefresh')}
+            Auto-refresh
           </span>
         </div>
       </div>
@@ -369,7 +351,7 @@ export function NewsSection({ onArticleClick }: NewsSectionProps) {
                 : 'bg-muted/20 text-muted-foreground border border-transparent hover:bg-muted/30 hover:text-foreground'
             }`}
           >
-            {t(FILTER_TAB_TRANSLATION_KEYS[tab])}
+            {tab}
           </button>
         ))}
       </div>

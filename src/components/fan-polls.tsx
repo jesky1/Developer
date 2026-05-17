@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ThumbsUp } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
 
 interface FanPollsProps {
   match: {
@@ -19,7 +18,6 @@ interface FanPollsProps {
 }
 
 export function FanPolls({ match, poll }: FanPollsProps) {
-  const { t } = useTranslation();
   const [voted, setVoted] = useState<string | null>(null);
   const [localPoll, setLocalPoll] = useState(poll);
 
@@ -65,7 +63,7 @@ export function FanPolls({ match, poll }: FanPollsProps) {
 
   const options = [
     { key: "home" as const, label: match.homeTeam, pct: homePct, color: "bg-neon" },
-    { key: "draw" as const, label: t('polls.draw'), pct: drawPct, color: "bg-yellow-500" },
+    { key: "draw" as const, label: "Draw", pct: drawPct, color: "bg-yellow-500" },
     { key: "away" as const, label: match.awayTeam, pct: awayPct, color: "bg-purple-500" },
   ];
 
@@ -78,10 +76,10 @@ export function FanPolls({ match, poll }: FanPollsProps) {
     >
       <div className="flex items-center gap-2 mb-4">
         <ThumbsUp className="w-4 h-4 text-neon" />
-        <h3 className="text-sm font-semibold text-foreground">{t('polls.title')}</h3>
+        <h3 className="text-sm font-semibold text-foreground">Fan Poll</h3>
       </div>
 
-      <p className="text-xs text-muted-foreground mb-4">{t('polls.whoWillWin')}</p>
+      <p className="text-xs text-muted-foreground mb-4">Who will win?</p>
 
       <div className="space-y-3">
         {options.map((option) => (
@@ -117,7 +115,7 @@ export function FanPolls({ match, poll }: FanPollsProps) {
 
       <div className="mt-3 text-center">
         <span className="text-[10px] text-muted-foreground">
-          {t('polls.votesCount', { total })}
+          {total.toLocaleString()} votes
         </span>
       </div>
     </motion.div>

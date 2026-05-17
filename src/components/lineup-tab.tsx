@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { ClubLogo } from "@/components/ui/club-logo";
-import { useTranslation } from "@/lib/i18n";
 
 /* ================================================================== */
 /*  INTERFACES                                                        */
@@ -367,7 +366,6 @@ function BenchSection({
   teamSide: "home" | "away";
   onPlayerClick: (name: string) => void;
 }) {
-  const { t } = useTranslation();
   const accentDot = teamSide === "home"
     ? "bg-emerald-500/60"
     : "bg-sky-500/60";
@@ -380,7 +378,7 @@ function BenchSection({
       <div className="flex items-center gap-2 mb-2">
         <Users className={`w-3 h-3 ${accentText}`} />
         <h4 className="text-[9px] sm:text-[10px] font-semibold text-white/40 uppercase tracking-wider">
-          {t('lineup.substitutes', { team: teamName })}
+          {teamName} Substitutes
         </h4>
       </div>
       <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
@@ -433,7 +431,6 @@ function StartingXIList({
   teamSide: "home" | "away";
   onPlayerClick: (name: string) => void;
 }) {
-  const { t } = useTranslation();
   const bestPlayer = lineup.startXI.reduce(
     (best, p) => (p.rating > best.rating ? p : best),
     lineup.startXI[0]
@@ -447,7 +444,7 @@ function StartingXIList({
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${teamSide === "home" ? "bg-emerald-500/50" : "bg-sky-500/50"}`} />
           <span className="text-[9px] sm:text-[10px] font-semibold text-white/40 uppercase tracking-wider">
-            {t('lineup.startingXI', { team: lineup.teamName })}
+            {lineup.teamName} XI
           </span>
         </div>
         {bestPlayer && bestPlayer.rating >= 7.5 && (
@@ -511,7 +508,6 @@ function StartingXIList({
 /* ================================================================== */
 
 export function LineupTab({ matchId, homeTeam, awayTeam, onPlayerClick }: LineupTabProps) {
-  const { t } = useTranslation();
   const [lineups, setLineups] = useState<LineupData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -556,7 +552,7 @@ export function LineupTab({ matchId, homeTeam, awayTeam, onPlayerClick }: Lineup
   if (error) {
     return (
       <div className="rounded-xl p-6 text-center bg-[#0c1220] border border-white/5">
-        <p className="text-red-400 text-sm font-medium">{t('lineup.loadFailed')}</p>
+        <p className="text-red-400 text-sm font-medium">Failed to load lineup data</p>
         <p className="text-white/30 text-xs mt-1">{error}</p>
       </div>
     );
@@ -568,8 +564,8 @@ export function LineupTab({ matchId, homeTeam, awayTeam, onPlayerClick }: Lineup
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
           <Users className="w-6 h-6 sm:w-8 sm:h-8 text-white/20" />
         </div>
-        <p className="text-white/40 text-sm font-medium">{t('lineup.noData')}</p>
-        <p className="text-white/20 text-xs mt-1">{t('lineup.willAppear')}</p>
+        <p className="text-white/40 text-sm font-medium">No lineup data available</p>
+        <p className="text-white/20 text-xs mt-1">Lineups will appear here once announced</p>
       </div>
     );
   }
@@ -604,7 +600,7 @@ export function LineupTab({ matchId, homeTeam, awayTeam, onPlayerClick }: Lineup
         {/* FORMASI center label */}
         <div className="flex flex-col items-center">
           <span className="text-[8px] sm:text-[9px] font-bold text-white/25 uppercase tracking-[0.2em]">
-            {t('lineup.formation')}
+            Formasi
           </span>
         </div>
 
@@ -673,13 +669,13 @@ export function LineupTab({ matchId, homeTeam, awayTeam, onPlayerClick }: Lineup
         <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-[#0a0f1e] border-t border-white/5">
           {homeLineup?.coach ? (
             <span className="text-[9px] sm:text-[10px] text-white/30">
-              <span className="text-white/15 uppercase tracking-wider">{t('lineup.coach')} </span>
+              <span className="text-white/15 uppercase tracking-wider">Coach: </span>
               <span className="text-emerald-400/60 font-medium">{homeLineup.coach}</span>
             </span>
           ) : <span />}
           {awayLineup?.coach ? (
             <span className="text-[9px] sm:text-[10px] text-white/30">
-              <span className="text-white/15 uppercase tracking-wider">{t('lineup.coach')} </span>
+              <span className="text-white/15 uppercase tracking-wider">Coach: </span>
               <span className="text-sky-400/60 font-medium">{awayLineup.coach}</span>
             </span>
           ) : <span />}

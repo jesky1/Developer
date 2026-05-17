@@ -19,7 +19,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useTranslation } from "@/lib/i18n";
 
 /* ================================================================== */
 /*  INTERFACES                                                        */
@@ -134,16 +133,16 @@ function getInitials(name: string): string {
   );
 }
 
-function getPositionGroupLabel(key: string, t: (key: string) => string): string {
+function getPositionGroupLabel(key: string): string {
   switch (key) {
     case "goalkeepers":
-      return t("team.goalkeepers");
+      return "Goalkeepers";
     case "defenders":
-      return t("team.defenders");
+      return "Defenders";
     case "midfielders":
-      return t("team.midfielders");
+      return "Midfielders";
     case "forwards":
-      return t("team.forwards");
+      return "Forwards";
     default:
       return key;
   }
@@ -366,8 +365,6 @@ function MatchRow({
   onClick: () => void;
   index: number;
 }) {
-  const { t } = useTranslation();
-
   return (
     <motion.button
       initial={{ opacity: 0, y: 8 }}
@@ -397,7 +394,7 @@ function MatchRow({
             </span>
           ) : (
             <span className="text-xs text-muted-foreground font-medium">
-              {t('team.vs')}
+              vs
             </span>
           )}
           <MatchStatusBadge
@@ -483,7 +480,6 @@ function TeamPageSkeleton() {
 
 function TeamNotFound() {
   const { goBack } = useNavigation();
-  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -495,7 +491,7 @@ function TeamNotFound() {
         >
           <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-neon transition-colors" />
           <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-            {t('common.back')}
+            Back
           </span>
         </button>
       </div>
@@ -509,15 +505,16 @@ function TeamNotFound() {
           <div className="w-20 h-20 rounded-full bg-surface-light border border-white/10 flex items-center justify-center mx-auto">
             <Trophy className="w-8 h-8 text-white/20" />
           </div>
-          <h2 className="text-xl font-bold text-foreground">{t('errors.teamNotFound')}</h2>
+          <h2 className="text-xl font-bold text-foreground">Team Not Found</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            {t('errors.teamNotFoundDesc')}
+            The team you&apos;re looking for doesn&apos;t exist or may have been
+            removed.
           </p>
           <button
             onClick={() => goBack()}
             className="px-4 py-2 rounded-lg bg-neon/10 border border-neon/30 text-neon text-sm font-semibold hover:bg-neon/20 transition-colors"
           >
-            {t('common.goBack')}
+            Go Back
           </button>
         </motion.div>
       </div>
@@ -531,7 +528,6 @@ function TeamNotFound() {
 
 function TeamError({ onRetry }: { onRetry: () => void }) {
   const { goBack } = useNavigation();
-  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -543,7 +539,7 @@ function TeamError({ onRetry }: { onRetry: () => void }) {
         >
           <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-neon transition-colors" />
           <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-            {t('common.back')}
+            Back
           </span>
         </button>
       </div>
@@ -558,23 +554,23 @@ function TeamError({ onRetry }: { onRetry: () => void }) {
             <span className="text-3xl">⚠️</span>
           </div>
           <h2 className="text-xl font-bold text-foreground">
-            {t('errors.somethingWrong')}
+            Something Went Wrong
           </h2>
           <p className="text-sm text-muted-foreground max-w-xs">
-            {t('errors.teamLoadFailed')}
+            Failed to load team details. Please try again.
           </p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => goBack()}
               className="px-4 py-2 rounded-lg bg-surface-light border border-white/10 text-muted-foreground text-sm font-semibold hover:bg-white/5 transition-colors"
             >
-              {t('common.goBack')}
+              Go Back
             </button>
             <button
               onClick={onRetry}
               className="px-4 py-2 rounded-lg bg-neon/10 border border-neon/30 text-neon text-sm font-semibold hover:bg-neon/20 transition-colors"
             >
-              {t('common.retry')}
+              Retry
             </button>
           </div>
         </motion.div>
@@ -594,7 +590,6 @@ export default function TeamDetailPage({
 }) {
   const { id } = use(params);
   const { navigate, goBack, goHome } = useNavigation();
-  const { t } = useTranslation();
 
   const [team, setTeam] = useState<TeamData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -700,10 +695,10 @@ export default function TeamDetailPage({
 
   const { stats, squad } = team;
   const squadGroups: { key: keyof SquadData; label: string; icon: string }[] = [
-    { key: "goalkeepers", label: t('team.goalkeepers'), icon: "🧤" },
-    { key: "defenders", label: t('team.defenders'), icon: "🛡️" },
-    { key: "midfielders", label: t('team.midfielders'), icon: "⚙️" },
-    { key: "forwards", label: t('team.forwards'), icon: "⚡" },
+    { key: "goalkeepers", label: "Goalkeepers", icon: "🧤" },
+    { key: "defenders", label: "Defenders", icon: "🛡️" },
+    { key: "midfielders", label: "Midfielders", icon: "⚙️" },
+    { key: "forwards", label: "Forwards", icon: "⚡" },
   ];
 
   return (
@@ -718,7 +713,7 @@ export default function TeamDetailPage({
           >
             <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-neon transition-colors" />
             <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-              {t('common.back')}
+              Back
             </span>
           </button>
           <button
@@ -728,7 +723,7 @@ export default function TeamDetailPage({
           >
             <Home className="w-3.5 h-3.5 text-muted-foreground group-hover:text-neon transition-colors" />
             <span className="text-xs font-semibold text-muted-foreground group-hover:text-neon transition-colors">
-              {t('common.home')}
+              Home
             </span>
           </button>
         </div>
@@ -798,7 +793,7 @@ export default function TeamDetailPage({
                   : "th"}
               </span>
               <span className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                {t('team.position')}
+                Position
               </span>
             </div>
 
@@ -810,7 +805,7 @@ export default function TeamDetailPage({
                 {stats.points}
               </span>
               <span className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                {t('team.points')}
+                Points
               </span>
             </div>
 
@@ -846,7 +841,7 @@ export default function TeamDetailPage({
               className="flex items-center justify-center gap-1.5 mt-4"
             >
               <span className="text-[10px] text-muted-foreground/60 mr-1 uppercase tracking-wider font-medium">
-                {t('team.form')}
+                Form
               </span>
               {stats.form.map((result, i) => (
                 <span
@@ -871,21 +866,21 @@ export default function TeamDetailPage({
                 className="flex-1 h-10 rounded-lg data-[state=active]:bg-neon/10 data-[state=active]:text-neon data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neon/50 transition-all text-xs sm:text-sm"
               >
                 <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-                {t('tabs.overview')}
+                Overview
               </TabsTrigger>
               <TabsTrigger
                 value="squad"
                 className="flex-1 h-10 rounded-lg data-[state=active]:bg-neon/10 data-[state=active]:text-neon data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neon/50 transition-all text-xs sm:text-sm"
               >
                 <Users className="w-3.5 h-3.5 mr-1.5" />
-                {t('tabs.squad')}
+                Squad
               </TabsTrigger>
               <TabsTrigger
                 value="fixtures"
                 className="flex-1 h-10 rounded-lg data-[state=active]:bg-neon/10 data-[state=active]:text-neon data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neon/50 transition-all text-xs sm:text-sm"
               >
                 <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                {t('tabs.fixtures')}
+                Fixtures
               </TabsTrigger>
             </TabsList>
           </div>
@@ -896,30 +891,30 @@ export default function TeamDetailPage({
               {/* Performance Stats Grid */}
               <div>
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  {t('team.performance')}
+                  Performance
                 </div>
                 <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-3">
                   <StatCard
                     icon={<Shield className="w-4 h-4" />}
-                    label={t('team.played')}
+                    label="Played"
                     value={stats.played}
                     delay={0}
                   />
                   <StatCard
                     icon={<Trophy className="w-4 h-4" />}
-                    label={t('team.won')}
+                    label="Won"
                     value={stats.won}
                     delay={0.05}
                   />
                   <StatCard
                     icon={<span className="text-sm">🤝</span>}
-                    label={t('team.drawn')}
+                    label="Drawn"
                     value={stats.drawn}
                     delay={0.1}
                   />
                   <StatCard
                     icon={<span className="text-sm">💔</span>}
-                    label={t('team.lost')}
+                    label="Lost"
                     value={stats.lost}
                     delay={0.15}
                   />
@@ -929,7 +924,7 @@ export default function TeamDetailPage({
               {/* Goals grid */}
               <div>
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  {t('team.goals')}
+                  Goals
                 </div>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <StatCard
@@ -962,7 +957,7 @@ export default function TeamDetailPage({
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('team.winRate')}
+                    Win Rate
                   </span>
                   <span className="text-sm font-black text-neon tabular-nums">
                     {stats.winRate}%
@@ -977,8 +972,8 @@ export default function TeamDetailPage({
                   />
                 </div>
                 <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground/50">
-                  <span>{t('team.wins', { count: stats.won })}</span>
-                  <span>{t('team.matchesPlayed', { count: stats.played })}</span>
+                  <span>{stats.won} wins</span>
+                  <span>{stats.played} matches</span>
                 </div>
               </motion.div>
 
@@ -993,28 +988,28 @@ export default function TeamDetailPage({
                   <div className="flex items-center gap-2 mb-1">
                     <Target className="w-3.5 h-3.5 text-neon/60" />
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t('team.avgScored')}
+                      Avg Scored
                     </span>
                   </div>
                   <span className="text-xl font-black text-foreground tabular-nums">
                     {stats.avgGoalsScored}
                   </span>
                   <span className="text-xs text-muted-foreground ml-1">
-                    {t('team.goalsPerGame')}
+                    goals/game
                   </span>
                 </div>
                 <div className="glass-card p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Shield className="w-3.5 h-3.5 text-red-400/60" />
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t('team.avgConceded')}
+                      Avg Conceded
                     </span>
                   </div>
                   <span className="text-xl font-black text-foreground tabular-nums">
                     {stats.avgGoalsConceded}
                   </span>
                   <span className="text-xs text-muted-foreground ml-1">
-                    {t('team.goalsPerGame')}
+                    goals/game
                   </span>
                 </div>
               </motion.div>
@@ -1028,7 +1023,7 @@ export default function TeamDetailPage({
                   className="glass-card p-4"
                 >
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                    {t('team.currentForm')}
+                    Current Form
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {stats.form.map((result, i) => (
@@ -1096,10 +1091,10 @@ export default function TeamDetailPage({
                     <Users className="w-6 h-6 text-white/20" />
                   </div>
                   <p className="text-white/40 text-sm font-medium">
-                    {t('team.noSquadData')}
+                    No squad data available
                   </p>
                   <p className="text-white/20 text-xs mt-1">
-                    {t('team.squadWillAppear')}
+                    Player information will appear here when available
                   </p>
                 </motion.div>
               )}
@@ -1114,7 +1109,7 @@ export default function TeamDetailPage({
                 <div className="flex items-center gap-2 mb-3">
                   <Clock className="w-3.5 h-3.5 text-neon/60" />
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('team.recentResults')}
+                    Recent Results
                   </span>
                 </div>
                 {team.recentMatches.length > 0 ? (
@@ -1132,7 +1127,7 @@ export default function TeamDetailPage({
                 ) : (
                   <div className="glass-card p-6 text-center">
                     <p className="text-sm text-muted-foreground">
-                      {t('team.noRecentResults')}
+                      No recent results
                     </p>
                   </div>
                 )}
