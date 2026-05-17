@@ -113,6 +113,13 @@ model Player {
   currentClub  String   @default("")
   clubLogo     String   @default("")
   rating       Float    @default(0)
+  apiFootballId Int     @default(0) // API-Football player ID
+  birthPlace   String   @default("")
+  birthCountry String   @default("")
+  injured      Boolean  @default(false)
+  teamId       Int      @default(0) // API-Football team ID
+  teamLogo     String   @default("") // API-Football team logo URL
+  leagueId     Int      @default(0) // API-Football league ID
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -137,6 +144,34 @@ model PlayerStats {
   rating          Float    @default(0)
   season          String   @default("2024/2025")
   matchRatings    String   @default("[]") // JSON array of {match, rating, opponent}
+  leagueId        Int      @default(0)
+  leagueName      String   @default("")
+  leagueSeason    Int      @default(0)
+  teamName        String   @default("")
+  lineups         Int      @default(0) // Games lineups (started matches)
+  minutes         Int      @default(0) // Games minutes played
+  goalsConceded   Int      @default(0) // Goals conceded (for GK)
+  saves           Int      @default(0) // Goalkeeper saves
+  passesTotal     Int      @default(0) // Total passes
+  passesKey       Int      @default(0) // Key passes (chances created)
+  tacklesBlocks   Int      @default(0)
+  duelsTotal      Int      @default(0)
+  duelsWon        Int      @default(0)
+  dribblesAttempts Int     @default(0)
+  dribblesSuccess Int      @default(0)
+  dribblesPast    Int      @default(0) // Times dribbled past by opponent
+  foulsDrawn      Int      @default(0)
+  foulsCommitted  Int      @default(0)
+  yellowRedCards  Int      @default(0) // Second yellow = red
+  penaltyWon      Int      @default(0)
+  penaltyCommitted Int     @default(0)
+  penaltyScored   Int      @default(0)
+  penaltyMissed   Int      @default(0)
+  penaltySaved    Int      @default(0)
+  isCaptain       Boolean  @default(false)
+  substitutesIn   Int      @default(0)
+  substitutesOut  Int      @default(0)
+  substitutesBench Int     @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

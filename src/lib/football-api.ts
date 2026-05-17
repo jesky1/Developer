@@ -288,3 +288,199 @@ export function transformScorers(scorers: FootballScorer[]) {
     photoUrl: s.player.photo,
   }))
 }
+
+// --- Player Statistics Types ---
+
+export interface FootballPlayerStats {
+  player: {
+    id: number
+    name: string
+    firstname: string
+    lastname: string
+    age: number
+    birth: {
+      date: string
+      place: string
+      country: string
+    } | null
+    nationality: string
+    height: string
+    weight: string
+    injured: boolean
+    photo: string
+  }
+  statistics: {
+    team: {
+      id: number
+      name: string
+      logo: string
+    }
+    league: {
+      id: number
+      name: string
+      country: string
+      logo: string
+      flag: string
+      season: number
+    }
+    games: {
+      appearences: number
+      lineups: number
+      minutes: number
+      number: number | null
+      position: string
+      rating: string | null
+      captain: boolean
+    }
+    substitutes: {
+      in: number
+      out: number
+      bench: number
+    }
+    shots: {
+      total: number | null
+      on: number | null
+    }
+    goals: {
+      total: number | null
+      conceded: number | null
+      assists: number | null
+      saves: number | null
+    }
+    passes: {
+      total: number | null
+      key: number | null
+      accuracy: number | null
+    }
+    tackles: {
+      total: number | null
+      blocks: number | null
+      interceptions: number | null
+    }
+    duels: {
+      total: number | null
+      won: number | null
+    }
+    dribbles: {
+      attempts: number | null
+      success: number | null
+      past: number | null
+    }
+    fouls: {
+      drawn: number | null
+      committed: number | null
+    }
+    cards: {
+      yellow: number
+      yellowred: number
+      red: number
+    }
+    penalty: {
+      won: number | null
+      commited: number | null
+      scored: number | null
+      missed: number | null
+      saved: number | null
+    }
+  }[]
+}
+
+// --- Player Statistics API Functions ---
+
+/** Get players statistics for a league/season */
+export async function getPlayersStatistics(leagueId: number, season: number, page: number = 1): Promise<FootballPlayerStats[]> {
+  return apiFetch('/players', { league: leagueId, season, page })
+}
+
+/** Get a specific player's statistics by ID and season */
+export async function getPlayerById(playerId: number, season: number): Promise<FootballPlayerStats[]> {
+  return apiFetch('/players', { id: playerId, season })
+}
+
+/** Search players by name */
+export async function searchPlayers(query: string, season: number = 2024): Promise<FootballPlayerStats[]> {
+  return apiFetch('/players', { search: query, season })
+}
+
+// --- Player Statistics Transform Helpers ---
+
+function mapPosition(apiPosition: string): string {
+  const map: Record<string, string> = {
+    'Attacker': 'FW',
+    'Midfielder': 'MF',
+    'Defender': 'DF',
+    'Goalkeeper': 'GK',
+  }
+  return map[apiPosition] || apiPosition
+}
+
+export function transformPlayerStatsToDb(data: FootballPlayerStats) {
+  const player = data.player
+  const stats = data.statistics[0] // Use first stats entry (primary league)
+
+  return {
+    // Player fields
+    apiFootballId: player.id,
+    name: player.name,
+    firstName: player.firstname || '',
+    lastName: player.lastname || '',
+    photoUrl: player.photo || '',
+    age: player.age || 0,
+    birthDate: player.birth?.date || '',
+    birthPlace: player.birth?.place || '',
+    birthCountry: player.birth?.country || '',
+    nationality: player.nationality || '',
+    height: player.height || '',
+    weight: player.weight || '',
+    position: stats?.games?.position ? mapPosition(stats.games.position) : '',
+    currentClub: stats?.team?.name || '',
+    clubLogo: '',
+    teamId: stats?.team?.id || 0,
+    teamLogo: stats?.team?.logo || '',
+    leagueId: stats?.league?.id || 0,
+    rating: parseFloat(stats?.games?.rating || '0'),
+    injured: player.injured || false,
+
+    // PlayerStats fields
+    leagueName: stats?.league?.name || '',
+    leagueSeason: stats?.league?.season || 0,
+    teamName: stats?.team?.name || '',
+    totalMatches: stats?.games?.appearences || 0,
+    lineups: stats?.games?.lineups || 0,
+    minutes: stats?.games?.minutes || 0,
+    goals: stats?.goals?.total || 0,
+    goalsConceded: stats?.goals?.conceded || 0,
+    assists: stats?.goals?.assists || 0,
+    saves: stats?.goals?.saves || 0,
+    shots: stats?.shots?.total || 0,
+    shotsOnTarget: stats?.shots?.on || 0,
+    passesTotal: stats?.passes?.total || 0,
+    passesKey: stats?.passes?.key || 0,
+    passingAccuracy: parseFloat(String(stats?.passes?.accuracy || '0')),
+    tackles: stats?.tackles?.total || 0,
+    tacklesBlocks: stats?.tackles?.blocks || 0,
+    interceptions: stats?.tackles?.interceptions || 0,
+    duelsTotal: stats?.duels?.total || 0,
+    duelsWon: stats?.duels?.won || 0,
+    dribblesAttempts: stats?.dribbles?.attempts || 0,
+    dribblesSuccess: stats?.dribbles?.success || 0,
+    dribblesPast: stats?.dribbles?.past || 0,
+    foulsDrawn: stats?.fouls?.drawn || 0,
+    foulsCommitted: stats?.fouls?.committed || 0,
+    fouls: stats?.fouls?.committed || 0, // keep for backward compat
+    yellowCards: stats?.cards?.yellow || 0,
+    yellowRedCards: stats?.cards?.yellowred || 0,
+    redCards: stats?.cards?.red || 0,
+    penaltyWon: stats?.penalty?.won || 0,
+    penaltyCommitted: stats?.penalty?.commited || 0,
+    penaltyScored: stats?.penalty?.scored || 0,
+    penaltyMissed: stats?.penalty?.missed || 0,
+    penaltySaved: stats?.penalty?.saved || 0,
+    isCaptain: stats?.games?.captain || false,
+    substitutesIn: stats?.substitutes?.in || 0,
+    substitutesOut: stats?.substitutes?.out || 0,
+    substitutesBench: stats?.substitutes?.bench || 0,
+    shirtNumber: stats?.games?.number || 0,
+    season: stats?.league?.season ? `${stats.league.season}/${stats.league.season + 1}` : '2024/2025',
+  }
+}

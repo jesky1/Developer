@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { useTranslation } from "@/lib/i18n";
+import { PlayerStatsTab } from "@/components/stats-tab";
 
 interface PlayerDetailModalProps {
   playerId: string | null;
@@ -63,6 +64,29 @@ interface PlayerStats {
   rating: number;
   season: string;
   matchRatings: MatchRating[];
+  // New API-Football fields
+  passesTotal: number;
+  passesKey: number;
+  tacklesBlocks: number;
+  duelsTotal: number;
+  duelsWon: number;
+  dribblesAttempts: number;
+  dribblesSuccess: number;
+  dribblesPast: number;
+  foulsDrawn: number;
+  foulsCommitted: number;
+  yellowRedCards: number;
+  penaltyWon: number;
+  penaltyScored: number;
+  penaltyMissed: number;
+  goalsConceded: number;
+  saves: number;
+  penaltySaved: number;
+  lineups: number;
+  minutes: number;
+  isCaptain: boolean;
+  substitutesIn: number;
+  substitutesOut: number;
 }
 
 interface Transfer {
@@ -465,39 +489,47 @@ export function PlayerDetailModal({
                           {player.stats.season}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                        <StatCard label={t('stats.matches')} value={player.stats.totalMatches} maxValue={40} delay={0.05} />
-                        <StatCard label={t('stats.goals')} value={player.stats.goals} maxValue={30} icon={Target} delay={0.08} highlight={player.stats.goals > 10} />
-                        <StatCard label={t('stats.assists')} value={player.stats.assists} maxValue={20} icon={TrendingUp} delay={0.11} highlight={player.stats.assists > 7} />
-                        <StatCard label={t('stats.shots')} value={player.stats.shots} maxValue={120} delay={0.14} />
-                        <StatCard label={t('stats.onTarget')} value={player.stats.shotsOnTarget} maxValue={70} delay={0.17} />
-                        <StatCard label={t('stats.passAcc')} value={Math.round(player.stats.passingAccuracy)} maxValue={100} suffix="%" delay={0.20} />
-                        <StatCard label={t('stats.tackles')} value={player.stats.tackles} maxValue={60} icon={Shield} delay={0.23} />
-                        <StatCard label={t('stats.interceptions')} value={player.stats.interceptions} maxValue={40} delay={0.26} />
-                        <StatCard label={t('stats.fouls')} value={player.stats.fouls} maxValue={40} delay={0.29} />
-                      </div>
-
-                      {/* Cards row */}
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div className="glass-card rounded-xl p-3.5 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                            <div className="w-3 h-4 bg-yellow-400 rounded-sm" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">{t('stats.yellowCards')}</p>
-                            <p className="text-lg font-bold text-yellow-400">{player.stats.yellowCards}</p>
-                          </div>
-                        </div>
-                        <div className="glass-card rounded-xl p-3.5 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                            <div className="w-3 h-4 bg-red-400 rounded-sm" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">{t('stats.redCards')}</p>
-                            <p className="text-lg font-bold text-red-400">{player.stats.redCards}</p>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Use PlayerStatsTab for detailed stats */}
+                      <PlayerStatsTab
+                        stats={{
+                          totalMatches: player.stats.totalMatches,
+                          goals: player.stats.goals,
+                          assists: player.stats.assists,
+                          shots: player.stats.shots,
+                          shotsOnTarget: player.stats.shotsOnTarget,
+                          passingAccuracy: player.stats.passingAccuracy,
+                          tackles: player.stats.tackles,
+                          interceptions: player.stats.interceptions,
+                          fouls: player.stats.fouls,
+                          yellowCards: player.stats.yellowCards,
+                          redCards: player.stats.redCards,
+                          rating: player.stats.rating,
+                          season: player.stats.season,
+                          passesTotal: player.stats.passesTotal ?? 0,
+                          passesKey: player.stats.passesKey ?? 0,
+                          tacklesBlocks: player.stats.tacklesBlocks ?? 0,
+                          duelsTotal: player.stats.duelsTotal ?? 0,
+                          duelsWon: player.stats.duelsWon ?? 0,
+                          dribblesAttempts: player.stats.dribblesAttempts ?? 0,
+                          dribblesSuccess: player.stats.dribblesSuccess ?? 0,
+                          dribblesPast: player.stats.dribblesPast ?? 0,
+                          foulsDrawn: player.stats.foulsDrawn ?? 0,
+                          foulsCommitted: player.stats.foulsCommitted ?? 0,
+                          yellowRedCards: player.stats.yellowRedCards ?? 0,
+                          penaltyWon: player.stats.penaltyWon ?? 0,
+                          penaltyScored: player.stats.penaltyScored ?? 0,
+                          penaltyMissed: player.stats.penaltyMissed ?? 0,
+                          goalsConceded: player.stats.goalsConceded ?? 0,
+                          saves: player.stats.saves ?? 0,
+                          penaltySaved: player.stats.penaltySaved ?? 0,
+                          lineups: player.stats.lineups ?? 0,
+                          minutes: player.stats.minutes ?? 0,
+                          isCaptain: player.stats.isCaptain ?? false,
+                          substitutesIn: player.stats.substitutesIn ?? 0,
+                          substitutesOut: player.stats.substitutesOut ?? 0,
+                        }}
+                        position={player.position}
+                      />
                     </div>
                   )}
 
