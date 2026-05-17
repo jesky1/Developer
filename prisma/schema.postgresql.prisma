@@ -1,0 +1,441 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===== FOOTBALL DATA MODELS =====
+
+model Match {
+  id         String   @id @default(cuid())
+  homeTeam   String
+  awayTeam   String
+  homeScore  Int      @default(0)
+  awayScore  Int      @default(0)
+  status     String   @default("UPCOMING") // LIVE, FT, HT, UPCOMING
+  minute     Int      @default(0)
+  league     String
+  leagueLogo String   @default("")
+  homeLogo   String   @default("")
+  awayLogo   String   @default("")
+  stadium    String   @default("")
+  kickoff    String   @default("")
+  isHot      Boolean  @default(false)
+  events     String   @default("[]") // JSON string of match events
+  homeForm   String   @default("[]") // JSON array of W/D/L
+  awayForm   String   @default("[]") // JSON array of W/D/L
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  poll       Poll?
+}
+
+model Standing {
+  id       String   @id @default(cuid())
+  position Int
+  team     String
+  teamLogo String   @default("")
+  played   Int      @default(0)
+  won      Int      @default(0)
+  drawn    Int      @default(0)
+  lost     Int      @default(0)
+  gf       Int      @default(0)
+  ga       Int      @default(0)
+  gd       Int      @default(0)
+  points   Int      @default(0)
+  league   String
+  form     String   @default("[]") // JSON array of W/D/L
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Scorer {
+  id        String   @id @default(cuid())
+  name      String
+  team      String
+  teamLogo  String   @default("")
+  goals     Int      @default(0)
+  assists   Int      @default(0)
+  matches   Int      @default(0)
+  league    String
+  photoUrl  String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Poll {
+  id        String   @id @default(cuid())
+  matchId   String   @unique
+  homeVotes Int      @default(0)
+  drawVotes Int      @default(0)
+  awayVotes Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+}
+
+model NewsItem {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String?  @unique
+  summary        String
+  content        String   @default("")   // Full article body (markdown)
+  category       String   @default("Transfer") // Transfer, Match Report, Preview, Analysis, Breaking, Rumor
+  imageUrl       String   @default("")
+  source         String   @default("GOALZONE AI")
+  tags           String   @default("[]") // JSON array of tags
+  seoTitle       String   @default("")
+  seoDescription String   @default("")
+  keywords       String   @default("")   // SEO keywords comma-separated
+  league         String   @default("")   // Related league
+  matchId        String?                // Related match ID (nullable)
+  isAiGenerated  Boolean  @default(true)
+  publishedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt @default(now())
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  name        String
+  firstName   String   @default("")
+  lastName    String   @default("")
+  photoUrl    String   @default("")
+  age         Int      @default(0)
+  birthDate   String   @default("")
+  nationality String   @default("")
+  height      String   @default("")
+  weight      String   @default("")
+  position    String   @default("") // FW, MF, DF, GK
+  shirtNumber Int      @default(0)
+  currentClub String   @default("")
+  clubLogo    String   @default("")
+  rating      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stats     PlayerStats?
+  transfers Transfer[]
+}
+
+model PlayerStats {
+  id              String   @id @default(cuid())
+  playerId        String   @unique
+  totalMatches    Int      @default(0)
+  goals           Int      @default(0)
+  assists         Int      @default(0)
+  shots           Int      @default(0)
+  shotsOnTarget   Int      @default(0)
+  passingAccuracy Float    @default(0)
+  tackles         Int      @default(0)
+  interceptions   Int      @default(0)
+  fouls           Int      @default(0)
+  yellowCards     Int      @default(0)
+  redCards        Int      @default(0)
+  rating          Float    @default(0)
+  season          String   @default("2024/2025")
+  matchRatings    String   @default("[]") // JSON array of {match, rating, opponent}
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model Transfer {
+  id        String   @id @default(cuid())
+  playerId  String
+  fromClub  String
+  toClub    String
+  fromLogo  String   @default("")
+  toLogo    String   @default("")
+  date      String
+  fee       String   @default("")
+  type      String   @default("Transfer") // Transfer, Loan, Free, Youth
+  createdAt DateTime @default(now())
+
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model MatchLineup {
+  id         String   @id @default(cuid())
+  matchId    String
+  team       String   // home or away
+  teamName   String
+  formation  String   @default("4-3-3")
+  startXI    String   @default("[]") // JSON array of player lineup data
+  substitutes String  @default("[]") // JSON array of substitute data
+  coach      String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MatchStats {
+  id                String   @id @default(cuid())
+  matchId           String   @unique
+  homePossession    Float    @default(50)
+  awayPossession    Float    @default(50)
+  homeShots         Int      @default(0)
+  awayShots         Int      @default(0)
+  homeShotsOnTarget Int      @default(0)
+  awayShotsOnTarget Int      @default(0)
+  homeCorners       Int      @default(0)
+  awayCorners       Int      @default(0)
+  homeFouls         Int      @default(0)
+  awayFouls         Int      @default(0)
+  homeOffsides      Int      @default(0)
+  awayOffsides      Int      @default(0)
+  homeYellowCards   Int      @default(0)
+  awayYellowCards   Int      @default(0)
+  homeRedCards      Int      @default(0)
+  awayRedCards      Int      @default(0)
+  homePassAccuracy  Float    @default(0)
+  awayPassAccuracy  Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ===== USER AUTH MODELS =====
+
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  emailVerified   DateTime?
+  passwordHash    String?   // null for OAuth users
+  image           String    @default("")
+  provider        String    @default("credentials") // credentials, google
+  providerAccountId String  @default("") // Google sub ID etc.
+  role            String    @default("user") // user, admin, superadmin
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  providerType      String   // oauth, credentials
+  provider          String   // google, credentials
+  providerAccountId String
+  refreshToken      String?  @default("")
+  accessToken       String?  @default("")
+  expiresAt         Int?
+  tokenType         String?  @default("")
+  scope             String?  @default("")
+  idToken           String?  @default("")
+  sessionState      String?  @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String   @id
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+}
+
+// ===== ADMIN PANEL MODELS =====
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @default("")
+  displayName  String   @default("")
+  avatarUrl    String   @default("")
+  role         String   @default("editor") // superadmin, admin, editor, viewer
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  activities   ActivityLog[]
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @default("")
+  category    String   @default("general") // general, branding, features, notifications, seo
+  description String   @default("")
+  isPublic    Boolean  @default(false) // Whether visible to frontend
+  updatedAt   DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String    @id @default(cuid())
+  userId    String?   // nullable for system-generated actions
+  action    String    // create, update, delete, login, logout, generate
+  resource  String    // match, news, user, setting, player, etc.
+  resourceId String   @default("")
+  details   String    @default("{}") // JSON details of the action
+  ip        String    @default("")
+  createdAt DateTime  @default(now())
+
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String   @default("/")
+  referrer  String   @default("")
+  country   String   @default("")
+  device    String   @default("") // desktop, mobile, tablet
+  browser   String   @default("")
+  os        String   @default("")
+  duration  Int      @default(0) // seconds on page
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String   @default("")
+  message   String
+  status    String   @default("unread") // unread, read, replied, archived
+  reply     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ===== AD TRACKING & MONETIZATION =====
+
+model AdUnit {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Homepage Banner", "Article Sidebar"
+  slotId      String   @unique // Google AdSense slot ID
+  placement   String   // header, sidebar, article_top, article_bottom, footer, in_feed
+  adType      String   @default("display") // display, native, in_feed, in_article, anchor
+  isActive    Boolean  @default(true)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  revenue     Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events      AdEvent[]
+}
+
+model AdEvent {
+  id        String   @id @default(cuid())
+  adUnitId  String
+  eventType String   // impression, click
+  page      String   @default("") // URL where ad was shown
+  ip        String   @default("")
+  userAgent String   @default("")
+  country   String   @default("")
+  revenue   Float    @default(0) // estimated revenue per event
+  createdAt DateTime @default(now())
+
+  adUnit    AdUnit   @relation(fields: [adUnitId], references: [id], onDelete: Cascade)
+}
+
+model AdSenseReport {
+  id            String   @id @default(cuid())
+  date          String   @unique // YYYY-MM-DD
+  impressions   Int      @default(0)
+  clicks        Int      @default(0)
+  revenue       Float    @default(0)
+  ctr           Float    @default(0) // Click-through rate
+  cpc           Float    @default(0) // Cost per click
+  rpm           Float    @default(0) // Revenue per mille
+  pageViews     Int      @default(0)
+  activeViewCtr Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ===== TRAFFIC & SEO =====
+
+model TrafficLog {
+  id          String   @id @default(cuid())
+  path        String   @default("/")
+  referrer    String   @default("")
+  country     String   @default("")
+  device      String   @default("") // desktop, mobile, tablet
+  browser     String   @default("")
+  os          String   @default("")
+  utmSource   String   @default("")
+  utmMedium   String   @default("")
+  utmCampaign String   @default("")
+  sessionId   String   @default("") // to track unique sessions
+  duration    Int      @default(0) // seconds on page
+  createdAt   DateTime @default(now())
+}
+
+model TrendingTopic {
+  id          String   @id @default(cuid())
+  keyword     String
+  source      String   @default("google") // google, twitter, reddit
+  volume      Int      @default(0) // search volume / tweet count
+  category    String   @default("football") // football, transfer, match, etc.
+  region      String   @default("global")
+  isProcessed Boolean  @default(false) // whether an article was generated from this
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ===== SCHEDULER & AUTOMATION =====
+
+model ScheduledTask {
+  id        String    @id @default(cuid())
+  type      String    // auto_article, trending_scrape, telegram_post, adsense_sync
+  status    String    @default("pending") // pending, running, completed, failed
+  schedule  String    @default("") // cron expression or interval
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+  result    String    @default("{}") // JSON result of last run
+  isEnabled Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model TelegramPost {
+  id        String    @id @default(cuid())
+  newsId    String?   // linked news article
+  chatId    String    @default("")
+  message   String
+  status    String    @default("pending") // pending, sent, failed
+  sentAt    DateTime?
+  error     String    @default("")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model InternalLink {
+  id         String   @id @default(cuid())
+  sourceSlug String   // article that contains the link
+  targetSlug String   // article being linked to
+  anchorText String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@unique([sourceSlug, targetSlug])
+}

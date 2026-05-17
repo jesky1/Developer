@@ -1,0 +1,19 @@
+{
+  "name": "GOALZONE - Live Football Scores",
+  "short_name": "GOALZONE",
+  "description": "Real-time live football scores, standings, and match updates",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a14",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/goalzone-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "entertainment"]
+}
