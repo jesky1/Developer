@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         db.adminUser.update({
           where: { id: user.id },
           data: { lastLoginAt: new Date() },
-        }).catch(() => { })
+        }).catch(() => {})
 
         // Create activity log (non-blocking)
         db.activityLog.create({
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
             resourceId: user.id,
             details: JSON.stringify({ username: user.username }),
           },
-        }).catch(() => { })
+        }).catch(() => {})
 
         // Return user data without password
         const { passwordHash: _ph, ...userWithoutPassword } = user
