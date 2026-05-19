@@ -3,9 +3,16 @@
 import { useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-// View Transitions API - use the built-in DOM types from TypeScript 5.x
-
-type VTUpdateCallback = () => void | Promise<void>;
+// View Transitions API type extension
+declare global {
+  interface Document {
+    startViewTransition?: (callback: () => void | Promise<void>) => {
+      finished: Promise<void>;
+      ready: Promise<void>;
+      updateCallbackDone: Promise<void>;
+    };
+  }
+}
 
 const SPLASH_SESSION_KEY = "goalzone-splash-shown";
 const SCROLL_POSITION_KEY = "goalzone-scroll-pos";
@@ -91,7 +98,7 @@ export function useNavigation() {
       const shouldScroll = options?.scroll ?? true;
 
       // Determine if this is a same-page hash navigation
-      const isSamePageHash = href.startsWith("#") ||
+      const isSamePageHash = href.startsWith("#") || 
         (href.startsWith(pathname) && href.includes("#"));
 
       const shouldReplace = replace || isSamePageHash;
@@ -144,7 +151,7 @@ export function useNavigation() {
    */
   const goBack = useCallback(() => {
     saveScrollPosition(pathname);
-
+    
     const startTransition = document.startViewTransition;
 
     const doBack = () => {

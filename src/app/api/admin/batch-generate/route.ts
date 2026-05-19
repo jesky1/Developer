@@ -451,7 +451,7 @@ Berdasarkan informasi di atas, tulis artikel berita sepak bola yang SEO-friendly
       article: {
         id: savedArticle.id,
         title: savedArticle.title,
-        slug: savedArticle.slug || '',
+        slug: savedArticle.slug,
         category: savedArticle.category,
         imageUrl: savedArticle.imageUrl,
         imageSource: savedArticle.imageSource,

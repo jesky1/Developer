@@ -366,8 +366,9 @@ export function PlayerDetailModal({
                           src={player.photoUrl || undefined}
                           size="xl"
                           variant="square"
-                          className={`!w-20 !h-20 sm:!w-24 sm:!h-24 !rounded-2xl !border-2 ${positionColors.avatarBg} ${positionColors.border} ${overallRating >= 8.0 ? "!shadow-[0_0_20px_rgba(74,222,128,0.3)]" : ""
-                            }`}
+                          className={`!w-20 !h-20 sm:!w-24 sm:!h-24 !rounded-2xl !border-2 ${positionColors.avatarBg} ${positionColors.border} ${
+                            overallRating >= 8.0 ? "!shadow-[0_0_20px_rgba(74,222,128,0.3)]" : ""
+                          }`}
                         />
 
                         {/* Rating Badge */}
@@ -548,8 +549,8 @@ export function PlayerDetailModal({
                                   color: "oklch(0.95 0.01 260)",
                                 }}
                                 labelStyle={{ color: "oklch(0.60 0.02 260)", fontSize: "10px" }}
-                                formatter={(value: number, _name: string, props: any) => [
-                                  `${value.toFixed(1)} vs ${props?.payload?.opponent ?? 'N/A'}`,
+                                formatter={(value: number, _name: string, props: { payload: { opponent: string } }) => [
+                                  `${value.toFixed(1)} vs ${props.payload.opponent}`,
                                   "Rating",
                                 ]}
                               />
@@ -619,12 +620,13 @@ export function PlayerDetailModal({
                                   <div className="flex items-center gap-2">
                                     {transfer.fee && (
                                       <span
-                                        className={`text-xs font-bold ${transfer.fee.toLowerCase() === "free"
+                                        className={`text-xs font-bold ${
+                                          transfer.fee.toLowerCase() === "free"
                                             ? "text-green-400"
                                             : transfer.fee.toLowerCase() === "youth"
-                                              ? "text-purple-400"
-                                              : "text-neon"
-                                          }`}
+                                            ? "text-purple-400"
+                                            : "text-neon"
+                                        }`}
                                       >
                                         {transfer.fee}
                                       </span>

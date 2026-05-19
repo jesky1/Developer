@@ -2,19 +2,20 @@
  * GOALZONE AI Service
  * Runs on port 3005 - handles AI article generation, trending scraping, etc.
  * Separated from main Next.js to prevent OOM from z-ai-web-dev-sdk
- *
- * Uses Prisma ORM for database access (works with SQLite locally & PostgreSQL in production)
  */
 
 import { createServer } from 'http'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { writeFileSync, mkdirSync } from 'fs'
+import { Database } from 'bun:sqlite'
 import ZAI from 'z-ai-web-dev-sdk'
-import { db } from './db'
 
-const PORT = parseInt(process.env.PORT || '3005', 10)
-const GENERATED_IMAGES_DIR = process.env.GENERATED_IMAGES_DIR || join(dirname(fileURLToPath(import.meta.url)), '../../public/generated')
+const PORT = 3005
+const DB_PATH = process.env.DATABASE_URL?.replace('file:', '') || join(dirname(fileURLToPath(import.meta.url)), '../../../db/custom.db')
+
+// Open database with Bun's built-in SQLite
+const db = new Database(DB_PATH)
+db.exec('PRAGMA journal_mode = WAL')
 
 // Helper: generate slug
 function toSlug(title: string): string {
@@ -30,6 +31,27 @@ function toSlug(title: string): string {
 // Helper: parse JSON safely
 function safeJsonParse(str: string, fallback: any = {}) {
   try { return JSON.parse(str) } catch { return fallback }
+}
+
+// Helper: run SQL and return results
+function runQuery(sql: string, params: any[] = []): any[] {
+  try {
+    const stmt = db.query(sql)
+    return stmt.all(...params) as any[]
+  } catch (err) {
+    console.error('SQL Error:', err)
+    return []
+  }
+}
+
+function runRun(sql: string, params: any[] = []): any {
+  try {
+    const stmt = db.query(sql)
+    return stmt.run(...params)
+  } catch (err) {
+    console.error('SQL Run Error:', err)
+    return null
+  }
 }
 
 // Initialize ZAI client (lazy)
@@ -130,15 +152,13 @@ IMPORTANT:
   // Step 3: Generate slug
   const slug = toSlug(parsed.title || 'untitled')
   let finalSlug = slug
-  const existingSlug = await db.newsItem.findUnique({ where: { slug: finalSlug } })
-  if (existingSlug) finalSlug = `${slug}-${Date.now()}`
+  const existingSlug = runQuery('SELECT id FROM NewsItem WHERE slug = ?', [finalSlug])
+  if (existingSlug.length > 0) finalSlug = `${slug}-${Date.now()}`
 
   // Step 4: Get existing articles for internal links
-  const existingArticles = await db.newsItem.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    select: { slug: true, title: true, category: true, tags: true, league: true },
-  })
+  const existingArticles = runQuery(
+    'SELECT slug, title, category, tags, league FROM NewsItem ORDER BY createdAt DESC LIMIT 20'
+  )
 
   const articleTags = Array.isArray(parsed.tags) ? parsed.tags : []
   const relatedArticles = existingArticles.filter((a: any) => {
@@ -167,9 +187,11 @@ IMPORTANT:
       })
       const imageBase64 = imageResponse.data[0]?.base64
       if (imageBase64) {
-        mkdirSync(GENERATED_IMAGES_DIR, { recursive: true })
+        const { writeFileSync, mkdirSync } = await import('fs')
+        const generatedDir = join(dirname(fileURLToPath(import.meta.url)), '../../../public/generated')
+        mkdirSync(generatedDir, { recursive: true })
         const filename = `${finalSlug}-${Date.now()}.png`
-        const filePath = join(GENERATED_IMAGES_DIR, filename)
+        const filePath = join(generatedDir, filename)
         writeFileSync(filePath, Buffer.from(imageBase64, 'base64'))
         imageUrl = `/generated/${filename}`
       }
@@ -180,57 +202,53 @@ IMPORTANT:
 
   // Step 6: Save to database
   const id = `ai_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  const now = new Date().toISOString()
   const tagsJson = JSON.stringify(articleTags)
 
-  await db.newsItem.create({
-    data: {
+  runRun(
+    `INSERT INTO NewsItem (id, title, slug, summary, content, category, imageUrl, source, tags, seoTitle, seoDescription, keywords, league, matchId, isAiGenerated, publishedAt, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
       id,
-      title: (parsed.title || 'Untitled').slice(0, 60),
-      slug: finalSlug,
-      summary: (parsed.summary || '').slice(0, 155),
+      (parsed.title || 'Untitled').slice(0, 60),
+      finalSlug,
+      (parsed.summary || '').slice(0, 155),
       content,
-      category: category || 'Breaking',
+      category || 'Breaking',
       imageUrl,
-      source: 'GOALZONE AI',
-      tags: tagsJson,
-      seoTitle: (parsed.seoTitle || parsed.title || '').slice(0, 60),
-      seoDescription: (parsed.seoDescription || parsed.summary || '').slice(0, 155),
-      keywords: parsed.keywords || '',
-      league: parsed.league || league || '',
-      isAiGenerated: true,
-    },
-  })
+      'GOALZONE AI',
+      tagsJson,
+      (parsed.seoTitle || parsed.title || '').slice(0, 60),
+      (parsed.seoDescription || parsed.summary || '').slice(0, 155),
+      parsed.keywords || '',
+      parsed.league || league || '',
+      null,
+      1, // isAiGenerated = true
+      now,
+      now,
+      now,
+    ]
+  )
 
-  // Step 7: Create internal links (upsert to handle duplicates gracefully)
+  // Step 7: Create internal links
   for (const related of relatedArticles.slice(0, 3)) {
     if (related.slug) {
       try {
-        await db.internalLink.upsert({
-          where: { sourceSlug_targetSlug: { sourceSlug: finalSlug, targetSlug: related.slug } },
-          update: {},
-          create: {
-            id: `il_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            sourceSlug: finalSlug,
-            targetSlug: related.slug,
-            anchorText: related.title,
-          },
-        })
+        runRun(
+          `INSERT OR IGNORE INTO InternalLink (id, sourceSlug, targetSlug, anchorText, createdAt) VALUES (?, ?, ?, ?, ?)`,
+          [`il_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, finalSlug, related.slug, related.title, now]
+        )
       } catch { /* skip duplicates */ }
     }
   }
 
   // Step 8: Activity log
   try {
-    await db.activityLog.create({
-      data: {
-        id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        action: 'generate',
-        resource: 'article',
-        resourceId: id,
-        details: JSON.stringify({ title: parsed.title, method: 'ai-service', hasImage: !!imageUrl }),
-        ip: '',
-      },
-    })
+    const logId = `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+    runRun(
+      `INSERT INTO ActivityLog (id, userId, action, resource, resourceId, details, ip, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [logId, null, 'generate', 'article', id, JSON.stringify({ title: parsed.title, method: 'ai-service', hasImage: !!imageUrl }), '', now]
+    )
   } catch { /* non-blocking */ }
 
   // Step 9: Auto-post to Telegram (optional)
@@ -258,7 +276,6 @@ IMPORTANT:
   }
 
   const generationTime = Date.now() - startTime
-  const now = new Date().toISOString()
 
   return {
     article: {
@@ -324,23 +341,17 @@ async function handleTrending(): Promise<any> {
   }
 
   // Save to database
+  const now = new Date().toISOString()
   const createdTopics = []
   for (const topic of topics) {
     try {
-      const existing = await db.trendingTopic.findFirst({ where: { keyword: topic.keyword } })
-      if (!existing) {
+      const existing = runQuery('SELECT id FROM TrendingTopic WHERE keyword = ?', [topic.keyword])
+      if (existing.length === 0) {
         const id = `tt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
-        await db.trendingTopic.create({
-          data: {
-            id,
-            keyword: topic.keyword,
-            source: topic.source,
-            volume: topic.volume,
-            category: topic.category,
-            region: 'global',
-            isProcessed: false,
-          },
-        })
+        runRun(
+          'INSERT INTO TrendingTopic (id, keyword, source, volume, category, region, isProcessed, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [id, topic.keyword, topic.source, topic.volume, topic.category, 'global', 0, now, now]
+        )
         createdTopics.push({ id, ...topic })
       }
     } catch { /* skip duplicates */ }
@@ -362,27 +373,23 @@ async function handleTelegram(body: any): Promise<any> {
   let finalChatId = chatId || process.env.TELEGRAM_CHAT_ID || ''
 
   if (newsId) {
-    const article = await db.newsItem.findUnique({ where: { id: newsId } })
-    if (!article) return { error: 'Article not found' }
+    const articles = runQuery('SELECT * FROM NewsItem WHERE id = ?', [newsId])
+    if (articles.length === 0) return { error: 'Article not found' }
+    const article = articles[0]
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://goalzone.app'
     finalMessage = `⚽ *${article.title}*\n\n${article.summary}\n\n🔗 ${siteUrl}/news/${article.slug || article.id}`
   }
 
   if (!finalMessage) return { error: 'message or newsId is required' }
 
+  const now = new Date().toISOString()
   const postId = `tp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
 
   // Save to database
-  await db.telegramPost.create({
-    data: {
-      id: postId,
-      newsId: newsId || null,
-      chatId: finalChatId,
-      message: finalMessage,
-      status: 'pending',
-      error: '',
-    },
-  })
+  runRun(
+    'INSERT INTO TelegramPost (id, newsId, chatId, message, status, error, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [postId, newsId || null, finalChatId, finalMessage, 'pending', '', now, now]
+  )
 
   // Try to send via Telegram Bot API
   const botToken = process.env.TELEGRAM_BOT_TOKEN
@@ -397,15 +404,9 @@ async function handleTelegram(body: any): Promise<any> {
       const telegramResult = await telegramResponse.json() as any
 
       if (telegramResult.ok) {
-        await db.telegramPost.update({
-          where: { id: postId },
-          data: { status: 'sent', sentAt: new Date() },
-        })
+        runRun("UPDATE TelegramPost SET status = 'sent', sentAt = ? WHERE id = ?", [now, postId])
       } else {
-        await db.telegramPost.update({
-          where: { id: postId },
-          data: { status: 'failed', error: telegramResult.description || 'Unknown error' },
-        })
+        runRun("UPDATE TelegramPost SET status = 'failed', error = ? WHERE id = ?", [telegramResult.description || 'Unknown error', postId])
       }
 
       return {
@@ -413,10 +414,7 @@ async function handleTelegram(body: any): Promise<any> {
         post: { id: postId, status: telegramResult.ok ? 'sent' : 'failed', message: finalMessage },
       }
     } catch {
-      await db.telegramPost.update({
-        where: { id: postId },
-        data: { status: 'failed', error: 'API unavailable' },
-      })
+      runRun("UPDATE TelegramPost SET status = 'failed', error = 'API unavailable' WHERE id = ?", [postId])
       return { success: false, post: { id: postId, status: 'failed', message: finalMessage, error: 'API unavailable' } }
     }
   }
@@ -430,21 +428,16 @@ async function handleTelegram(body: any): Promise<any> {
 // ==========================================
 // HANDLER: Get Trending Topics
 // ==========================================
-async function handleGetTrending(): Promise<any> {
-  const topics = await db.trendingTopic.findMany({
-    orderBy: { volume: 'desc' },
-    take: 20,
-  })
+function handleGetTrending(): any {
+  const topics = runQuery('SELECT * FROM TrendingTopic ORDER BY volume DESC LIMIT 20')
   return { topics }
 }
 
 // ==========================================
 // HANDLER: Get Scheduled Tasks
 // ==========================================
-async function handleGetSchedule(): Promise<any> {
-  const tasks = await db.scheduledTask.findMany({
-    orderBy: { createdAt: 'desc' },
-  })
+function handleGetSchedule(): any {
+  const tasks = runQuery('SELECT * FROM ScheduledTask ORDER BY createdAt DESC')
   return { tasks }
 }
 
@@ -466,12 +459,13 @@ const server = createServer(async (req, res) => {
   // Parse URL
   const url = new URL(req.url || '/', `http://localhost:${PORT}`)
   const pathname = url.pathname
+  const action = url.searchParams.get('action') || ''
 
   try {
     // Route: Health check
     if (pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ status: 'ok', service: 'goalzone-ai', port: PORT, db: 'prisma' }))
+      res.end(JSON.stringify({ status: 'ok', service: 'goalzone-ai', port: PORT }))
       return
     }
 
@@ -489,7 +483,7 @@ const server = createServer(async (req, res) => {
       return
     }
 
-    // Route: Trending (POST - scrape)
+    // Route: Trending
     if (pathname === '/trending' && req.method === 'POST') {
       const result = await handleTrending()
       res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -497,9 +491,9 @@ const server = createServer(async (req, res) => {
       return
     }
 
-    // Route: Trending (GET - list)
+    // Route: Get trending
     if (pathname === '/trending' && req.method === 'GET') {
-      const result = await handleGetTrending()
+      const result = handleGetTrending()
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify(result))
       return
@@ -523,11 +517,8 @@ const server = createServer(async (req, res) => {
       const { topic } = body
       let scriptTopic = topic
       if (!scriptTopic) {
-        const trending = await db.trendingTopic.findFirst({
-          where: { isProcessed: false },
-          orderBy: { volume: 'desc' },
-        })
-        scriptTopic = trending?.keyword || 'football highlights'
+        const trending = runQuery("SELECT keyword FROM TrendingTopic WHERE isProcessed = 0 ORDER BY volume DESC LIMIT 1")
+        scriptTopic = trending[0]?.keyword || 'football highlights'
       }
 
       const client = await getZaiClient()
@@ -580,7 +571,7 @@ IMPORTANT:
 
     // Route: Schedule
     if (pathname === '/schedule' && req.method === 'GET') {
-      const result = await handleGetSchedule()
+      const result = handleGetSchedule()
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify(result))
       return
@@ -610,14 +601,12 @@ function parseBody(req: any): Promise<any> {
 
 server.listen(PORT, () => {
   console.log(`🤖 GOALZONE AI Service running on port ${PORT}`)
-  console.log(`   Database: Prisma ORM (${process.env.DATABASE_URL?.startsWith('postgres') ? 'PostgreSQL (Supabase)' : process.env.DATABASE_URL?.startsWith('file:') ? 'SQLite' : 'default'})`)
-  console.log(`   Images dir: ${GENERATED_IMAGES_DIR}`)
+  console.log(`   Database: ${DB_PATH}`)
   console.log(`   Endpoints:`)
-  console.log(`     POST /generate      - Generate AI article`)
-  console.log(`     POST /trending      - Scrape trending topics`)
-  console.log(`     GET  /trending      - Get trending topics`)
-  console.log(`     POST /telegram      - Send Telegram message`)
-  console.log(`     POST /tiktok-script - Generate TikTok script`)
-  console.log(`     GET  /schedule      - Get scheduled tasks`)
-  console.log(`     GET  /health        - Health check`)
+  console.log(`     POST /generate    - Generate AI article`)
+  console.log(`     POST /trending    - Scrape trending topics`)
+  console.log(`     GET  /trending    - Get trending topics`)
+  console.log(`     POST /telegram    - Send Telegram message`)
+  console.log(`     GET  /schedule    - Get scheduled tasks`)
+  console.log(`     GET  /health      - Health check`)
 })

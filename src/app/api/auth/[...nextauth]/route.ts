@@ -57,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         db.user.update({
           where: { id: user.id },
           data: { lastLoginAt: new Date() },
-        }).catch(() => { })
+        }).catch(() => {})
 
         return {
           id: user.id,
@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
           if (!existingUser) {
             // Create new user from Google profile
             await createUser({
-              name: profile.name || (profile as Record<string, unknown>).given_name as string || profile.email.split('@')[0],
+              name: profile.name || profile.given_name || profile.email.split('@')[0],
               email: profile.email,
               image: (profile as Record<string, unknown>).picture as string || '',
               provider: 'google',
@@ -130,7 +130,7 @@ export const authOptions: NextAuthOptions = {
             await db.user.update({
               where: { id: dbUser.id },
               data: { lastLoginAt: new Date() },
-            }).catch(() => { })
+            }).catch(() => {})
           }
 
           return true
@@ -148,8 +148,8 @@ export const authOptions: NextAuthOptions = {
       // Initial sign in
       if (user) {
         token.userId = user.id
-        token.role = (user as unknown as Record<string, unknown>).role as string || 'user'
-        token.provider = (user as unknown as Record<string, unknown>).provider as string || account?.provider || 'credentials'
+        token.role = (user as Record<string, unknown>).role as string || 'user'
+        token.provider = (user as Record<string, unknown>).provider as string || account?.provider || 'credentials'
       }
 
       // Look up user from DB on subsequent requests to ensure role is fresh

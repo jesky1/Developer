@@ -288,10 +288,3 @@ export function transformScorers(scorers: FootballScorer[]) {
     photoUrl: s.player.photo,
   }))
 }
-
-// --- Player Statistics Functions ---
-// Re-exported from player-stats-api.ts for backward compatibility.
-// New code should import directly from '@/lib/player-stats-api'
-
-export { getPlayersStatistics, transformPlayerStatsToDb } from './player-stats-api'
-export type { FootballPlayerStats } from './player-stats-api'

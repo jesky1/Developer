@@ -190,9 +190,6 @@ function generateSchemaOrg(article: {
   league: string
   slug: string
   createdAt: Date
-  seoDescription?: string
-  keywords?: string
-  tags?: string[]
 }, match: {
   homeTeam: string
   awayTeam: string
