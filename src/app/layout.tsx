@@ -10,11 +10,11 @@ const websiteLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "GOALZONE",
-  url: "https://goalzone.app",
+  url: "https://goalzone-live.vercel.app",
   description: "Real-time live football scores, standings, and match updates.",
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://goalzone.app/search?q={search_term_string}",
+    target: "https://goalzone-live.vercel.app/search?q={search_term_string}",
     "query-input": "required name=search_term_string",
   },
 };
@@ -39,7 +39,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://goalzone.app"),
+  metadataBase: new URL("https://goalzone-live.vercel.app"),
   title: {
     default: "GOALZONE - Live Football Scores, Standings & Real-Time Updates",
     template: "%s | GOALZONE",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     "match highlights",
     "football stats",
   ],
-  authors: [{ name: "GOALZONE", url: "https://goalzone.app" }],
+  authors: [{ name: "GOALZONE", url: "https://goalzone-live.vercel.app" }],
   creator: "GOALZONE",
   publisher: "GOALZONE",
   robots: {
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://goalzone.app",
+    url: "https://goalzone-live.vercel.app",
     siteName: "GOALZONE",
     title: "GOALZONE - Live Football Scores, Standings & Real-Time Updates",
     description:
@@ -136,8 +136,8 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="view-transition" content="same-origin" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone.app/api/news/rss" />
-        <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone.app/api/sitemap" />
+        <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone-live.vercel.app/api/news/rss" />
+        <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone-live.vercel.app/api/sitemap" />
         {/* JSON-LD structured data — rendered server-side in <head> to avoid React script-tag warnings */}
         <script
           type="application/ld+json"

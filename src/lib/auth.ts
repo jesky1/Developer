@@ -1,5 +1,5 @@
 import { jwtVerify, SignJWT } from 'jose'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -82,4 +82,41 @@ export async function getAuthUser(request: NextRequest) {
   } catch {
     return null
   }
+}
+
+/**
+ * Require admin authentication for API routes.
+ * Returns the authenticated user or a 401 NextResponse.
+ * Use in admin API route handlers to enforce auth.
+ *
+ * Usage:
+ *   const authResult = await requireAdminAuth(request)
+ *   if (authResult instanceof NextResponse) return authResult // 401
+ *   const user = authResult // AdminUser object
+ */
+export async function requireAdminAuth(request: NextRequest) {
+  const user = await getAuthUser(request)
+
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    )
+  }
+
+  if (!user.isActive) {
+    return NextResponse.json(
+      { error: 'Account is disabled' },
+      { status: 401 }
+    )
+  }
+
+  return user
+}
+
+/**
+ * Type guard: check if the result is an error response (not a user)
+ */
+export function isAuthError(result: Awaited<ReturnType<typeof requireAdminAuth>>): result is NextResponse {
+  return result instanceof NextResponse
 }
