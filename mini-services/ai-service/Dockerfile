@@ -1,51 +1,34 @@
-# GoalZone AI Service - Docker image for Render.com / Railway
-# Build context: project root (set via render.yaml)
-# e.g., docker build -f mini-services/ai-service/Dockerfile .
+# GoalZone AI Service - Standalone Docker
+# Compatible with Railway, Fly.io, Koyeb, and any Docker-hosting platform
+# Uses its own prisma/schema.prisma (PostgreSQL provider)
 
-# ---- Stage 1: Install dependencies ----
-FROM oven/bun:1 AS deps
-
-WORKDIR /app
-
-# Copy prisma schema from monorepo root
-COPY prisma/ /app/prisma/
-
-# Switch to PostgreSQL provider for production (Supabase)
-RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/g' /app/prisma/schema.prisma
-
-# Copy package files
-COPY mini-services/ai-service/package.json ./
-COPY mini-services/ai-service/bun.lock* ./
-
-# Install dependencies
-RUN bun install --frozen-lockfile 2>/dev/null || bun install
-
-# Generate Prisma client (with PostgreSQL provider)
-RUN bunx prisma generate --schema=/app/prisma/schema.prisma
-
-# ---- Stage 2: Runtime ----
 FROM oven/bun:1
 
 WORKDIR /app
 
-# Copy node_modules with generated Prisma client
-COPY --from=deps /app/node_modules ./node_modules
+# Copy prisma schema (already set to PostgreSQL)
+COPY prisma ./prisma/
 
-# Copy prisma schema (needed at runtime)
-COPY prisma/ /app/prisma/
+# Copy package files
+COPY package.json ./
+
+# Install dependencies (pins Prisma 6.x to avoid Prisma 7 breaking changes)
+RUN bun install
+
+# Generate Prisma client using the installed version (not bunx which fetches latest)
+RUN bunx --bun prisma generate
 
 # Copy application code
-COPY mini-services/ai-service/package.json ./
-COPY mini-services/ai-service/index.ts ./
-COPY mini-services/ai-service/db.ts ./
+COPY index.ts ./
+COPY db.ts ./
 
 # Create directory for generated images
 RUN mkdir -p /app/public/generated
 
-# Render.com provides PORT via environment variable
+# Cloud platforms provide PORT via environment variable
 ENV PORT=10000
 
-# Set defaults
+# Non-sensitive defaults only (secrets are set via cloud platform env vars)
 ENV NODE_ENV=production
 ENV GENERATED_IMAGES_DIR=/app/public/generated
 
