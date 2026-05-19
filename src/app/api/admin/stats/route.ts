@@ -89,7 +89,10 @@ export async function GET() {
       select: { createdAt: true, title: true },
     })
 
-    const settings = await db.siteSettings.findFirst()
+    const settings = await db.siteSetting.findMany({
+      where: { category: 'features' },
+    })
+    const settingsMap = Object.fromEntries(settings.map((s) => [s.key, s.value]))
 
     return NextResponse.json({
       totalArticles,
@@ -113,8 +116,8 @@ export async function GET() {
         topArticles,
       },
       autoPost: {
-        enabled: settings?.autoPostEnabled ?? false,
-        interval: settings?.autoPostInterval ?? 30,
+        enabled: settingsMap['autoPostEnabled'] === 'true',
+        interval: parseInt(settingsMap['autoPostInterval'] || '30', 10),
         lastGeneration: lastAiArticle?.createdAt?.toISOString() ?? null,
         lastArticleTitle: lastAiArticle?.title ?? null,
         generatedToday: articlesToday,

@@ -31,8 +31,11 @@ export async function GET(request: NextRequest) {
             clicks: acc.clicks + r.clicks,
             revenue: acc.revenue + r.revenue,
             pageViews: acc.pageViews + r.pageViews,
+            ctr: 0,
+            cpc: 0,
+            rpm: 0,
           }),
-          { impressions: 0, clicks: 0, revenue: 0, pageViews: 0 }
+          { impressions: 0, clicks: 0, revenue: 0, pageViews: 0, ctr: 0, cpc: 0, rpm: 0 }
         )
 
         totals.ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0
@@ -127,7 +130,7 @@ export async function POST(request: NextRequest) {
       case 'sync': {
         // In production, this would call the Google AdSense API
         // For now, create/update sample data for the last 14 days
-        const syncResults = []
+        const syncResults: { id: string; date: string }[] = []
 
         for (let i = 13; i >= 0; i--) {
           const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)

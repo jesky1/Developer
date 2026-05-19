@@ -84,14 +84,24 @@ model NewsItem {
   content        String   @default("")   // Full article body (markdown)
   category       String   @default("Transfer") // Transfer, Match Report, Preview, Analysis, Breaking, Rumor
   imageUrl       String   @default("")
+  imageAlt       String   @default("")   // Image alt text for SEO & accessibility
+  imageWidth     Int      @default(0)
+  imageHeight    Int      @default(0)
+  imageSource    String   @default("")   // Image attribution (e.g. "Pexels - Photographer")
   source         String   @default("GOALZONE AI")
+  sourceUrl      String   @default("")   // Original source URL
   tags           String   @default("[]") // JSON array of tags
   seoTitle       String   @default("")
   seoDescription String   @default("")
+  seoKeywords    String   @default("[]") // JSON array of SEO keywords
   keywords       String   @default("")   // SEO keywords comma-separated
   league         String   @default("")   // Related league
   matchId        String?                // Related match ID (nullable)
   isAiGenerated  Boolean  @default(true)
+  isPublished    Boolean  @default(true)
+  isHeadline     Boolean  @default(false)
+  language       String   @default("id") // Language code (id, en, etc.)
+  viewCount      Int      @default(0)
   publishedAt    DateTime @default(now())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt @default(now())
