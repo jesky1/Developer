@@ -89,8 +89,27 @@ export interface LiveMatchesUpdatePayload {
 }
 
 // --- Socket Connection Config ---
-// Detect environment: sandbox uses Caddy gateway, local dev connects directly
+
+/**
+ * Detect environment and determine the correct Socket.io server URL.
+ *
+ * Priority:
+ * 1. NEXT_PUBLIC_SOCKET_URL env var — set this in Vercel to your external
+ *    WebSocket server URL (e.g. https://ws.goalzone.app).
+ *    Set to "disabled" to skip WebSocket entirely (REST-only mode).
+ * 2. Sandbox (Caddy gateway on port 81) — use relative path with XTransformPort.
+ * 3. Local dev / preview — use origin with XTransformPort query param.
+ * 4. SSR fallback — localhost:3003.
+ */
 function getSocketUrl(): string {
+  // Check for explicit env var override (production use-case)
+  const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+  if (envUrl) {
+    // "disabled" means skip WebSocket entirely — return empty string (caller checks)
+    if (envUrl.toLowerCase() === 'disabled') return '';
+    return envUrl;
+  }
+
   if (typeof window !== 'undefined') {
     // Sandbox (Caddy gateway on port 81)
     if (window.location.port === '81') {
@@ -103,15 +122,28 @@ function getSocketUrl(): string {
   return 'http://localhost:3003';
 }
 
+/**
+ * Check if WebSocket is explicitly disabled via environment variable.
+ */
+export function isWebSocketDisabled(): boolean {
+  const envUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+  return envUrl?.toLowerCase() === 'disabled';
+}
+
 const SOCKET_OPTIONS: Parameters<typeof io>[1] = {
-  path: '/',
-  transports: ['websocket', 'polling'],
+  path: '/socket.io/',
+  // HTTP Polling first, then upgrade to WebSocket if supported.
+  // This is critical for Vercel which doesn't support raw WebSocket
+  // but may allow long-polling through its edge network.
+  transports: ['polling', 'websocket'],
   reconnection: true,
-  reconnectionAttempts: Infinity, // Keep trying to reconnect
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 10000,
+  // Limit reconnection attempts to prevent infinite retry loops
+  // that cause aggressive "Offline/Disconnected" flashing.
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000,
+  reconnectionDelayMax: 30000,
   randomizationFactor: 0.5,
-  timeout: 10000,
+  timeout: 15000,
   autoConnect: false,
 };
 
@@ -123,10 +155,17 @@ let socketInstance: Socket | null = null;
  * Returns a singleton Socket.IO client instance.
  * The socket is lazily initialized on first call and does NOT
  * auto-connect. Call `socket.connect()` when ready.
+ *
+ * If NEXT_PUBLIC_SOCKET_URL is set to "disabled", returns null.
  */
-export function getSocket(): Socket {
+export function getSocket(): Socket | null {
+  if (isWebSocketDisabled()) return null;
+
+  const url = getSocketUrl();
+  if (!url) return null;
+
   if (!socketInstance) {
-    socketInstance = io(getSocketUrl(), SOCKET_OPTIONS);
+    socketInstance = io(url, SOCKET_OPTIONS);
   }
   return socketInstance;
 }

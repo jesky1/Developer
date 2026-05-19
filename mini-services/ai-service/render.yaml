@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: goalzone-ai-service
+    runtime: docker
+    dockerfilePath: ./mini-services/ai-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: main
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+        # Set this to your Supabase PostgreSQL connection string
+        # Format: postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+      - key: PORT
+        value: "10000"
+      - key: NODE_ENV
+        value: production
+      - key: GENERATED_IMAGES_DIR
+        value: /app/public/generated
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+    healthCheckPath: /health
+    env: docker

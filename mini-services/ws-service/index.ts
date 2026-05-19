@@ -1,11 +1,6 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import { Database } from 'bun:sqlite'
-
-// --- Database Setup ---
-const DB_PATH = import.meta.dir + '/../../db/custom.db'
-const db = new Database(DB_PATH)
-db.exec('PRAGMA journal_mode = WAL')
+import { db } from './db'
 
 // --- Types ---
 interface GoalEvent {
@@ -21,10 +16,26 @@ interface GoalEvent {
   awayScore: number
 }
 
+// --- HTTP Server with health check ---
+const httpServer = createServer((req, res) => {
+  // Health check endpoint for Render.com / cloud platforms
+  if (req.url === '/health' || (req.url === '/' && req.method === 'GET')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      status: 'ok',
+      service: 'goalzone-ws',
+      port: parseInt(process.env.PORT || '3003', 10),
+      clients: connectedClientCount,
+      dataMode: process.env.DATA_MODE || 'mock',
+      db: process.env.DATABASE_URL?.startsWith('postgres') ? 'PostgreSQL (Supabase)' : 'SQLite',
+    }))
+    return
+  }
+})
+
 // --- Socket.IO Server ---
-const httpServer = createServer()
 const io = new Server(httpServer, {
-  path: '/',
+  path: '/socket.io/',
   cors: { origin: '*', methods: ['GET', 'POST'] },
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -33,38 +44,23 @@ const io = new Server(httpServer, {
 // --- Previous match data cache ---
 let prevMatchesMap = new Map<string, { homeScore: number; awayScore: number; status: string; minute: number }>()
 
-// --- Fetch all matches from DB ---
-function fetchMatchesFromDB() {
-  const stmt = db.prepare(`
-    SELECT m.id, m.homeTeam, m.awayTeam, m.homeScore, m.awayScore, m.status, m.minute,
-      m.league, m.leagueLogo, m.homeLogo, m.awayLogo, m.stadium, m.kickoff, m.isHot,
-      m.events, m.homeForm, m.awayForm
-    FROM Match m
-    ORDER BY 
-      CASE m.status 
-        WHEN 'LIVE' THEN 0 
-        WHEN 'HT' THEN 1 
-        WHEN 'UPCOMING' THEN 2 
-        WHEN 'FT' THEN 3 
-      END
-  `)
-  return stmt.all() as any[]
+// --- Status ordering for sort ---
+const STATUS_ORDER: Record<string, number> = { LIVE: 0, HT: 1, UPCOMING: 2, FT: 3 }
+
+// --- Fetch all matches from DB via Prisma ---
+async function fetchMatchesFromDB() {
+  const matches = await db.match.findMany()
+  // Replicate the CASE-based ordering from the original raw SQL
+  matches.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
+  return matches
 }
 
-function fetchScorersFromDB() {
-  const stmt = db.prepare(`
-    SELECT id, name, team, teamLogo, goals, assists, matches, league, photoUrl
-    FROM Scorer ORDER BY goals DESC
-  `)
-  return stmt.all()
+async function fetchScorersFromDB() {
+  return db.scorer.findMany({ orderBy: { goals: 'desc' } })
 }
 
-function fetchStandingsFromDB(league: string = 'Premier League') {
-  const stmt = db.prepare(`
-    SELECT id, position, team, teamLogo, played, won, drawn, lost, gf, ga, gd, points, league, form
-    FROM Standing WHERE league = ? ORDER BY position ASC
-  `)
-  return stmt.all(league)
+async function fetchStandingsFromDB(league: string = 'Premier League') {
+  return db.standing.findMany({ where: { league }, orderBy: { position: 'asc' } })
 }
 
 function formatMatchData(matches: any[]) {
@@ -116,22 +112,18 @@ const GOAL_PLAYERS: Record<string, string[]> = {
   'Monaco': ['Embolo', 'Ben Yedder', 'Golovin'],
 }
 
-const updateStmt = db.prepare(`
-  UPDATE Match SET homeScore = ?, awayScore = ?, minute = ?, status = ?, events = ?, isHot = ? WHERE id = ?
-`)
-
-function simulateMatchUpdates(): GoalEvent[] {
-  const matches = fetchMatchesFromDB()
+async function simulateMatchUpdates(): Promise<GoalEvent[]> {
+  const matches = await fetchMatchesFromDB()
   const goals: GoalEvent[] = []
 
   for (const match of matches) {
     if (match.status !== 'LIVE') continue
 
-    let newMinute = (match.minute as number) + 1
-    let newStatus = match.status as string
-    let newHomeScore = match.homeScore as number
-    let newAwayScore = match.awayScore as number
-    let newIsHot = match.isHot as number
+    let newMinute = match.minute + 1
+    let newStatus = match.status
+    let newHomeScore = match.homeScore
+    let newAwayScore = match.awayScore
+    let newIsHot = match.isHot
 
     if (newMinute > 90) { newMinute = 90; newStatus = 'FT' }
     if (newMinute === 46 && newStatus === 'LIVE') { newStatus = 'HT' }
@@ -144,11 +136,11 @@ function simulateMatchUpdates(): GoalEvent[] {
 
     if (homeGoalChance && newMinute <= 90) {
       newHomeScore += 1
-      const players = GOAL_PLAYERS[match.homeTeam as string] || ['Unknown']
+      const players = GOAL_PLAYERS[match.homeTeam] || ['Unknown']
       const scorer = players[Math.floor(Math.random() * players.length)]
       eventsArr.push({ type: 'goal', team: 'home', player: scorer, minute: newMinute })
       goals.push({
-        fixtureId: match.id as string, homeTeam: match.homeTeam as string, awayTeam: match.awayTeam as string,
+        fixtureId: match.id, homeTeam: match.homeTeam, awayTeam: match.awayTeam,
         score: `${newHomeScore}-${newAwayScore}`, minute: newMinute, status: newStatus,
         scoringTeam: 'home', playerName: scorer, homeScore: newHomeScore, awayScore: newAwayScore,
       })
@@ -156,11 +148,11 @@ function simulateMatchUpdates(): GoalEvent[] {
 
     if (awayGoalChance && newMinute <= 90) {
       newAwayScore += 1
-      const players = GOAL_PLAYERS[match.awayTeam as string] || ['Unknown']
+      const players = GOAL_PLAYERS[match.awayTeam] || ['Unknown']
       const scorer = players[Math.floor(Math.random() * players.length)]
       eventsArr.push({ type: 'goal', team: 'away', player: scorer, minute: newMinute })
       goals.push({
-        fixtureId: match.id as string, homeTeam: match.homeTeam as string, awayTeam: match.awayTeam as string,
+        fixtureId: match.id, homeTeam: match.homeTeam, awayTeam: match.awayTeam,
         score: `${newHomeScore}-${newAwayScore}`, minute: newMinute, status: newStatus,
         scoringTeam: 'away', playerName: scorer, homeScore: newHomeScore, awayScore: newAwayScore,
       })
@@ -169,13 +161,23 @@ function simulateMatchUpdates(): GoalEvent[] {
     if (Math.random() < 0.02 && newMinute <= 90) {
       const isHome = Math.random() < 0.5
       const team = isHome ? 'home' : 'away'
-      const teamName = (isHome ? match.homeTeam : match.awayTeam) as string
+      const teamName = isHome ? match.homeTeam : match.awayTeam
       const players = GOAL_PLAYERS[teamName] || ['Unknown']
       const player = players[Math.floor(Math.random() * players.length)]
       eventsArr.push({ type: 'yellow', team, player, minute: newMinute })
     }
 
-    updateStmt.run(newHomeScore, newAwayScore, newMinute, newStatus, JSON.stringify(eventsArr), newIsHot ? 1 : 0, match.id)
+    await db.match.update({
+      where: { id: match.id },
+      data: {
+        homeScore: newHomeScore,
+        awayScore: newAwayScore,
+        minute: newMinute,
+        status: newStatus,
+        events: JSON.stringify(eventsArr),
+        isHot: newIsHot,
+      },
+    })
   }
   return goals
 }
@@ -185,8 +187,9 @@ async function syncRealData(): Promise<GoalEvent[]> {
   const goals: GoalEvent[] = []
 
   try {
-    // Call the Next.js API to sync data
-    const response = await fetch('http://localhost:3000/api/football', {
+    // Call the Next.js API to sync data (use env var for production)
+    const nextApiUrl = process.env.NEXT_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${nextApiUrl}/api/football`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ syncMode: 'live' }),
@@ -207,8 +210,8 @@ async function syncRealData(): Promise<GoalEvent[]> {
 }
 
 // --- Check for changes and emit updates ---
-function checkAndEmitUpdates() {
-  const rawMatches = fetchMatchesFromDB()
+async function checkAndEmitUpdates() {
+  const rawMatches = await fetchMatchesFromDB()
   const formattedMatches = formatMatchData(rawMatches)
   const goals: GoalEvent[] = []
 
@@ -278,15 +281,18 @@ io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id} (${connectedClientCount} total)`)
   broadcastClientCount()
 
-  const rawMatches = fetchMatchesFromDB()
-  const formattedMatches = formatMatchData(rawMatches)
-  const scorers = fetchScorersFromDB()
-  const standings = fetchStandingsFromDB()
+    // Send initial data asynchronously
+    ; (async () => {
+      const rawMatches = await fetchMatchesFromDB()
+      const formattedMatches = formatMatchData(rawMatches)
+      const scorers = await fetchScorersFromDB()
+      const standings = await fetchStandingsFromDB()
 
-  socket.emit('initialData', { matches: formattedMatches, scorers, standings, timestamp: new Date().toISOString() })
+      socket.emit('initialData', { matches: formattedMatches, scorers, standings, timestamp: new Date().toISOString() })
+    })()
 
-  socket.on('requestUpdate', () => {
-    const rawMatches = fetchMatchesFromDB()
+  socket.on('requestUpdate', async () => {
+    const rawMatches = await fetchMatchesFromDB()
     const formattedMatches = formatMatchData(rawMatches)
     socket.emit('liveMatchesUpdate', { matches: formattedMatches, timestamp: new Date().toISOString() })
   })
@@ -300,47 +306,60 @@ io.on('connection', (socket) => {
   socket.on('error', (error) => { console.error(`Socket error (${socket.id}):`, error) })
 })
 
-// --- Main update loop ---
-const initialMatches = fetchMatchesFromDB()
-const initialFormatted = formatMatchData(initialMatches)
-for (const match of initialFormatted) {
-  prevMatchesMap.set(match.id, { homeScore: match.homeScore, awayScore: match.awayScore, status: match.status, minute: match.minute })
-}
-
-// Determine data mode
-const DATA_MODE = process.env.DATA_MODE || 'mock'
-const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY || ''
-const useRealData = DATA_MODE === 'real' && FOOTBALL_API_KEY.length > 0
-
-const SIMULATION_INTERVAL = 10000 // 10 detik
-const REAL_SYNC_INTERVAL = 30000 // 30 detik untuk real API
-
-setInterval(async () => {
-  try {
-    if (useRealData) {
-      // Real mode: sync dari Football API
-      await syncRealData()
-    } else {
-      // Mock mode: simulasi match progression
-      simulateMatchUpdates()
+  // --- Main update loop ---
+  ; (async () => {
+    const initialMatches = await fetchMatchesFromDB()
+    const initialFormatted = formatMatchData(initialMatches)
+    for (const match of initialFormatted) {
+      prevMatchesMap.set(match.id, { homeScore: match.homeScore, awayScore: match.awayScore, status: match.status, minute: match.minute })
     }
 
-    // Emit perubahan ke semua client
-    checkAndEmitUpdates()
-  } catch (err) {
-    console.error('Error in update cycle:', err)
-  }
-}, useRealData ? REAL_SYNC_INTERVAL : SIMULATION_INTERVAL)
+    // Determine data mode
+    const DATA_MODE = process.env.DATA_MODE || 'mock'
+    const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY || ''
+    const useRealData = DATA_MODE === 'real' && FOOTBALL_API_KEY.length > 0
 
-// --- Start Server ---
-const PORT = 3003
-httpServer.listen(PORT, () => {
-  console.log(`⚽ GOALZONE WebSocket Server running on port ${PORT}`)
-  console.log(`📡 Data mode: ${useRealData ? 'REAL (API-Football)' : 'MOCK (simulasi)'}`)
-  console.log(`⏱️  Update interval: ${useRealData ? REAL_SYNC_INTERVAL / 1000 : SIMULATION_INTERVAL / 1000}s`)
-  console.log(`🔗 Connect via: io('/?XTransformPort=${PORT}')`)
-})
+    const SIMULATION_INTERVAL = 10000 // 10 seconds
+    const REAL_SYNC_INTERVAL = 30000 // 30 seconds for real API
+
+    setInterval(async () => {
+      try {
+        if (useRealData) {
+          // Real mode: sync from Football API
+          await syncRealData()
+        } else {
+          // Mock mode: simulate match progression
+          await simulateMatchUpdates()
+        }
+
+        // Emit changes to all clients
+        await checkAndEmitUpdates()
+      } catch (err) {
+        console.error('Error in update cycle:', err)
+      }
+    }, useRealData ? REAL_SYNC_INTERVAL : SIMULATION_INTERVAL)
+
+    // --- Start Server ---
+    const PORT = parseInt(process.env.PORT || '3003', 10)
+    httpServer.listen(PORT, () => {
+      console.log(`⚽ GOALZONE WebSocket Server running on port ${PORT}`)
+      console.log(`📡 Data mode: ${useRealData ? 'REAL (API-Football)' : 'MOCK (simulasi)'}`)
+      console.log(`⏱️  Update interval: ${useRealData ? REAL_SYNC_INTERVAL / 1000 : SIMULATION_INTERVAL / 1000}s`)
+      console.log(`🔗 Connect via: io('/?XTransformPort=${PORT}') or direct URL`)
+      console.log(`💾 Database: ${process.env.DATABASE_URL?.startsWith('postgres') ? 'PostgreSQL (Supabase)' : process.env.DATABASE_URL?.startsWith('file:') ? 'SQLite' : 'Unknown'}`)
+    })
+  })()
 
 // --- Graceful Shutdown ---
-process.on('SIGTERM', () => { httpServer.close(() => { db.close(); process.exit(0) }) })
-process.on('SIGINT', () => { httpServer.close(() => { db.close(); process.exit(0) }) })
+process.on('SIGTERM', () => {
+  httpServer.close(async () => {
+    await db.$disconnect()
+    process.exit(0)
+  })
+})
+process.on('SIGINT', () => {
+  httpServer.close(async () => {
+    await db.$disconnect()
+    process.exit(0)
+  })
+})
