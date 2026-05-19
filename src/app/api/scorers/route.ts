@@ -1,8 +1,8 @@
-import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    const { db } = await import('@/lib/db')
     const { searchParams } = new URL(request.url)
     const league = searchParams.get('league')
 
@@ -32,11 +32,8 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json(parsed)
-  } catch (error) {
-    console.error('Error fetching scorers:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch scorers' },
-      { status: 500 }
-    )
+  } catch {
+    // Return empty array instead of 500 — prevents frontend from breaking
+    return NextResponse.json([])
   }
 }

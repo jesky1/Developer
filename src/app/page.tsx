@@ -25,7 +25,8 @@ import type { NewsArticle } from "@/components/news-section";
 import { useSocket } from "@/hooks/use-socket";
 import type { GoalEvent } from "@/services/socket";
 import { PlayerDetailModal } from "@/components/player-detail-modal";
-import { Wifi, WifiOff, RefreshCw, Loader2, Radio, Zap } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, Loader2, Radio, Zap, CloudOff } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 // Lazy load admin panel - keeps it out of the initial bundle
 import dynamic from "next/dynamic";
@@ -52,7 +53,7 @@ const SplashScreen = dynamic(
 );
 
 // Empty subscribe function for useSyncExternalStore
-const emptySubscribe = () => () => {};
+const emptySubscribe = () => () => { };
 
 const AUTH_KEY = "goalzone_admin_token";
 const USER_KEY = "goalzone_user";
@@ -109,6 +110,7 @@ function LiveScoresView({
     requestUpdate,
     lastUpdate,
     dataSource,
+    wsReconnectAttempts,
   } = useSocket();
 
   // Use useSyncExternalStore to safely read sessionStorage without hydration mismatch.
@@ -127,6 +129,7 @@ function LiveScoresView({
   const splashActive = shouldShowSplash && !splashDismissed;
 
   const { navigate, restoreScroll } = useNavigation();
+  const { t } = useTranslation();
 
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [isNewsDetailOpen, setIsNewsDetailOpen] = useState(false);
@@ -157,8 +160,8 @@ function LiveScoresView({
 
   const goalMatchIds = new Set(goalEvents.map((g: GoalEvent) => g.fixtureId));
 
-  const handleMatchClick = useCallback((match: Record<string, unknown>) => {
-    const matchId = (match as Record<string, unknown>).id as string;
+  const handleMatchClick = useCallback((match: { id?: string | number }) => {
+    const matchId = String(match.id ?? '');
     if (matchId) {
       navigate(`/match/${matchId}`);
     }
@@ -209,181 +212,203 @@ function LiveScoresView({
           splashActive ? "opacity-0" : "opacity-100"
         )}
       >
-      <Navbar
-        currentUser={currentUser}
-        onLoginClick={onLoginClick}
-        onLogout={onLogout}
-        onOpenAdmin={onOpenAdmin}
-        matches={matches}
-      />
+        <Navbar
+          currentUser={currentUser}
+          onLoginClick={onLoginClick}
+          onLogout={onLogout}
+          onOpenAdmin={onOpenAdmin}
+          matches={matches}
+        />
 
-      <main className="flex-1 pt-20 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isConnected ? (
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full",
-                    dataSource === 'ws'
-                      ? "bg-green-500/10 border border-green-500/20"
-                      : "bg-emerald-500/10 border border-emerald-500/20"
-                  )}
-                >
-                  <Wifi className={cn("w-3 h-3", dataSource === 'ws' ? "text-green-500" : "text-emerald-500")} />
-                  <span className={cn("text-[10px] font-semibold", dataSource === 'ws' ? "text-green-500" : "text-emerald-500")}>
-                    {dataSource === 'ws' ? 'LIVE' : 'LIVE \u00b7 API'}
+        <main className="flex-1 pt-20 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                {isConnected ? (
+                  <div
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded-full",
+                      dataSource === 'ws'
+                        ? "bg-green-500/10 border border-green-500/20"
+                        : "bg-amber-500/10 border border-amber-500/20"
+                    )}
+                  >
+                    {dataSource === 'ws' ? (
+                      <Wifi className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <CloudOff className="w-3 h-3 text-amber-500" />
+                    )}
+                    <span className={cn("text-[10px] font-semibold", dataSource === 'ws' ? "text-green-500" : "text-amber-500")}>
+                      {dataSource === 'ws' ? t('status.live') : t('status.staticData')}
+                    </span>
+                    <span className={cn("w-1.5 h-1.5 rounded-full", dataSource === 'ws' ? "bg-green-500 live-pulse" : "bg-amber-500")} />
+                  </div>
+                ) : isReconnecting ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                    <Loader2 className="w-3 h-3 text-yellow-500 animate-spin" />
+                    <span className="text-[10px] text-yellow-500 font-semibold">
+                      {wsReconnectAttempts > 0
+                        ? `${t('status.connecting')} (${wsReconnectAttempts}/10)`
+                        : t('status.connecting')
+                      }
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
+                    <WifiOff className="w-3 h-3 text-red-500" />
+                    <span className="text-[10px] text-red-500 font-semibold">{t('status.offline')}</span>
+                  </div>
+                )}
+
+                {isConnected && liveCount > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <Radio className="w-3 h-3 text-green-500" />
+                    <span>{liveCount} {liveCount !== 1 ? t('match.liveMatches') : t('match.liveMatch')}</span>
+                  </div>
+                )}
+
+                {lastUpdate && (
+                  <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                    {t('match.updated')} {lastUpdate.toLocaleTimeString()}
                   </span>
-                  <span className={cn("w-1.5 h-1.5 rounded-full live-pulse", dataSource === 'ws' ? "bg-green-500" : "bg-emerald-500")} />
-                </div>
-              ) : isReconnecting ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
-                  <Loader2 className="w-3 h-3 text-yellow-500 animate-spin" />
-                  <span className="text-[10px] text-yellow-500 font-semibold">Connecting...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
-                  <WifiOff className="w-3 h-3 text-red-500" />
-                  <span className="text-[10px] text-red-500 font-semibold">Offline</span>
-                </div>
-              )}
-
-              {isConnected && liveCount > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <Radio className="w-3 h-3 text-green-500" />
-                  <span>{liveCount} live match{liveCount !== 1 ? 'es' : ''}</span>
-                </div>
-              )}
-
-              {lastUpdate && (
-                <span className="text-[10px] text-muted-foreground">
-                  Updated {lastUpdate.toLocaleTimeString()}
-                </span>
-              )}
+                )}
+              </div>
+              <button
+                onClick={requestUpdate}
+                className="flex items-center gap-1 text-[10px] text-neon hover:underline cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                {t('status.refresh')}
+              </button>
             </div>
-            <button
-              onClick={requestUpdate}
-              className="flex items-center gap-1 text-[10px] text-neon hover:underline cursor-pointer"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Refresh
-            </button>
-          </div>
 
-          {isLoading && matches.length === 0 ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="glass-card neon-glow rounded-2xl p-6 space-y-6 animate-pulse">
-                  <div className="h-6 bg-surface-light rounded w-1/3" />
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-2">
-                      <div className="w-16 h-16 bg-surface-light rounded-full" />
-                      <div className="w-20 h-4 bg-surface-light rounded" />
-                    </div>
-                    <div className="w-24 h-10 bg-surface-light rounded" />
-                    <div className="space-y-2">
-                      <div className="w-16 h-16 bg-surface-light rounded-full" />
-                      <div className="w-20 h-4 bg-surface-light rounded" />
+            {isLoading && matches.length === 0 ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="glass-card neon-glow rounded-2xl p-6 space-y-6 animate-pulse">
+                    <div className="h-6 bg-surface-light rounded w-1/3" />
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-2">
+                        <div className="w-16 h-16 bg-surface-light rounded-full" />
+                        <div className="w-20 h-4 bg-surface-light rounded" />
+                      </div>
+                      <div className="w-24 h-10 bg-surface-light rounded" />
+                      <div className="space-y-2">
+                        <div className="w-16 h-16 bg-surface-light rounded-full" />
+                        <div className="w-20 h-4 bg-surface-light rounded" />
+                      </div>
                     </div>
                   </div>
+                  <div className="space-y-5">
+                    <div className="glass-card rounded-2xl p-5 animate-pulse h-48" />
+                    <div className="glass-card rounded-2xl p-5 animate-pulse h-48" />
+                  </div>
                 </div>
-                <div className="space-y-5">
-                  <div className="glass-card rounded-2xl p-5 animate-pulse h-48" />
-                  <div className="glass-card rounded-2xl p-5 animate-pulse h-48" />
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-neon" />
+                    <span className="text-sm font-semibold text-foreground">{t('match.connectingData')}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="w-2 h-2 rounded-full bg-neon animate-pulse"
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-neon" />
-                  <span className="text-sm font-semibold text-foreground">Connecting to live data...</span>
-                </div>
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-neon animate-pulse"
+            ) : !isLoading && matches.length === 0 && scorers.length === 0 && standings.length === 0 ? (
+              <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center gap-4 text-center">
+                <CloudOff className="w-12 h-12 text-muted-foreground" />
+                <h2 className="text-lg font-semibold text-foreground">{t('status.noData')}</h2>
+                <p className="text-sm text-muted-foreground max-w-md">{t('status.noDataDesc')}</p>
+                <button
+                  onClick={requestUpdate}
+                  className="flex items-center gap-2 px-4 py-2 mt-2 rounded-lg bg-neon/10 text-neon hover:bg-neon/20 transition-colors text-sm font-medium cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  {t('status.refresh')}
+                </button>
+              </div>
+            ) : (
+              <>
+                <section id="live">
+                  <LiveTicker matches={matches} />
+                </section>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <div className="lg:col-span-2 space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => featuredMatch && handleMatchClick(featuredMatch)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && featuredMatch) handleMatchClick(featuredMatch);
+                        }}
+                      >
+                        <FeaturedMatch match={featuredMatch} goalFlash={!!featuredGoalEvent} />
+                      </div>
+
+                      <div className="space-y-5">
+                        <MatchTimeline match={featuredMatch} />
+                        <FanPolls match={featuredMatch} poll={featuredMatchPoll} />
+                      </div>
+                    </div>
+
+                    <LiveMatchesList
+                      matches={matches}
+                      onMatchClick={handleMatchClick}
+                      goalMatchIds={goalMatchIds}
+                      isLoading={isLoading}
                     />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <section id="live">
-                <LiveTicker matches={matches} />
-              </section>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => featuredMatch && handleMatchClick(featuredMatch)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && featuredMatch) handleMatchClick(featuredMatch);
-                      }}
-                    >
-                      <FeaturedMatch match={featuredMatch} goalFlash={!!featuredGoalEvent} />
-                    </div>
-
-                    <div className="space-y-5">
-                      <MatchTimeline match={featuredMatch} />
-                      <FanPolls match={featuredMatch} poll={featuredMatchPoll} />
-                    </div>
+                    <FeaturedMatchesGrid
+                      matches={otherMatches}
+                      onMatchClick={handleMatchClick}
+                      goalMatchIds={goalMatchIds}
+                      isLoading={isLoading}
+                    />
                   </div>
 
-                  <LiveMatchesList
-                    matches={matches}
-                    onMatchClick={handleMatchClick}
-                    goalMatchIds={goalMatchIds}
-                    isLoading={isLoading}
-                  />
-
-                  <FeaturedMatchesGrid
-                    matches={otherMatches}
-                    onMatchClick={handleMatchClick}
-                    goalMatchIds={goalMatchIds}
-                    isLoading={isLoading}
-                  />
+                  <div className="space-y-5">
+                    <Sidebar scorers={scorers} standings={standings} onPlayerClick={handlePlayerClick} onTeamClick={handleTeamClick} />
+                  </div>
                 </div>
 
-                <div className="space-y-5">
-                  <Sidebar scorers={scorers} standings={standings} onPlayerClick={handlePlayerClick} onTeamClick={handleTeamClick} />
-                </div>
-              </div>
+                <StandingsSection selectedLeague={footerSelectedLeague} />
 
-              <StandingsSection selectedLeague={footerSelectedLeague} />
+                <NewsSection onArticleClick={handleArticleClick} />
+              </>
+            )}
+          </div>
+        </main>
 
-              <NewsSection onArticleClick={handleArticleClick} />
-            </>
-          )}
-        </div>
-      </main>
+        <Footer onLeagueClick={handleLeagueClick} />
 
-      <Footer onLeagueClick={handleLeagueClick} />
+        <HotMatchHighlight matches={matches} />
 
-      <HotMatchHighlight matches={matches} />
+        <NewsDetailModal
+          article={selectedArticle}
+          isOpen={isNewsDetailOpen}
+          onClose={() => {
+            setIsNewsDetailOpen(false);
+            setSelectedArticle(null);
+          }}
+        />
 
-      <NewsDetailModal
-        article={selectedArticle}
-        isOpen={isNewsDetailOpen}
-        onClose={() => {
-          setIsNewsDetailOpen(false);
-          setSelectedArticle(null);
-        }}
-      />
-
-      <PlayerDetailModal
-        playerId={null}
-        playerName={selectedPlayerId}
-        isOpen={isPlayerDetailOpen}
-        onClose={() => {
-          setIsPlayerDetailOpen(false);
-          setSelectedPlayerId(null);
-        }}
-      />
+        <PlayerDetailModal
+          playerId={null}
+          playerName={selectedPlayerId}
+          isOpen={isPlayerDetailOpen}
+          onClose={() => {
+            setIsPlayerDetailOpen(false);
+            setSelectedPlayerId(null);
+          }}
+        />
       </div>
     </div>
   );
@@ -441,7 +466,7 @@ export default function HomePage() {
       // localStorage might not be available
     }
     // Also sign out from NextAuth session if active
-    fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
+    fetch('/api/auth/signout', { method: 'POST' }).catch(() => { });
   }, []);
 
   const handleOpenAdmin = useCallback(() => {

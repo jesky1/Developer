@@ -173,11 +173,19 @@ export function useSocket(): UseSocketReturn {
     if (scorersData.length > 0) setScorers(scorersData);
     if (standingsData.length > 0) setStandings(standingsData);
 
-    // Only update data source if we got data
-    if (matchesData.length > 0 || scorersData.length > 0 || standingsData.length > 0) {
+    const hasAnyData = matchesData.length > 0 || scorersData.length > 0 || standingsData.length > 0;
+
+    if (hasAnyData) {
       if (!wsConnectedRef.current) {
         setDataSource('rest');
-        // If we have data from REST, we're effectively "connected" via static data
+        setIsConnected(true);
+        setIsReconnecting(false);
+      }
+    } else {
+      // No data from REST API — mark as loaded but show "offline/static" state
+      // This prevents the UI from being stuck at "Connecting to live data..." forever
+      if (!wsConnectedRef.current) {
+        setDataSource('rest');
         setIsConnected(true);
         setIsReconnecting(false);
       }
