@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { I18nProvider } from "@/lib/i18n";
 
 // JSON-LD structured data rendered server-side to avoid React 19 script-tag warnings
 const websiteLd = {
@@ -158,7 +159,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            {children}
+            <I18nProvider>
+              {children}
+            </I18nProvider>
           </AuthProvider>
           <Toaster
             position="top-right"
