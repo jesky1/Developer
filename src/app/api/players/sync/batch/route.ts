@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { isRealDataMode, getPlayersStatistics, transformPlayerStatsToDb } from '@/lib/football-api'
+import { isRealDataMode } from '@/lib/football-api'
+import { getPlayersStatistics, transformPlayerStatsToDb } from '@/lib/player-stats-api'
 
 export async function POST(request: NextRequest) {
     try {
