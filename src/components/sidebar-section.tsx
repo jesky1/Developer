@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Medal, ChevronDown, Loader2 } from "lucide-react";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 // === Types ===
 
 interface Scorer {
+  id?: string;
   name: string;
   team: string;
   teamLogo?: string;
@@ -69,6 +71,7 @@ function TopScorers({
   const [leagueScorers, setLeagueScorers] = useState<Scorer[]>(scorers);
   const [isLeagueLoading, setIsLeagueLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { t } = useTranslation();
 
   // Fetch scorers filtered by league
   const fetchScorers = useCallback(async (league: string) => {
@@ -80,8 +83,11 @@ function TopScorers({
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
-      setLeagueScorers(
-        data.map((s: Record<string, unknown>) => ({
+      // Deduplicate by name+team+league to prevent duplicate entries from DB
+      const seen = new Set<string>();
+      const deduped = data
+        .map((s: Record<string, unknown>) => ({
+          id: (s.id as string) || undefined,
           name: (s.name as string) || "",
           team: (s.team as string) || "",
           teamLogo: (s.teamLogo as string) || undefined,
@@ -91,7 +97,13 @@ function TopScorers({
           league: (s.league as string) || undefined,
           photoUrl: (s.photoUrl as string) || undefined,
         }))
-      );
+        .filter((s: Scorer) => {
+          const key = `${s.name}-${s.team}-${s.league || ''}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      setLeagueScorers(deduped);
     } catch {
       // Fallback: use the original scorers prop filtered by league
       if (league) {
@@ -109,14 +121,23 @@ function TopScorers({
   }, [selectedLeague, fetchScorers]);
 
   // Update when parent scorers change (for "All" view)
+  // Deduplicate by name+team+league to prevent duplicate entries
   useEffect(() => {
     if (!selectedLeague) {
-      setLeagueScorers(scorers);
+      const seen = new Set<string>();
+      const deduped = scorers.filter((s) => {
+        const key = `${s.name}-${s.team}-${s.league || ''}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setLeagueScorers(deduped);
     }
   }, [scorers, selectedLeague]);
 
   const activeLeagueLabel =
     SCORER_LEAGUES.find((l) => l.value === selectedLeague)?.name || "All";
+  const displayLeagueLabel = activeLeagueLabel === "All" ? t("scorers.all") : activeLeagueLabel;
 
   return (
     <motion.div
@@ -129,7 +150,7 @@ function TopScorers({
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
           <h3 className="text-sm font-semibold text-foreground">
-            Top Goalscorers
+            {t("scorers.title")}
           </h3>
         </div>
 
@@ -139,7 +160,7 @@ function TopScorers({
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-lg bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer"
           >
-            <span>{activeLeagueLabel}</span>
+            <span>{displayLeagueLabel}</span>
             <ChevronDown
               className={cn(
                 "w-3 h-3 transition-transform",
@@ -177,7 +198,7 @@ function TopScorers({
                             : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
                         )}
                       >
-                        {league.name}
+                        {league.name === "All" ? t("scorers.all") : league.name}
                       </button>
                     ))}
                   </div>
@@ -209,7 +230,7 @@ function TopScorers({
               exit={{ opacity: 0 }}
               className="text-center py-6 text-xs text-muted-foreground"
             >
-              No scorers found
+              {t("scorers.noScorers")}
             </motion.div>
           ) : (
             <motion.div
@@ -221,7 +242,7 @@ function TopScorers({
             >
               {leagueScorers.map((scorer, i) => (
                 <motion.div
-                  key={`${scorer.name}-${scorer.team}`}
+                  key={scorer.id || `scorer-${i}-${scorer.name}-${scorer.team}-${scorer.league || ''}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
@@ -237,8 +258,8 @@ function TopScorers({
                   onKeyDown={
                     onPlayerClick
                       ? (e) => {
-                          if (e.key === "Enter") onPlayerClick(scorer.name);
-                        }
+                        if (e.key === "Enter") onPlayerClick(scorer.name);
+                      }
                       : undefined
                   }
                 >
@@ -249,10 +270,10 @@ function TopScorers({
                       i === 0
                         ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
                         : i === 1
-                        ? "bg-gray-400/20 text-gray-300 border border-gray-400/30"
-                        : i === 2
-                        ? "bg-amber-600/20 text-amber-500 border border-amber-600/30"
-                        : "bg-surface-light text-muted-foreground border border-white/10"
+                          ? "bg-gray-400/20 text-gray-300 border border-gray-400/30"
+                          : i === 2
+                            ? "bg-amber-600/20 text-amber-500 border border-amber-600/30"
+                            : "bg-surface-light text-muted-foreground border border-white/10"
                     )}
                   >
                     {i + 1}
@@ -287,7 +308,7 @@ function TopScorers({
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-neon">{scorer.goals}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {scorer.matches} apps
+                      {scorer.matches} {t("scorers.apps")}
                     </p>
                   </div>
                 </motion.div>
@@ -309,6 +330,7 @@ function LeagueTable({
   standings: Standing[];
   onTeamClick?: (teamName: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -318,7 +340,7 @@ function LeagueTable({
     >
       <div className="flex items-center gap-2 mb-4">
         <Medal className="w-4 h-4 text-neon" />
-        <h3 className="text-sm font-semibold text-foreground">League Table</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("sidebar.leagueTable")}</h3>
       </div>
 
       <div className="overflow-x-auto">
@@ -326,20 +348,20 @@ function LeagueTable({
           <thead>
             <tr className="text-[10px] text-muted-foreground uppercase tracking-wider border-b border-white/5">
               <th className="text-left py-2 w-6">#</th>
-              <th className="text-left py-2">Team</th>
-              <th className="text-center py-2 w-7">P</th>
-              <th className="text-center py-2 w-7">W</th>
-              <th className="text-center py-2 w-7">D</th>
-              <th className="text-center py-2 w-7">L</th>
-              <th className="text-center py-2 w-8">GD</th>
-              <th className="text-center py-2 w-8 font-bold">Pts</th>
-              <th className="text-center py-2 w-16">Form</th>
+              <th className="text-left py-2">{t("standings.team")}</th>
+              <th className="text-center py-2 w-7">{t("standings.played")}</th>
+              <th className="text-center py-2 w-7">{t("standings.won")}</th>
+              <th className="text-center py-2 w-7">{t("standings.drawn")}</th>
+              <th className="text-center py-2 w-7">{t("standings.lost")}</th>
+              <th className="text-center py-2 w-8">{t("standings.goalDiff")}</th>
+              <th className="text-center py-2 w-8 font-bold">{t("standings.points")}</th>
+              <th className="text-center py-2 w-16">{t("standings.form")}</th>
             </tr>
           </thead>
           <tbody>
             {standings.map((team, i) => (
               <motion.tr
-                key={team.team}
+                key={`standings-${i}-${team.team}-${team.league || ''}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.04 }}
@@ -355,8 +377,8 @@ function LeagueTable({
                 onKeyDown={
                   onTeamClick
                     ? (e) => {
-                        if (e.key === "Enter") onTeamClick(team.team);
-                      }
+                      if (e.key === "Enter") onTeamClick(team.team);
+                    }
                     : undefined
                 }
               >
@@ -367,8 +389,8 @@ function LeagueTable({
                       i < 4
                         ? "bg-neon/15 text-neon"
                         : i < 6
-                        ? "bg-blue-500/10 text-blue-400"
-                        : "text-muted-foreground"
+                          ? "bg-blue-500/10 text-blue-400"
+                          : "text-muted-foreground"
                     )}
                   >
                     {team.position}
@@ -417,14 +439,14 @@ function LeagueTable({
                     {Array.isArray(team.form) &&
                       team.form.map((r, fi) => (
                         <span
-                          key={fi}
+                          key={`form-${i}-${fi}`}
                           className={cn(
                             "w-4 h-4 rounded-sm flex items-center justify-center text-[8px] font-bold",
                             r === "W"
                               ? "bg-green-500/20 text-green-400"
                               : r === "D"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : "bg-red-500/20 text-red-400"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-red-500/20 text-red-400"
                           )}
                         >
                           {r}

@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     })
 
     const parsed = scorers.map((s) => ({
+      id: s.id,
       name: s.name,
       team: s.team,
       teamLogo: s.teamLogo || undefined,

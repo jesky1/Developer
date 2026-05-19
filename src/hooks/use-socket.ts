@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
-import { getSocket, destroySocket } from '@/services/socket';
+import { getSocket, destroySocket, isWebSocketDisabled } from '@/services/socket';
 import type {
   Match,
   Scorer,
@@ -29,6 +29,7 @@ interface UseSocketReturn {
   lastUpdate: Date | null;
   connectedClients: number;
   dataSource: 'ws' | 'rest' | null;
+  wsReconnectAttempts: number;
 }
 
 // --- REST API fallback data fetcher ---
@@ -74,6 +75,7 @@ async function fetchScorersFromAPI(): Promise<Scorer[]> {
     if (!res.ok) return [];
     const data = await res.json();
     return data.map((s: Record<string, unknown>) => ({
+      id: (s.id as string) || undefined,
       name: (s.name as string) || '',
       team: (s.team as string) || '',
       teamLogo: (s.teamLogo as string) || undefined,
@@ -149,12 +151,15 @@ export function useSocket(): UseSocketReturn {
   const [connectedClients, setConnectedClients] = useState(0);
 
   const [dataSource, setDataSource] = useState<'ws' | 'rest' | null>(null);
+  const [wsReconnectAttempts, setWsReconnectAttempts] = useState(0);
   const socketRef = useRef<Socket | null>(null);
   const goalTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const wsConnectedRef = useRef(false);
   const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restPollingRef = useRef(false);
+  const wsDisabledRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
 
   // Fetch all data from REST API
   const fetchAllFromREST = useCallback(async () => {
@@ -172,7 +177,7 @@ export function useSocket(): UseSocketReturn {
     if (matchesData.length > 0 || scorersData.length > 0 || standingsData.length > 0) {
       if (!wsConnectedRef.current) {
         setDataSource('rest');
-        // If we have data from REST, we're not truly "disconnected"
+        // If we have data from REST, we're effectively "connected" via static data
         setIsConnected(true);
         setIsReconnecting(false);
       }
@@ -201,14 +206,32 @@ export function useSocket(): UseSocketReturn {
   }, []);
 
   useEffect(() => {
+    // If WebSocket is explicitly disabled (production without WS server),
+    // skip socket initialization entirely and go straight to REST polling.
+    if (isWebSocketDisabled()) {
+      console.log('[GOALZONE] WebSocket disabled by config, using REST API only');
+      wsDisabledRef.current = true;
+      // Schedule REST polling asynchronously to avoid synchronous setState in effect
+      const timer = setTimeout(() => startRESTPolling(), 0);
+      return () => clearTimeout(timer);
+    }
+
     let socket: Socket | null = null;
 
     try {
       socket = getSocket();
-      socket.connect();
-      socketRef.current = socket;
+      if (socket) {
+        socket.connect();
+        socketRef.current = socket;
+      }
     } catch (err) {
       console.error('[GOALZONE] Failed to initialize WebSocket:', err);
+    }
+
+    // If socket is null (shouldn't happen unless disabled), fall back to REST
+    if (!socket) {
+      const timer = setTimeout(() => startRESTPolling(), 0);
+      return () => clearTimeout(timer);
     }
 
     // Set a timeout to fall back to REST API if WS doesn't connect
@@ -220,117 +243,128 @@ export function useSocket(): UseSocketReturn {
 
     // --- Connection lifecycle ---
 
-    if (socket) {
-      socket.on('connect', () => {
-        setIsConnected(true);
-        setIsReconnecting(false);
-        wsConnectedRef.current = true;
-        setDataSource('ws');
-        stopRESTPolling();
+    socket.on('connect', () => {
+      setIsConnected(true);
+      setIsReconnecting(false);
+      wsConnectedRef.current = true;
+      reconnectAttemptsRef.current = 0;
+      setWsReconnectAttempts(0);
+      setDataSource('ws');
+      stopRESTPolling();
 
-        // Clear fallback timer
-        if (fallbackTimerRef.current) {
-          clearTimeout(fallbackTimerRef.current);
-          fallbackTimerRef.current = null;
-        }
-      });
+      // Clear fallback timer
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
+    });
 
-      socket.on('disconnect', () => {
-        wsConnectedRef.current = false;
-        setDataSource(null);
-        // Don't immediately show disconnected - start REST fallback
-        // The REST fetch will update isConnected to true if it gets data
-        setIsReconnecting(true);
-        startRESTPolling();
-      });
+    socket.on('disconnect', (reason) => {
+      wsConnectedRef.current = false;
+      setDataSource(null);
 
-      socket.on('reconnect_attempt', () => {
-        setIsReconnecting(true);
-      });
+      console.log(`[GOALZONE] WebSocket disconnected: ${reason}`);
 
-      socket.on('reconnect', () => {
-        setIsReconnecting(false);
-        wsConnectedRef.current = true;
-        stopRESTPolling();
-      });
+      // Don't immediately show "Offline" — start REST fallback.
+      // The REST fetch will update isConnected to true if it gets data,
+      // preventing the UI from showing "Offline" when data is still available.
+      setIsReconnecting(true);
+      startRESTPolling();
+    });
 
-      socket.on('reconnect_failed', () => {
-        // REST polling should already be running, but ensure it
-        startRESTPolling();
-      });
+    socket.on('reconnect_attempt', (attempt) => {
+      reconnectAttemptsRef.current = attempt;
+      setWsReconnectAttempts(attempt);
+      setIsReconnecting(true);
+    });
 
-      // --- Data events ---
+    socket.on('reconnect', () => {
+      setIsReconnecting(false);
+      wsConnectedRef.current = true;
+      reconnectAttemptsRef.current = 0;
+      setWsReconnectAttempts(0);
+      stopRESTPolling();
+    });
 
-      socket.on('initialData', (data: InitialDataPayload) => {
-        setMatches(data.matches);
-        setScorers(data.scorers);
-        setStandings(data.standings);
-        setLastUpdate(new Date(data.timestamp));
-        setIsLoading(false);
-      });
+    socket.on('reconnect_failed', () => {
+      console.log('[GOALZONE] WebSocket reconnection attempts exhausted. Staying on REST API mode.');
+      setIsReconnecting(false);
+      setWsReconnectAttempts(-1); // -1 means max attempts reached
+      // REST polling should already be running, but ensure it
+      startRESTPolling();
+    });
 
-      socket.on('liveMatchesUpdate', (data: LiveMatchesUpdatePayload) => {
-        setMatches((prev) => {
-          const newMap = new Map(data.matches.map((m) => [m.id, m]));
-          const updated = prev.map((old) => {
-            const fresh = newMap.get(old.id);
-            if (!fresh) return old;
-            if (
-              old.homeScore !== fresh.homeScore ||
-              old.awayScore !== fresh.awayScore ||
-              old.status !== fresh.status ||
-              old.minute !== fresh.minute ||
-              old.events.length !== fresh.events.length
-            ) {
-              return fresh;
-            }
-            return old;
-          });
+    // --- Data events ---
 
-          const prevIds = new Set(prev.map((m) => m.id));
-          for (const m of data.matches) {
-            if (!prevIds.has(m.id)) {
-              updated.push(m);
-            }
+    socket.on('initialData', (data: InitialDataPayload) => {
+      setMatches(data.matches);
+      setScorers(data.scorers);
+      setStandings(data.standings);
+      setLastUpdate(new Date(data.timestamp));
+      setIsLoading(false);
+    });
+
+    socket.on('liveMatchesUpdate', (data: LiveMatchesUpdatePayload) => {
+      setMatches((prev) => {
+        const newMap = new Map(data.matches.map((m) => [m.id, m]));
+        const updated = prev.map((old) => {
+          const fresh = newMap.get(old.id);
+          if (!fresh) return old;
+          if (
+            old.homeScore !== fresh.homeScore ||
+            old.awayScore !== fresh.awayScore ||
+            old.status !== fresh.status ||
+            old.minute !== fresh.minute ||
+            old.events.length !== fresh.events.length
+          ) {
+            return fresh;
           }
-
-          return updated;
-        });
-        setLastUpdate(new Date(data.timestamp));
-        setIsLoading(false);
-      });
-
-      socket.on('goalScored', (goal: GoalEvent) => {
-        const eventKey = `${goal.fixtureId}-${goal.scoringTeam}-${goal.minute}-${goal.playerName}`;
-
-        setGoalEvents((prev) => {
-          if (prev.some((e) => `${e.fixtureId}-${e.scoringTeam}-${e.minute}-${e.playerName}` === eventKey)) {
-            return prev;
-          }
-          return [...prev, goal];
+          return old;
         });
 
-        const existingTimer = goalTimersRef.current.get(eventKey);
-        if (existingTimer) {
-          clearTimeout(existingTimer);
+        const prevIds = new Set(prev.map((m) => m.id));
+        for (const m of data.matches) {
+          if (!prevIds.has(m.id)) {
+            updated.push(m);
+          }
         }
 
-        const timer = setTimeout(() => {
-          setGoalEvents((prev) =>
-            prev.filter(
-              (e) => `${e.fixtureId}-${e.scoringTeam}-${e.minute}-${e.playerName}` !== eventKey
-            )
-          );
-          goalTimersRef.current.delete(eventKey);
-        }, 5000);
+        return updated;
+      });
+      setLastUpdate(new Date(data.timestamp));
+      setIsLoading(false);
+    });
 
-        goalTimersRef.current.set(eventKey, timer);
+    socket.on('goalScored', (goal: GoalEvent) => {
+      const eventKey = `${goal.fixtureId}-${goal.scoringTeam}-${goal.minute}-${goal.playerName}`;
+
+      setGoalEvents((prev) => {
+        if (prev.some((e) => `${e.fixtureId}-${e.scoringTeam}-${e.minute}-${e.playerName}` === eventKey)) {
+          return prev;
+        }
+        return [...prev, goal];
       });
 
-      socket.on('clientCount', (count: number) => {
-        setConnectedClients(count);
-      });
-    }
+      const existingTimer = goalTimersRef.current.get(eventKey);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
+
+      const timer = setTimeout(() => {
+        setGoalEvents((prev) =>
+          prev.filter(
+            (e) => `${e.fixtureId}-${e.scoringTeam}-${e.minute}-${e.playerName}` !== eventKey
+          )
+        );
+        goalTimersRef.current.delete(eventKey);
+      }, 5000);
+
+      goalTimersRef.current.set(eventKey, timer);
+    });
+
+    socket.on('clientCount', (count: number) => {
+      setConnectedClients(count);
+    });
 
     // --- Cleanup ---
 
@@ -379,5 +413,6 @@ export function useSocket(): UseSocketReturn {
     lastUpdate,
     connectedClients,
     dataSource,
+    wsReconnectAttempts,
   };
 }
