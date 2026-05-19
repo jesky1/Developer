@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { signToken, comparePassword, hashPassword, getAuthUser } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -55,6 +54,9 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        // Use dynamic import to avoid build-time PrismaClient initialization issues
+        const { db } = await import('@/lib/db')
+
         const user = await db.adminUser.findUnique({ where: { username } })
 
         if (!user) {
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
         db.adminUser.update({
           where: { id: user.id },
           data: { lastLoginAt: new Date() },
-        }).catch(() => {})
+        }).catch(() => { })
 
         // Create activity log (non-blocking)
         db.activityLog.create({
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
             resourceId: user.id,
             details: JSON.stringify({ username: user.username }),
           },
-        }).catch(() => {})
+        }).catch(() => { })
 
         // Return user data without password
         const { passwordHash: _ph, ...userWithoutPassword } = user
@@ -122,6 +124,8 @@ export async function POST(request: NextRequest) {
             { status: 401 }
           )
         }
+
+        const { db } = await import('@/lib/db')
 
         const body = await request.json()
         const { userId, currentPassword, newPassword } = body

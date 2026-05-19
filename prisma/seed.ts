@@ -185,36 +185,52 @@ async function main() {
 
   // === TRANSFERS ===
   const transferData: Array<{ playerName: string; transfers: Array<{ fromClub: string; toClub: string; date: string; fee: string; type: string }> }> = [
-    { playerName: 'Kylian Mbappé', transfers: [
-      { fromClub: 'AS Monaco', toClub: 'Real Madrid', date: '2024-07-15', fee: 'Free', type: 'Free' },
-      { fromClub: 'AS Monaco', toClub: 'PSG', date: '2017-08-31', fee: '€180M', type: 'Transfer' },
-    ]},
-    { playerName: 'Jude Bellingham', transfers: [
-      { fromClub: 'Borussia Dortmund', toClub: 'Real Madrid', date: '2023-06-14', fee: '€115M', type: 'Transfer' },
-      { fromClub: 'Birmingham City', toClub: 'Borussia Dortmund', date: '2020-07-20', fee: '€25M', type: 'Transfer' },
-    ]},
-    { playerName: 'Erling Haaland', transfers: [
-      { fromClub: 'Borussia Dortmund', toClub: 'Manchester City', date: '2022-06-13', fee: '€60M', type: 'Transfer' },
-      { fromClub: 'Red Bull Salzburg', toClub: 'Borussia Dortmund', date: '2019-12-29', fee: '€20M', type: 'Transfer' },
-    ]},
-    { playerName: 'Harry Kane', transfers: [
-      { fromClub: 'Tottenham', toClub: 'Bayern Munich', date: '2023-08-12', fee: '€100M', type: 'Transfer' },
-      { fromClub: 'Tottenham Youth', toClub: 'Tottenham', date: '2009-07-01', fee: 'Youth', type: 'Youth' },
-    ]},
-    { playerName: 'Vinícius Jr.', transfers: [
-      { fromClub: 'Flamengo', toClub: 'Real Madrid', date: '2018-07-12', fee: '€45M', type: 'Transfer' },
-    ]},
-    { playerName: 'Cole Palmer', transfers: [
-      { fromClub: 'Manchester City', toClub: 'Chelsea', date: '2023-09-01', fee: '€47M', type: 'Transfer' },
-      { fromClub: 'Manchester City Youth', toClub: 'Manchester City', date: '2020-07-01', fee: 'Youth', type: 'Youth' },
-    ]},
-    { playerName: 'Lamine Yamal', transfers: [
-      { fromClub: 'La Masia', toClub: 'Barcelona', date: '2023-07-01', fee: 'Youth', type: 'Youth' },
-    ]},
-    { playerName: 'Darwin Núñez', transfers: [
-      { fromClub: 'Benfica', toClub: 'Liverpool', date: '2022-06-13', fee: '€75M', type: 'Transfer' },
-      { fromClub: 'Almería', toClub: 'Benfica', date: '2020-09-04', fee: '€24M', type: 'Transfer' },
-    ]},
+    {
+      playerName: 'Kylian Mbappé', transfers: [
+        { fromClub: 'AS Monaco', toClub: 'Real Madrid', date: '2024-07-15', fee: 'Free', type: 'Free' },
+        { fromClub: 'AS Monaco', toClub: 'PSG', date: '2017-08-31', fee: '€180M', type: 'Transfer' },
+      ]
+    },
+    {
+      playerName: 'Jude Bellingham', transfers: [
+        { fromClub: 'Borussia Dortmund', toClub: 'Real Madrid', date: '2023-06-14', fee: '€115M', type: 'Transfer' },
+        { fromClub: 'Birmingham City', toClub: 'Borussia Dortmund', date: '2020-07-20', fee: '€25M', type: 'Transfer' },
+      ]
+    },
+    {
+      playerName: 'Erling Haaland', transfers: [
+        { fromClub: 'Borussia Dortmund', toClub: 'Manchester City', date: '2022-06-13', fee: '€60M', type: 'Transfer' },
+        { fromClub: 'Red Bull Salzburg', toClub: 'Borussia Dortmund', date: '2019-12-29', fee: '€20M', type: 'Transfer' },
+      ]
+    },
+    {
+      playerName: 'Harry Kane', transfers: [
+        { fromClub: 'Tottenham', toClub: 'Bayern Munich', date: '2023-08-12', fee: '€100M', type: 'Transfer' },
+        { fromClub: 'Tottenham Youth', toClub: 'Tottenham', date: '2009-07-01', fee: 'Youth', type: 'Youth' },
+      ]
+    },
+    {
+      playerName: 'Vinícius Jr.', transfers: [
+        { fromClub: 'Flamengo', toClub: 'Real Madrid', date: '2018-07-12', fee: '€45M', type: 'Transfer' },
+      ]
+    },
+    {
+      playerName: 'Cole Palmer', transfers: [
+        { fromClub: 'Manchester City', toClub: 'Chelsea', date: '2023-09-01', fee: '€47M', type: 'Transfer' },
+        { fromClub: 'Manchester City Youth', toClub: 'Manchester City', date: '2020-07-01', fee: 'Youth', type: 'Youth' },
+      ]
+    },
+    {
+      playerName: 'Lamine Yamal', transfers: [
+        { fromClub: 'La Masia', toClub: 'Barcelona', date: '2023-07-01', fee: 'Youth', type: 'Youth' },
+      ]
+    },
+    {
+      playerName: 'Darwin Núñez', transfers: [
+        { fromClub: 'Benfica', toClub: 'Liverpool', date: '2022-06-13', fee: '€75M', type: 'Transfer' },
+        { fromClub: 'Almería', toClub: 'Benfica', date: '2020-09-04', fee: '€24M', type: 'Transfer' },
+      ]
+    },
   ];
 
   for (const { playerName, transfers } of transferData) {
@@ -657,61 +673,61 @@ async function main() {
 
   // === STANDINGS ===
   const standings = [
-    { position: 1, team: 'Liverpool', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg', played: 28, won: 21, drawn: 5, lost: 2, gf: 62, ga: 22, gd: 40, points: 68, league: 'Premier League', form: JSON.stringify(['W','W','D','W','W']) },
-    { position: 2, team: 'Arsenal', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', played: 28, won: 19, drawn: 6, lost: 3, gf: 58, ga: 21, gd: 37, points: 63, league: 'Premier League', form: JSON.stringify(['W','D','W','W','L']) },
-    { position: 3, team: 'Manchester City', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg', played: 28, won: 18, drawn: 5, lost: 5, gf: 60, ga: 28, gd: 32, points: 59, league: 'Premier League', form: JSON.stringify(['W','W','D','L','W']) },
-    { position: 4, team: 'Aston Villa', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Aston_Villa_FC_crest_%282023%29.svg', played: 28, won: 16, drawn: 4, lost: 8, gf: 52, ga: 33, gd: 19, points: 52, league: 'Premier League', form: JSON.stringify(['W','W','L','W','W']) },
-    { position: 5, team: 'Chelsea', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg', played: 28, won: 15, drawn: 5, lost: 8, gf: 50, ga: 35, gd: 15, points: 50, league: 'Premier League', form: JSON.stringify(['W','L','W','W','W']) },
-    { position: 6, team: 'Tottenham', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg', played: 28, won: 14, drawn: 4, lost: 10, gf: 53, ga: 42, gd: 11, points: 46, league: 'Premier League', form: JSON.stringify(['L','W','D','L','W']) },
-    { position: 1, team: 'Real Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg', played: 27, won: 21, drawn: 4, lost: 2, gf: 65, ga: 20, gd: 45, points: 67, league: 'La Liga', form: JSON.stringify(['W','W','D','W','W']) },
-    { position: 2, team: 'Barcelona', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', played: 27, won: 19, drawn: 5, lost: 3, gf: 60, ga: 25, gd: 35, points: 62, league: 'La Liga', form: JSON.stringify(['W','L','W','W','D']) },
-    { position: 3, team: 'Atletico Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f4/Atletico_Madrid_Badge.svg', played: 27, won: 18, drawn: 4, lost: 5, gf: 52, ga: 22, gd: 30, points: 58, league: 'La Liga', form: JSON.stringify(['W','D','W','L','W']) },
-    { position: 4, team: 'Sevilla', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_FC_logo.svg', played: 27, won: 14, drawn: 6, lost: 7, gf: 40, ga: 30, gd: 10, points: 48, league: 'La Liga', form: JSON.stringify(['L','W','D','W','L']) },
-    { position: 1, team: 'Inter Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg', played: 27, won: 22, drawn: 3, lost: 2, gf: 63, ga: 18, gd: 45, points: 69, league: 'Serie A', form: JSON.stringify(['W','W','W','D','W']) },
-    { position: 2, team: 'Juventus', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Juventus_logo.svg', played: 27, won: 17, drawn: 7, lost: 3, gf: 48, ga: 20, gd: 28, points: 58, league: 'Serie A', form: JSON.stringify(['D','W','W','L','W']) },
-    { position: 3, team: 'AC Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg', played: 27, won: 16, drawn: 5, lost: 6, gf: 50, ga: 30, gd: 20, points: 53, league: 'Serie A', form: JSON.stringify(['D','L','W','D','L']) },
-    { position: 4, team: 'Roma', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/AS_Roma_logo_%282017%29.svg', played: 27, won: 15, drawn: 4, lost: 8, gf: 45, ga: 32, gd: 13, points: 49, league: 'Serie A', form: JSON.stringify(['W','L','D','W','W']) },
+    { position: 1, team: 'Liverpool', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg', played: 28, won: 21, drawn: 5, lost: 2, gf: 62, ga: 22, gd: 40, points: 68, league: 'Premier League', form: JSON.stringify(['W', 'W', 'D', 'W', 'W']) },
+    { position: 2, team: 'Arsenal', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', played: 28, won: 19, drawn: 6, lost: 3, gf: 58, ga: 21, gd: 37, points: 63, league: 'Premier League', form: JSON.stringify(['W', 'D', 'W', 'W', 'L']) },
+    { position: 3, team: 'Manchester City', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg', played: 28, won: 18, drawn: 5, lost: 5, gf: 60, ga: 28, gd: 32, points: 59, league: 'Premier League', form: JSON.stringify(['W', 'W', 'D', 'L', 'W']) },
+    { position: 4, team: 'Aston Villa', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Aston_Villa_FC_crest_%282023%29.svg', played: 28, won: 16, drawn: 4, lost: 8, gf: 52, ga: 33, gd: 19, points: 52, league: 'Premier League', form: JSON.stringify(['W', 'W', 'L', 'W', 'W']) },
+    { position: 5, team: 'Chelsea', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg', played: 28, won: 15, drawn: 5, lost: 8, gf: 50, ga: 35, gd: 15, points: 50, league: 'Premier League', form: JSON.stringify(['W', 'L', 'W', 'W', 'W']) },
+    { position: 6, team: 'Tottenham', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg', played: 28, won: 14, drawn: 4, lost: 10, gf: 53, ga: 42, gd: 11, points: 46, league: 'Premier League', form: JSON.stringify(['L', 'W', 'D', 'L', 'W']) },
+    { position: 1, team: 'Real Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg', played: 27, won: 21, drawn: 4, lost: 2, gf: 65, ga: 20, gd: 45, points: 67, league: 'La Liga', form: JSON.stringify(['W', 'W', 'D', 'W', 'W']) },
+    { position: 2, team: 'Barcelona', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', played: 27, won: 19, drawn: 5, lost: 3, gf: 60, ga: 25, gd: 35, points: 62, league: 'La Liga', form: JSON.stringify(['W', 'L', 'W', 'W', 'D']) },
+    { position: 3, team: 'Atletico Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f4/Atletico_Madrid_Badge.svg', played: 27, won: 18, drawn: 4, lost: 5, gf: 52, ga: 22, gd: 30, points: 58, league: 'La Liga', form: JSON.stringify(['W', 'D', 'W', 'L', 'W']) },
+    { position: 4, team: 'Sevilla', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_FC_logo.svg', played: 27, won: 14, drawn: 6, lost: 7, gf: 40, ga: 30, gd: 10, points: 48, league: 'La Liga', form: JSON.stringify(['L', 'W', 'D', 'W', 'L']) },
+    { position: 1, team: 'Inter Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg', played: 27, won: 22, drawn: 3, lost: 2, gf: 63, ga: 18, gd: 45, points: 69, league: 'Serie A', form: JSON.stringify(['W', 'W', 'W', 'D', 'W']) },
+    { position: 2, team: 'Juventus', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Juventus_logo.svg', played: 27, won: 17, drawn: 7, lost: 3, gf: 48, ga: 20, gd: 28, points: 58, league: 'Serie A', form: JSON.stringify(['D', 'W', 'W', 'L', 'W']) },
+    { position: 3, team: 'AC Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg', played: 27, won: 16, drawn: 5, lost: 6, gf: 50, ga: 30, gd: 20, points: 53, league: 'Serie A', form: JSON.stringify(['D', 'L', 'W', 'D', 'L']) },
+    { position: 4, team: 'Roma', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/AS_Roma_logo_%282017%29.svg', played: 27, won: 15, drawn: 4, lost: 8, gf: 45, ga: 32, gd: 13, points: 49, league: 'Serie A', form: JSON.stringify(['W', 'L', 'D', 'W', 'W']) },
     // --- Bundesliga ---
-    { position: 1, team: 'Bayern Munich', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', played: 26, won: 20, drawn: 3, lost: 3, gf: 62, ga: 20, gd: 42, points: 63, league: 'Bundesliga', form: JSON.stringify(['W','W','D','W','W']) },
-    { position: 2, team: 'Leverkusen', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/59/Bayer_04_Leverkusen_logo.svg', played: 26, won: 18, drawn: 4, lost: 4, gf: 58, ga: 25, gd: 33, points: 58, league: 'Bundesliga', form: JSON.stringify(['W','W','D','W','L']) },
-    { position: 3, team: 'Dortmund', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg', played: 26, won: 17, drawn: 5, lost: 4, gf: 55, ga: 30, gd: 25, points: 56, league: 'Bundesliga', form: JSON.stringify(['D','W','W','L','W']) },
-    { position: 4, team: 'Stuttgart', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/02/VfB_Stuttgart_1893_logo.svg', played: 26, won: 15, drawn: 5, lost: 6, gf: 50, ga: 32, gd: 18, points: 50, league: 'Bundesliga', form: JSON.stringify(['W','D','W','W','L']) },
-    { position: 5, team: 'RB Leipzig', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/e2/RB_Leipzig_2014_logo.svg', played: 26, won: 14, drawn: 4, lost: 8, gf: 52, ga: 35, gd: 17, points: 46, league: 'Bundesliga', form: JSON.stringify(['W','L','W','D','W']) },
-    { position: 6, team: 'Frankfurt', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/e5/Eintracht_Frankfurt_logo.svg', played: 26, won: 12, drawn: 6, lost: 8, gf: 48, ga: 38, gd: 10, points: 42, league: 'Bundesliga', form: JSON.stringify(['D','W','L','W','W']) },
-    { position: 7, team: 'Freiburg', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/6/6d/SC_Freiburg_logo.svg', played: 26, won: 11, drawn: 5, lost: 10, gf: 40, ga: 40, gd: 0, points: 38, league: 'Bundesliga', form: JSON.stringify(['L','W','D','L','W']) },
-    { position: 8, team: 'Wolfsburg', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/2/28/VfL_Wolfsburg_logo.svg', played: 26, won: 10, drawn: 5, lost: 11, gf: 38, ga: 42, gd: -4, points: 35, league: 'Bundesliga', form: JSON.stringify(['L','D','W','L','L']) },
+    { position: 1, team: 'Bayern Munich', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', played: 26, won: 20, drawn: 3, lost: 3, gf: 62, ga: 20, gd: 42, points: 63, league: 'Bundesliga', form: JSON.stringify(['W', 'W', 'D', 'W', 'W']) },
+    { position: 2, team: 'Leverkusen', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/59/Bayer_04_Leverkusen_logo.svg', played: 26, won: 18, drawn: 4, lost: 4, gf: 58, ga: 25, gd: 33, points: 58, league: 'Bundesliga', form: JSON.stringify(['W', 'W', 'D', 'W', 'L']) },
+    { position: 3, team: 'Dortmund', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg', played: 26, won: 17, drawn: 5, lost: 4, gf: 55, ga: 30, gd: 25, points: 56, league: 'Bundesliga', form: JSON.stringify(['D', 'W', 'W', 'L', 'W']) },
+    { position: 4, team: 'Stuttgart', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/02/VfB_Stuttgart_1893_logo.svg', played: 26, won: 15, drawn: 5, lost: 6, gf: 50, ga: 32, gd: 18, points: 50, league: 'Bundesliga', form: JSON.stringify(['W', 'D', 'W', 'W', 'L']) },
+    { position: 5, team: 'RB Leipzig', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/e2/RB_Leipzig_2014_logo.svg', played: 26, won: 14, drawn: 4, lost: 8, gf: 52, ga: 35, gd: 17, points: 46, league: 'Bundesliga', form: JSON.stringify(['W', 'L', 'W', 'D', 'W']) },
+    { position: 6, team: 'Frankfurt', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/e5/Eintracht_Frankfurt_logo.svg', played: 26, won: 12, drawn: 6, lost: 8, gf: 48, ga: 38, gd: 10, points: 42, league: 'Bundesliga', form: JSON.stringify(['D', 'W', 'L', 'W', 'W']) },
+    { position: 7, team: 'Freiburg', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/6/6d/SC_Freiburg_logo.svg', played: 26, won: 11, drawn: 5, lost: 10, gf: 40, ga: 40, gd: 0, points: 38, league: 'Bundesliga', form: JSON.stringify(['L', 'W', 'D', 'L', 'W']) },
+    { position: 8, team: 'Wolfsburg', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/2/28/VfL_Wolfsburg_logo.svg', played: 26, won: 10, drawn: 5, lost: 11, gf: 38, ga: 42, gd: -4, points: 35, league: 'Bundesliga', form: JSON.stringify(['L', 'D', 'W', 'L', 'L']) },
     // --- Ligue 1 ---
-    { position: 1, team: 'PSG', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', played: 26, won: 20, drawn: 4, lost: 2, gf: 60, ga: 18, gd: 42, points: 64, league: 'Ligue 1', form: JSON.stringify(['W','W','W','D','W']) },
-    { position: 2, team: 'Marseille', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/2/26/Olympique_de_Marseille_logo.svg', played: 26, won: 16, drawn: 5, lost: 5, gf: 48, ga: 28, gd: 20, points: 53, league: 'Ligue 1', form: JSON.stringify(['W','D','W','W','L']) },
-    { position: 3, team: 'Monaco', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/AS_Monaco_logo.svg', played: 26, won: 15, drawn: 5, lost: 6, gf: 50, ga: 30, gd: 20, points: 50, league: 'Ligue 1', form: JSON.stringify(['W','W','D','W','L']) },
-    { position: 4, team: 'Lille', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f2/Lille_OSC_logo.svg', played: 26, won: 14, drawn: 4, lost: 8, gf: 42, ga: 30, gd: 12, points: 46, league: 'Ligue 1', form: JSON.stringify(['W','L','W','W','D']) },
-    { position: 5, team: 'Lyon', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/3/3c/Olympique_Lyonnais_logo.svg', played: 26, won: 12, drawn: 5, lost: 9, gf: 45, ga: 38, gd: 7, points: 41, league: 'Ligue 1', form: JSON.stringify(['D','W','L','D','W']) },
-    { position: 6, team: 'Nice', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/8/81/OGC_Nice_logo.svg', played: 26, won: 11, drawn: 5, lost: 10, gf: 38, ga: 35, gd: 3, points: 38, league: 'Ligue 1', form: JSON.stringify(['L','W','D','L','W']) },
+    { position: 1, team: 'PSG', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', played: 26, won: 20, drawn: 4, lost: 2, gf: 60, ga: 18, gd: 42, points: 64, league: 'Ligue 1', form: JSON.stringify(['W', 'W', 'W', 'D', 'W']) },
+    { position: 2, team: 'Marseille', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/2/26/Olympique_de_Marseille_logo.svg', played: 26, won: 16, drawn: 5, lost: 5, gf: 48, ga: 28, gd: 20, points: 53, league: 'Ligue 1', form: JSON.stringify(['W', 'D', 'W', 'W', 'L']) },
+    { position: 3, team: 'Monaco', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/AS_Monaco_logo.svg', played: 26, won: 15, drawn: 5, lost: 6, gf: 50, ga: 30, gd: 20, points: 50, league: 'Ligue 1', form: JSON.stringify(['W', 'W', 'D', 'W', 'L']) },
+    { position: 4, team: 'Lille', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f2/Lille_OSC_logo.svg', played: 26, won: 14, drawn: 4, lost: 8, gf: 42, ga: 30, gd: 12, points: 46, league: 'Ligue 1', form: JSON.stringify(['W', 'L', 'W', 'W', 'D']) },
+    { position: 5, team: 'Lyon', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/3/3c/Olympique_Lyonnais_logo.svg', played: 26, won: 12, drawn: 5, lost: 9, gf: 45, ga: 38, gd: 7, points: 41, league: 'Ligue 1', form: JSON.stringify(['D', 'W', 'L', 'D', 'W']) },
+    { position: 6, team: 'Nice', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/8/81/OGC_Nice_logo.svg', played: 26, won: 11, drawn: 5, lost: 10, gf: 38, ga: 35, gd: 3, points: 38, league: 'Ligue 1', form: JSON.stringify(['L', 'W', 'D', 'L', 'W']) },
     // --- BRI Liga 1 (Indonesia) ---
-    { position: 1, team: 'Persib Bandung', teamLogo: '', played: 26, won: 16, drawn: 5, lost: 5, gf: 45, ga: 22, gd: 23, points: 53, league: 'Liga 1 Indonesia', form: JSON.stringify(['W','W','D','W','W']) },
-    { position: 2, team: 'Persija Jakarta', teamLogo: '', played: 26, won: 15, drawn: 6, lost: 5, gf: 42, ga: 24, gd: 18, points: 51, league: 'Liga 1 Indonesia', form: JSON.stringify(['W','D','W','W','L']) },
-    { position: 3, team: 'Arema FC', teamLogo: '', played: 26, won: 14, drawn: 4, lost: 8, gf: 40, ga: 30, gd: 10, points: 46, league: 'Liga 1 Indonesia', form: JSON.stringify(['W','L','W','D','W']) },
-    { position: 4, team: 'Bali United', teamLogo: '', played: 26, won: 13, drawn: 5, lost: 8, gf: 38, ga: 28, gd: 10, points: 44, league: 'Liga 1 Indonesia', form: JSON.stringify(['W','W','L','W','D']) },
-    { position: 5, team: 'PSM Makassar', teamLogo: '', played: 26, won: 12, drawn: 6, lost: 8, gf: 35, ga: 28, gd: 7, points: 42, league: 'Liga 1 Indonesia', form: JSON.stringify(['D','W','W','L','W']) },
-    { position: 6, team: 'Persebaya Surabaya', teamLogo: '', played: 26, won: 11, drawn: 5, lost: 10, gf: 34, ga: 32, gd: 2, points: 38, league: 'Liga 1 Indonesia', form: JSON.stringify(['L','W','D','W','D']) },
-    { position: 7, team: 'Borneo FC', teamLogo: '', played: 26, won: 10, drawn: 5, lost: 11, gf: 30, ga: 35, gd: -5, points: 35, league: 'Liga 1 Indonesia', form: JSON.stringify(['L','D','W','L','L']) },
-    { position: 8, team: 'PSIS Semarang', teamLogo: '', played: 26, won: 8, drawn: 6, lost: 12, gf: 25, ga: 38, gd: -13, points: 30, league: 'Liga 1 Indonesia', form: JSON.stringify(['L','L','D','L','W']) },
+    { position: 1, team: 'Persib Bandung', teamLogo: '', played: 26, won: 16, drawn: 5, lost: 5, gf: 45, ga: 22, gd: 23, points: 53, league: 'Liga 1 Indonesia', form: JSON.stringify(['W', 'W', 'D', 'W', 'W']) },
+    { position: 2, team: 'Persija Jakarta', teamLogo: '', played: 26, won: 15, drawn: 6, lost: 5, gf: 42, ga: 24, gd: 18, points: 51, league: 'Liga 1 Indonesia', form: JSON.stringify(['W', 'D', 'W', 'W', 'L']) },
+    { position: 3, team: 'Arema FC', teamLogo: '', played: 26, won: 14, drawn: 4, lost: 8, gf: 40, ga: 30, gd: 10, points: 46, league: 'Liga 1 Indonesia', form: JSON.stringify(['W', 'L', 'W', 'D', 'W']) },
+    { position: 4, team: 'Bali United', teamLogo: '', played: 26, won: 13, drawn: 5, lost: 8, gf: 38, ga: 28, gd: 10, points: 44, league: 'Liga 1 Indonesia', form: JSON.stringify(['W', 'W', 'L', 'W', 'D']) },
+    { position: 5, team: 'PSM Makassar', teamLogo: '', played: 26, won: 12, drawn: 6, lost: 8, gf: 35, ga: 28, gd: 7, points: 42, league: 'Liga 1 Indonesia', form: JSON.stringify(['D', 'W', 'W', 'L', 'W']) },
+    { position: 6, team: 'Persebaya Surabaya', teamLogo: '', played: 26, won: 11, drawn: 5, lost: 10, gf: 34, ga: 32, gd: 2, points: 38, league: 'Liga 1 Indonesia', form: JSON.stringify(['L', 'W', 'D', 'W', 'D']) },
+    { position: 7, team: 'Borneo FC', teamLogo: '', played: 26, won: 10, drawn: 5, lost: 11, gf: 30, ga: 35, gd: -5, points: 35, league: 'Liga 1 Indonesia', form: JSON.stringify(['L', 'D', 'W', 'L', 'L']) },
+    { position: 8, team: 'PSIS Semarang', teamLogo: '', played: 26, won: 8, drawn: 6, lost: 12, gf: 25, ga: 38, gd: -13, points: 30, league: 'Liga 1 Indonesia', form: JSON.stringify(['L', 'L', 'D', 'L', 'W']) },
     // --- Eredivisie ---
-    { position: 1, team: 'PSV', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/2/2d/PSV_Eindhoven_Logo.svg', played: 26, won: 22, drawn: 2, lost: 2, gf: 70, ga: 18, gd: 52, points: 68, league: 'Eredivisie', form: JSON.stringify(['W','W','W','D','W']) },
-    { position: 2, team: 'Ajax', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Ajax_Amsterdam_logo.svg', played: 26, won: 18, drawn: 4, lost: 4, gf: 58, ga: 25, gd: 33, points: 58, league: 'Eredivisie', form: JSON.stringify(['W','W','D','W','W']) },
-    { position: 3, team: 'Feyenoord', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/95/Feyenoord_logo.svg', played: 26, won: 17, drawn: 3, lost: 6, gf: 55, ga: 30, gd: 25, points: 54, league: 'Eredivisie', form: JSON.stringify(['W','D','W','L','W']) },
-    { position: 4, team: 'AZ Alkmaar', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/45/AZ_Alkmaar_logo.svg', played: 26, won: 14, drawn: 5, lost: 7, gf: 48, ga: 32, gd: 16, points: 47, league: 'Eredivisie', form: JSON.stringify(['D','W','L','W','W']) },
-    { position: 5, team: 'Twente', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/0e/FC_Twente_logo.svg', played: 26, won: 13, drawn: 5, lost: 8, gf: 45, ga: 33, gd: 12, points: 44, league: 'Eredivisie', form: JSON.stringify(['W','L','W','D','W']) },
-    { position: 6, team: 'Utrecht', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/8/86/FC_Utrecht_logo.svg', played: 26, won: 11, drawn: 6, lost: 9, gf: 40, ga: 35, gd: 5, points: 39, league: 'Eredivisie', form: JSON.stringify(['D','W','L','W','D']) },
+    { position: 1, team: 'PSV', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/2/2d/PSV_Eindhoven_Logo.svg', played: 26, won: 22, drawn: 2, lost: 2, gf: 70, ga: 18, gd: 52, points: 68, league: 'Eredivisie', form: JSON.stringify(['W', 'W', 'W', 'D', 'W']) },
+    { position: 2, team: 'Ajax', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Ajax_Amsterdam_logo.svg', played: 26, won: 18, drawn: 4, lost: 4, gf: 58, ga: 25, gd: 33, points: 58, league: 'Eredivisie', form: JSON.stringify(['W', 'W', 'D', 'W', 'W']) },
+    { position: 3, team: 'Feyenoord', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/95/Feyenoord_logo.svg', played: 26, won: 17, drawn: 3, lost: 6, gf: 55, ga: 30, gd: 25, points: 54, league: 'Eredivisie', form: JSON.stringify(['W', 'D', 'W', 'L', 'W']) },
+    { position: 4, team: 'AZ Alkmaar', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/45/AZ_Alkmaar_logo.svg', played: 26, won: 14, drawn: 5, lost: 7, gf: 48, ga: 32, gd: 16, points: 47, league: 'Eredivisie', form: JSON.stringify(['D', 'W', 'L', 'W', 'W']) },
+    { position: 5, team: 'Twente', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/0/0e/FC_Twente_logo.svg', played: 26, won: 13, drawn: 5, lost: 8, gf: 45, ga: 33, gd: 12, points: 44, league: 'Eredivisie', form: JSON.stringify(['W', 'L', 'W', 'D', 'W']) },
+    { position: 6, team: 'Utrecht', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/8/86/FC_Utrecht_logo.svg', played: 26, won: 11, drawn: 6, lost: 9, gf: 40, ga: 35, gd: 5, points: 39, league: 'Eredivisie', form: JSON.stringify(['D', 'W', 'L', 'W', 'D']) },
     // --- Champions League ---
-    { position: 1, team: 'Real Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg', played: 6, won: 4, drawn: 1, lost: 1, gf: 12, ga: 5, gd: 7, points: 13, league: 'Champions League', form: JSON.stringify(['W','D','W','W','L']) },
-    { position: 2, team: 'Manchester City', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg', played: 6, won: 3, drawn: 2, lost: 1, gf: 10, ga: 5, gd: 5, points: 11, league: 'Champions League', form: JSON.stringify(['W','W','D','W','D']) },
-    { position: 3, team: 'Barcelona', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', played: 6, won: 3, drawn: 1, lost: 2, gf: 9, ga: 7, gd: 2, points: 10, league: 'Champions League', form: JSON.stringify(['W','L','W','D','L']) },
-    { position: 4, team: 'Inter Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg', played: 6, won: 3, drawn: 1, lost: 2, gf: 8, ga: 6, gd: 2, points: 10, league: 'Champions League', form: JSON.stringify(['W','D','L','W','W']) },
-    { position: 5, team: 'Bayern Munich', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', played: 6, won: 2, drawn: 2, lost: 2, gf: 8, ga: 7, gd: 1, points: 8, league: 'Champions League', form: JSON.stringify(['D','W','L','D','W']) },
-    { position: 6, team: 'Arsenal', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', played: 6, won: 2, drawn: 2, lost: 2, gf: 7, ga: 6, gd: 1, points: 8, league: 'Champions League', form: JSON.stringify(['W','D','W','L','D']) },
-    { position: 7, team: 'PSG', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', played: 6, won: 2, drawn: 1, lost: 3, gf: 7, ga: 8, gd: -1, points: 7, league: 'Champions League', form: JSON.stringify(['L','W','D','L','W']) },
-    { position: 8, team: 'Dortmund', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg', played: 6, won: 1, drawn: 2, lost: 3, gf: 5, ga: 9, gd: -4, points: 5, league: 'Champions League', form: JSON.stringify(['L','D','L','W','D']) },
+    { position: 1, team: 'Real Madrid', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg', played: 6, won: 4, drawn: 1, lost: 1, gf: 12, ga: 5, gd: 7, points: 13, league: 'Champions League', form: JSON.stringify(['W', 'D', 'W', 'W', 'L']) },
+    { position: 2, team: 'Manchester City', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg', played: 6, won: 3, drawn: 2, lost: 1, gf: 10, ga: 5, gd: 5, points: 11, league: 'Champions League', form: JSON.stringify(['W', 'W', 'D', 'W', 'D']) },
+    { position: 3, team: 'Barcelona', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', played: 6, won: 3, drawn: 1, lost: 2, gf: 9, ga: 7, gd: 2, points: 10, league: 'Champions League', form: JSON.stringify(['W', 'L', 'W', 'D', 'L']) },
+    { position: 4, team: 'Inter Milan', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg', played: 6, won: 3, drawn: 1, lost: 2, gf: 8, ga: 6, gd: 2, points: 10, league: 'Champions League', form: JSON.stringify(['W', 'D', 'L', 'W', 'W']) },
+    { position: 5, team: 'Bayern Munich', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg', played: 6, won: 2, drawn: 2, lost: 2, gf: 8, ga: 7, gd: 1, points: 8, league: 'Champions League', form: JSON.stringify(['D', 'W', 'L', 'D', 'W']) },
+    { position: 6, team: 'Arsenal', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', played: 6, won: 2, drawn: 2, lost: 2, gf: 7, ga: 6, gd: 1, points: 8, league: 'Champions League', form: JSON.stringify(['W', 'D', 'W', 'L', 'D']) },
+    { position: 7, team: 'PSG', teamLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', played: 6, won: 2, drawn: 1, lost: 3, gf: 7, ga: 8, gd: -1, points: 7, league: 'Champions League', form: JSON.stringify(['L', 'W', 'D', 'L', 'W']) },
+    { position: 8, team: 'Dortmund', teamLogo: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg', played: 6, won: 1, drawn: 2, lost: 3, gf: 5, ga: 9, gd: -4, points: 5, league: 'Champions League', form: JSON.stringify(['L', 'D', 'L', 'W', 'D']) },
   ];
 
   for (const standing of standings) {

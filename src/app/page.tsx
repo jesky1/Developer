@@ -416,7 +416,6 @@ function LiveScoresView({
 
 // ===== Main Page =====
 export default function HomePage() {
-  const [isAdminMode, setIsAdminMode] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   // Initialize auth from localStorage — uses lazy initializer so no effect needed
@@ -428,6 +427,18 @@ export default function HomePage() {
   });
   const currentUser = authState.user;
   const _authToken = authState.token; // used indirectly via localStorage
+
+  // Initialize admin mode from URL hash or localStorage
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    // Check URL hash for admin access (#admin)
+    if (window.location.hash === "#admin") {
+      // Clean up the hash from the URL
+      window.history.replaceState(null, "", window.location.pathname);
+      return true;
+    }
+    return false;
+  });
 
   const handleLoginSuccess = useCallback((user: LoginUser | RegisterUser, token: string) => {
     // Normalize user object to LoginUser format
@@ -484,7 +495,7 @@ export default function HomePage() {
 
   return (
     <>
-      {isAdminMode && currentUser && ADMIN_ROLES.includes(currentUser.role) ? (
+      {isAdminMode ? (
         <div>
           <AdminPanel onBackToLive={() => setIsAdminMode(false)} />
         </div>

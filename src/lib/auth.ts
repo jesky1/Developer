@@ -1,6 +1,5 @@
 import { jwtVerify, SignJWT } from 'jose'
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'goalzone-jwt-secret-key-change-in-production'
@@ -77,6 +76,8 @@ export async function getAuthUser(request: NextRequest) {
   try {
     const token = authHeader.substring(7)
     const payload = await verifyToken(token)
+    // Use dynamic import to avoid build-time PrismaClient initialization issues
+    const { db } = await import('@/lib/db')
     const user = await db.adminUser.findUnique({ where: { id: payload.userId } })
     return user
   } catch {
