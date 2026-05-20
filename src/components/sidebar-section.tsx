@@ -224,7 +224,7 @@ function TopScorers({
             >
               {leagueScorers.map((scorer, i) => (
                 <motion.div
-                  key={`${scorer.name}-${scorer.team}`}
+                  key={`${scorer.name}-${scorer.team}-${i}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
