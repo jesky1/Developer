@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigation } from "@/hooks/use-navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, Zap, Home, Loader2, LogIn, User, ShieldCheck, LogOut, ChevronDown } from "lucide-react";
+import { Search, Menu, X, Zap, Home, Loader2, LogIn, User, ShieldCheck, LogOut, ChevronDown, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -26,6 +26,7 @@ interface NavbarProps {
   onLoginClick?: () => void;
   onLogout?: () => void;
   onOpenAdmin?: () => void;
+  onChangePassword?: () => void;
   matches?: Array<{
     id: string;
     homeTeam: string;
@@ -42,7 +43,7 @@ interface NavbarProps {
 
 const ADMIN_ROLES = ["superadmin", "admin", "editor"];
 
-export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, matches = [] }: NavbarProps) {
+export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, onChangePassword, matches = [] }: NavbarProps) {
   const { navigate } = useNavigation();
   const { t } = useTranslation();
 
@@ -124,6 +125,11 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
     setUserDropdownOpen(false);
     onOpenAdmin?.();
   }, [onOpenAdmin]);
+
+  const handleChangePassword = useCallback(() => {
+    setUserDropdownOpen(false);
+    onChangePassword?.();
+  }, [onChangePassword]);
 
   // Get initials for avatar
   const userInitials = currentUser?.displayName
@@ -336,6 +342,13 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                           </button>
                         )}
                         <button
+                          onClick={handleChangePassword}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-neon/10 transition-colors text-left"
+                        >
+                          <KeyRound className="w-4 h-4 text-neon" />
+                          <span className="text-sm text-foreground">{t("nav.changePassword")}</span>
+                        </button>
+                        <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-red-500/10 transition-colors text-left"
                         >
@@ -441,6 +454,16 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
                       {t("nav.admin")}
                     </button>
                   )}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleChangePassword();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-neon hover:bg-neon/10"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    {t("nav.changePassword")}
+                  </button>
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);

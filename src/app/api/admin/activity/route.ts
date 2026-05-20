@@ -1,7 +1,8 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
-// GET: List activity logs with pagination
+// GET: List activity logs with pagination + filtering
+// Query params: page, limit, userId, action, resource
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -9,8 +10,19 @@ export async function GET(request: Request) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)))
     const skip = (page - 1) * limit
 
+    // Filters
+    const userId = searchParams.get('userId') || undefined
+    const action = searchParams.get('action') || undefined
+    const resource = searchParams.get('resource') || undefined
+
+    const where: Record<string, unknown> = {}
+    if (userId) where.userId = userId
+    if (action) where.action = action
+    if (resource) where.resource = resource
+
     const [logs, total] = await Promise.all([
       db.activityLog.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -18,12 +30,13 @@ export async function GET(request: Request) {
           user: {
             select: {
               displayName: true,
+              username: true,
               role: true,
             },
           },
         },
       }),
-      db.activityLog.count(),
+      db.activityLog.count({ where }),
     ])
 
     const result = logs.map((log) => ({

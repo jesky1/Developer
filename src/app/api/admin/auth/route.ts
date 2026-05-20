@@ -236,24 +236,36 @@ async function handleLogin(request: NextRequest) {
     )
   }
 
-  // 8. Update last login (non-blocking, ignore errors)
+  // 8. Capture IP address and user-agent from request headers
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  const ip = forwardedFor?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || request.ip
+    || '127.0.0.1'
+  const userAgent = request.headers.get('user-agent') || 'Unknown'
+
+  // 9. Update last login (non-blocking, ignore errors)
   db.adminUser.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date() },
   }).catch((err) => console.error('Failed to update lastLoginAt:', err))
 
-  // 9. Create activity log (non-blocking, ignore errors)
+  // 10. Create activity log with IP + user-agent (non-blocking, ignore errors)
   db.activityLog.create({
     data: {
       userId: user.id,
       action: 'login',
       resource: 'auth',
       resourceId: user.id,
-      details: JSON.stringify({ username: user.username }),
+      ip,
+      details: JSON.stringify({
+        username: user.username,
+        userAgent,
+      }),
     },
   }).catch((err) => console.error('Failed to create activity log:', err))
 
-  // 10. Return success — user data without password
+  // 11. Return success — user data without password
   const { passwordHash: _ph, ...userWithoutPassword } = user
 
   return NextResponse.json({

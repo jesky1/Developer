@@ -12,6 +12,16 @@ import {
   Loader2,
   ShieldCheck,
   UserCog,
+  Globe,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Clock,
+  MapPin,
+  Chrome,
+  LogIn,
+  ChevronRight,
+  X,
 } from 'lucide-react'
 
 import {
@@ -53,6 +63,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 // ===== Types =====
 interface AdminUser {
@@ -69,11 +80,92 @@ interface AdminUser {
   activityCount: number
 }
 
+interface LoginActivity {
+  id: string
+  userId: string | null
+  action: string
+  resource: string
+  resourceId: string
+  details: string
+  ip: string
+  createdAt: string
+  user: {
+    displayName: string | null
+    username?: string | null
+    role: string | null
+  } | null
+}
+
 interface UserFormData {
   username: string
   email: string
   displayName: string
   role: string
+}
+
+// ===== User-Agent Parser =====
+interface ParsedUA {
+  browser: string
+  browserIcon: React.ReactNode
+  os: string
+  deviceType: string
+  deviceIcon: React.ReactNode
+}
+
+function parseUserAgent(ua: string): ParsedUA {
+  if (!ua || ua === 'Unknown') {
+    return {
+      browser: 'Unknown',
+      browserIcon: <Chrome className="size-3.5 text-muted-foreground" />,
+      os: 'Unknown',
+      deviceType: 'Unknown',
+      deviceIcon: <Monitor className="size-3.5 text-muted-foreground" />,
+    }
+  }
+
+  // Parse browser
+  let browser = 'Unknown'
+  let browserIcon: React.ReactNode = <Chrome className="size-3.5 text-muted-foreground" />
+
+  if (ua.includes('Firefox/')) {
+    browser = 'Firefox'
+    browserIcon = <span className="text-orange-500 text-xs font-bold">Fx</span>
+  } else if (ua.includes('Edg/')) {
+    browser = 'Edge'
+    browserIcon = <span className="text-blue-500 text-xs font-bold">E</span>
+  } else if (ua.includes('Chrome/') && !ua.includes('Edg/')) {
+    browser = 'Chrome'
+    browserIcon = <span className="text-green-500 text-xs font-bold">Ch</span>
+  } else if (ua.includes('Safari/') && !ua.includes('Chrome/')) {
+    browser = 'Safari'
+    browserIcon = <span className="text-sky-500 text-xs font-bold">Sf</span>
+  } else if (ua.includes('Opera/') || ua.includes('OPR/')) {
+    browser = 'Opera'
+    browserIcon = <span className="text-red-500 text-xs font-bold">Op</span>
+  }
+
+  // Parse OS
+  let os = 'Unknown'
+  if (ua.includes('Windows')) os = 'Windows'
+  else if (ua.includes('Mac OS X')) os = 'macOS'
+  else if (ua.includes('Linux') && !ua.includes('Android')) os = 'Linux'
+  else if (ua.includes('Android')) os = 'Android'
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS'
+  else if (ua.includes('CrOS')) os = 'Chrome OS'
+
+  // Parse device type
+  let deviceType = 'Desktop'
+  let deviceIcon: React.ReactNode = <Monitor className="size-3.5 text-muted-foreground" />
+
+  if (/Mobi|Android.*Mobile|iPhone/i.test(ua)) {
+    deviceType = 'Mobile'
+    deviceIcon = <Smartphone className="size-3.5 text-sky-500" />
+  } else if (/iPad|Android(?!.*Mobile)|Tablet/i.test(ua)) {
+    deviceType = 'Tablet'
+    deviceIcon = <Tablet className="size-3.5 text-purple-500" />
+  }
+
+  return { browser, browserIcon, os, deviceType, deviceIcon }
 }
 
 // ===== Role badge config =====
@@ -102,6 +194,23 @@ function formatDate(dateStr: string | null): string {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+    })
+  } catch {
+    return 'Invalid'
+  }
+}
+
+function formatDateFull(dateStr: string): string {
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     })
   } catch {
     return 'Invalid'
@@ -153,6 +262,12 @@ export function AdminUsers() {
   const [deletingUser, setDeletingUser] = React.useState<AdminUser | null>(null)
   const [deleting, setDeleting] = React.useState(false)
 
+  // Login details dialog state
+  const [loginDetailOpen, setLoginDetailOpen] = React.useState(false)
+  const [loginDetailUser, setLoginDetailUser] = React.useState<AdminUser | null>(null)
+  const [loginActivities, setLoginActivities] = React.useState<LoginActivity[]>([])
+  const [loadingActivities, setLoadingActivities] = React.useState(false)
+
   // Pagination
   const [currentPage, setCurrentPage] = React.useState(1)
   const pageSize = 10
@@ -175,6 +290,29 @@ export function AdminUsers() {
   React.useEffect(() => {
     fetchUsers()
   }, [fetchUsers])
+
+  // Fetch login activities for a specific user
+  const fetchLoginActivities = React.useCallback(async (userId: string) => {
+    setLoadingActivities(true)
+    try {
+      const res = await fetch(`/api/admin/activity?userId=${userId}&action=login&limit=50`)
+      if (!res.ok) throw new Error('Failed to fetch activities')
+      const data = await res.json()
+      setLoginActivities(data.data || [])
+    } catch {
+      toast.error('Failed to load login history')
+      setLoginActivities([])
+    } finally {
+      setLoadingActivities(false)
+    }
+  }, [])
+
+  // Open login detail dialog for a user
+  const handleViewLoginDetails = (user: AdminUser) => {
+    setLoginDetailUser(user)
+    setLoginDetailOpen(true)
+    fetchLoginActivities(user.id)
+  }
 
   // Filter users
   const filteredUsers = React.useMemo(() => {
@@ -420,7 +558,8 @@ export function AdminUsers() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.2, delay: i * 0.03 }}
-                        className="border-b transition-colors hover:bg-muted/50 group"
+                        className="border-b transition-colors hover:bg-muted/50 group cursor-pointer"
+                        onClick={() => handleViewLoginDetails(user)}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -469,12 +608,24 @@ export function AdminUsers() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell">
-                          <span className="text-xs text-muted-foreground" title={formatDate(user.lastLoginAt)}>
-                            {formatRelativeTime(user.lastLoginAt)}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="size-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground" title={formatDate(user.lastLoginAt)}>
+                              {formatRelativeTime(user.lastLoginAt)}
+                            </span>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleViewLoginDetails(user)}
+                              title="View login details"
+                            >
+                              <LogIn className="size-3.5" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -687,6 +838,213 @@ export function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Login Details Dialog */}
+      <Dialog open={loginDetailOpen} onOpenChange={setLoginDetailOpen}>
+        <DialogContent className="glass-card sm:max-w-lg p-0 overflow-hidden">
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4 border-b border-border/50">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LogIn className="size-5 text-neon" />
+                Login Details
+              </DialogTitle>
+              <DialogDescription className="flex items-center gap-2 mt-1">
+                {loginDetailUser && (
+                  <>
+                    <Avatar className="size-5">
+                      <AvatarFallback className="text-[8px] font-bold bg-neon/20 text-neon">
+                        {getInitials(loginDetailUser.displayName || loginDetailUser.username)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>
+                      {loginDetailUser.displayName || loginDetailUser.username}
+                      <span className="text-muted-foreground"> — {loginDetailUser.email}</span>
+                    </span>
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Quick stats */}
+            {loginDetailUser && (
+              <div className="mt-3 flex flex-wrap gap-3">
+                <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`${roleBadgeConfig[loginDetailUser.role]?.bg || ''} ${roleBadgeConfig[loginDetailUser.role]?.text || ''} ${roleBadgeConfig[loginDetailUser.role]?.border || ''} text-[9px] uppercase`}
+                  >
+                    {loginDetailUser.role}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                  <Clock className="size-3" />
+                  Last: {formatRelativeTime(loginDetailUser.lastLoginAt)}
+                </div>
+                <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                  <LogIn className="size-3" />
+                  {loginActivities.length} login{loginActivities.length !== 1 ? 's' : ''} recorded
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Login activity list */}
+          <div className="px-6 py-4">
+            {loadingActivities ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                    <Skeleton className="size-8 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-3 w-40" />
+                      <Skeleton className="h-2 w-28" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : loginActivities.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                  <LogIn className="size-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">No login history</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Login activity will appear here when this user logs in
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <ScrollArea className="max-h-96">
+                <div className="space-y-2 pr-2">
+                  {loginActivities.map((activity, i) => {
+                    let details: Record<string, unknown> = {}
+                    try {
+                      details = JSON.parse(activity.details || '{}')
+                    } catch { /* empty */ }
+
+                    const ua = (details.userAgent as string) || ''
+                    const parsed = parseUserAgent(ua)
+                    const isFirst = i === 0
+
+                    return (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className={`rounded-lg border p-3 transition-colors ${isFirst
+                            ? 'border-neon/20 bg-neon/5'
+                            : 'border-border/50 bg-muted/30 hover:bg-muted/50'
+                          }`}
+                      >
+                        {/* Login time + first badge */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Clock className="size-3.5 text-muted-foreground" />
+                            <span className="text-xs font-medium text-foreground">
+                              {formatDateFull(activity.createdAt)}
+                            </span>
+                          </div>
+                          {isFirst && (
+                            <Badge className="bg-neon/15 text-neon border-neon/30 text-[9px] px-1.5 py-0">
+                              Latest
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Detail grid */}
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+                          {/* IP Address */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-6 rounded bg-muted/80">
+                              <Globe className="size-3 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">IP Address</p>
+                              <p className="text-xs font-medium text-foreground font-mono">
+                                {activity.ip || '—'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Browser */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-6 rounded bg-muted/80">
+                              {parsed.browserIcon}
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Browser</p>
+                              <p className="text-xs font-medium text-foreground">
+                                {parsed.browser}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Device Type */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-6 rounded bg-muted/80">
+                              {parsed.deviceIcon}
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">Device</p>
+                              <p className="text-xs font-medium text-foreground">
+                                {parsed.deviceType}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* OS */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center size-6 rounded bg-muted/80">
+                              <Monitor className="size-3 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground leading-none mb-0.5">OS</p>
+                              <p className="text-xs font-medium text-foreground">
+                                {parsed.os}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Raw user-agent (collapsible) */}
+                        {ua && ua !== 'Unknown' && (
+                          <details className="mt-2">
+                            <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                              User-Agent string
+                            </summary>
+                            <p className="text-[9px] text-muted-foreground break-all mt-1 bg-muted/50 rounded px-2 py-1 font-mono leading-relaxed">
+                              {ua}
+                            </p>
+                          </details>
+                        )}
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-3 border-t border-border/50 flex items-center justify-between">
+            <p className="text-[10px] text-muted-foreground">
+              Showing last {loginActivities.length} login{loginActivities.length !== 1 ? 's' : ''}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLoginDetailOpen(false)}
+              className="gap-1.5"
+            >
+              <X className="size-3" />
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

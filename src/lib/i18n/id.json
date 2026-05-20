@@ -8,6 +8,7 @@
     "admin": "Panel Admin",
     "login": "Masuk",
     "logout": "Keluar",
+    "changePassword": "Ubah Password",
     "search": "Cari klub, liga...",
     "noMatchesFound": "Tidak ada pertandingan untuk"
   },
@@ -177,7 +178,23 @@
     "confirmMismatch": "Konfirmasi password tidak cocok",
     "configError": "Terjadi kesalahan konfigurasi",
     "googleFailed": "Gagal login dengan Google",
-    "googleRegisterFailed": "Gagal mendaftar dengan Google"
+    "googleRegisterFailed": "Gagal mendaftar dengan Google",
+    "changePassword": {
+      "title": "Ubah Password",
+      "subtitle": "Perbarui password akun Anda",
+      "currentPassword": "Password Saat Ini",
+      "enterCurrentPassword": "Masukkan password saat ini",
+      "newPassword": "Password Baru",
+      "enterNewPassword": "Masukkan password baru",
+      "confirmNewPassword": "Konfirmasi Password Baru",
+      "repeatNewPassword": "Ulangi password baru",
+      "submit": "Ubah Password",
+      "changing": "Mengubah password...",
+      "success": "Password berhasil diubah!",
+      "failed": "Gagal mengubah password",
+      "allFieldsRequired": "Semua kolom harus diisi",
+      "samePassword": "Password baru harus berbeda dari password saat ini"
+    }
   },
   "polls": {
     "title": "Polling Penggemar",

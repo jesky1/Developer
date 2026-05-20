@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Navbar, type LoginUser } from "@/components/navbar";
 import { LoginModal } from "@/components/login-modal";
 import { RegisterModal, type RegisterUser } from "@/components/register-modal";
+import { ChangePasswordModal } from "@/components/change-password-modal";
 import { LiveTicker } from "@/components/live-ticker";
 import { FeaturedMatch } from "@/components/featured-match";
 import { MatchTimeline } from "@/components/match-timeline";
@@ -93,11 +94,13 @@ function LiveScoresView({
   onLoginClick,
   onLogout,
   onOpenAdmin,
+  onChangePassword,
 }: {
   currentUser: LoginUser | null;
   onLoginClick: () => void;
   onLogout: () => void;
   onOpenAdmin: () => void;
+  onChangePassword: () => void;
 }) {
   const {
     isConnected,
@@ -217,6 +220,7 @@ function LiveScoresView({
           onLoginClick={onLoginClick}
           onLogout={onLogout}
           onOpenAdmin={onOpenAdmin}
+          onChangePassword={onChangePassword}
           matches={matches}
         />
 
@@ -406,6 +410,7 @@ export default function HomePage() {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   // Initialize auth from localStorage — uses lazy initializer so no effect needed
   const [authState, setAuthState] = useState(() => {
     // This runs once during initial render (client-only logic safe because ssr:false wrapper)
@@ -460,6 +465,10 @@ export default function HomePage() {
     setIsAdminMode(true);
   }, []);
 
+  const handleChangePassword = useCallback(() => {
+    setIsChangePasswordOpen(true);
+  }, []);
+
   // Wait for auth initialization to avoid flash
   if (!authState.initialized) {
     return (
@@ -481,6 +490,7 @@ export default function HomePage() {
           onLoginClick={() => setIsLoginOpen(true)}
           onLogout={handleLogout}
           onOpenAdmin={handleOpenAdmin}
+          onChangePassword={handleChangePassword}
         />
       )}
 
@@ -502,6 +512,14 @@ export default function HomePage() {
           setIsLoginOpen(true);
         }}
         onRegisterSuccess={handleLoginSuccess}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        userId={currentUser?.id || ""}
+        username={currentUser?.username || currentUser?.displayName || ""}
+        isAdmin={currentUser ? ADMIN_ROLES.includes(currentUser.role) : false}
       />
     </>
   );
