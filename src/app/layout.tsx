@@ -136,6 +136,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="view-transition" content="same-origin" />
+        <link rel="apple-touch-icon" href="/goalzone-logo.png" sizes="180x180" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone-live.vercel.app/api/news/rss" />
         <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone-live.vercel.app/api/sitemap" />

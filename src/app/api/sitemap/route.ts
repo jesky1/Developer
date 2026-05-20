@@ -1,16 +1,30 @@
-import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 3600
+
+async function getDb() {
+  // Dynamic import to ensure dotenv is loaded first
+  const { db } = await import('@/lib/db')
+  return db
+}
 
 export async function GET() {
   try {
-    const news = await db.newsItem.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    })
+    const db = await getDb()
 
-    const matches = await db.match.findMany()
+    const [news, matches] = await Promise.all([
+      db.newsItem.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+        select: { slug: true, id: true, updatedAt: true },
+      }).catch(() => []),
+      db.match.findMany({
+        select: { id: true, updatedAt: true },
+      }).catch(() => []),
+    ])
 
-    const baseUrl = 'https://goalzone.app'
+    const baseUrl = 'https://goalzone-live.vercel.app'
     const now = new Date().toISOString()
 
     const newsUrls = news.map((article) => {
@@ -62,9 +76,23 @@ ${newsUrls}
     })
   } catch (error) {
     console.error('Error generating sitemap:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate sitemap' },
-      { status: 500 }
-    )
+    // Return minimal sitemap on error so crawlers don't get 500
+    const baseUrl = 'https://goalzone-live.vercel.app'
+    const now = new Date().toISOString()
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>always</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`
+    return new NextResponse(fallback, {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    })
   }
 }

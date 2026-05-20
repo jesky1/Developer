@@ -19,7 +19,7 @@ async function main() {
   const adminEmail = 'admin@goalzone.com'
   const adminUsername = 'admin'
   const adminPassword = 'admin123'
-  const adminRole = 'admin'
+  const adminRole = 'superadmin'
 
   try {
     const existingAdmin = await prisma.adminUser.findFirst({

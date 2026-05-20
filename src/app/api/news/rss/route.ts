@@ -1,14 +1,23 @@
-import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 300
+
+async function getDb() {
+  const { db } = await import('@/lib/db')
+  return db
+}
 
 export async function GET() {
   try {
+    const db = await getDb()
+
     const news = await db.newsItem.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
-    })
+    }).catch(() => [])
 
-    const baseUrl = 'https://goalzone.app'
+    const baseUrl = 'https://goalzone-live.vercel.app'
 
     const items = news.map((article) => {
       const slug = article.slug || article.id
@@ -50,9 +59,23 @@ ${items}
     })
   } catch (error) {
     console.error('Error generating RSS feed:', error)
-    return NextResponse.json(
-      { error: 'Failed to generate RSS feed' },
-      { status: 500 }
-    )
+    // Return minimal RSS on error so feed readers don't break
+    const baseUrl = 'https://goalzone-live.vercel.app'
+    const fallback = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>GOALZONE - Latest Football News</title>
+    <link>${baseUrl}</link>
+    <description>Real-time football news, match reports, transfer updates, and analysis powered by AI</description>
+    <language>en</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+  </channel>
+</rss>`
+    return new NextResponse(fallback, {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+      },
+    })
   }
 }
