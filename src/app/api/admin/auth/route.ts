@@ -54,10 +54,18 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Use dynamic import to avoid build-time PrismaClient initialization issues
+        // Use dynamic import for Vercel serverless resilience
         const { db } = await import('@/lib/db')
 
-        const user = await db.adminUser.findUnique({ where: { username } })
+        // Support login by username OR email
+        const user = await db.adminUser.findFirst({
+          where: {
+            OR: [
+              { username },
+              { email: username },
+            ],
+          },
+        })
 
         if (!user) {
           return NextResponse.json(
@@ -80,6 +88,15 @@ export async function POST(request: NextRequest) {
             { error: 'Invalid credentials' },
             { status: 401 }
           )
+        }
+
+        // Auto-upgrade: if password hash is old HMAC format, re-hash with bcrypt
+        if (user.passwordHash.includes(':') && user.passwordHash.length < 100) {
+          const newBcryptHash = await hashPassword(password)
+          db.adminUser.update({
+            where: { id: user.id },
+            data: { passwordHash: newBcryptHash },
+          }).catch(() => { })
         }
 
         // Generate JWT
@@ -164,7 +181,7 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Hash new password
+        // Hash new password with bcrypt
         const newHash = await hashPassword(newPassword)
 
         // Update password

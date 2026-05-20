@@ -319,19 +319,6 @@ function LiveScoresView({
                   </div>
                 </div>
               </div>
-            ) : !isLoading && matches.length === 0 && scorers.length === 0 && standings.length === 0 ? (
-              <div className="glass-card rounded-2xl p-12 flex flex-col items-center justify-center gap-4 text-center">
-                <CloudOff className="w-12 h-12 text-muted-foreground" />
-                <h2 className="text-lg font-semibold text-foreground">{t('status.noData')}</h2>
-                <p className="text-sm text-muted-foreground max-w-md">{t('status.noDataDesc')}</p>
-                <button
-                  onClick={requestUpdate}
-                  className="flex items-center gap-2 px-4 py-2 mt-2 rounded-lg bg-neon/10 text-neon hover:bg-neon/20 transition-colors text-sm font-medium cursor-pointer"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t('status.refresh')}
-                </button>
-              </div>
             ) : (
               <>
                 <section id="live">
@@ -416,6 +403,7 @@ function LiveScoresView({
 
 // ===== Main Page =====
 export default function HomePage() {
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   // Initialize auth from localStorage — uses lazy initializer so no effect needed
@@ -427,18 +415,6 @@ export default function HomePage() {
   });
   const currentUser = authState.user;
   const _authToken = authState.token; // used indirectly via localStorage
-
-  // Initialize admin mode from URL hash or localStorage
-  const [isAdminMode, setIsAdminMode] = useState(() => {
-    if (typeof window === "undefined") return false;
-    // Check URL hash for admin access (#admin)
-    if (window.location.hash === "#admin") {
-      // Clean up the hash from the URL
-      window.history.replaceState(null, "", window.location.pathname);
-      return true;
-    }
-    return false;
-  });
 
   const handleLoginSuccess = useCallback((user: LoginUser | RegisterUser, token: string) => {
     // Normalize user object to LoginUser format
@@ -495,7 +471,7 @@ export default function HomePage() {
 
   return (
     <>
-      {isAdminMode ? (
+      {isAdminMode && currentUser && ADMIN_ROLES.includes(currentUser.role) ? (
         <div>
           <AdminPanel onBackToLive={() => setIsAdminMode(false)} />
         </div>

@@ -273,15 +273,6 @@ export function Navbar({ currentUser, onLoginClick, onLogout, onOpenAdmin, match
             >
               <Search className="w-4 h-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground/40 hover:text-neon hover:bg-neon/10"
-              onClick={handleOpenAdmin}
-              title="Admin Panel"
-            >
-              <ShieldCheck className="w-4 h-4" />
-            </Button>
             <LanguageSelector />
             <ThemeToggle />
 

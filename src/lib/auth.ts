@@ -1,5 +1,6 @@
 import { jwtVerify, SignJWT } from 'jose'
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'goalzone-jwt-secret-key-change-in-production'
@@ -18,52 +19,53 @@ export async function verifyToken(token: string) {
   return payload as { userId: string; username: string; role: string }
 }
 
-// Simple password hashing using HMAC-SHA256
-// Format: salt:hash (both hex encoded)
-// This avoids any native module compilation issues with bcryptjs
-async function hmacHash(password: string, salt: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(salt + password)
-  const hashBuffer = await crypto.subtle.sign('HMAC', await getHmacKey(), data)
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-let _hmacKey: CryptoKey | null = null
-async function getHmacKey(): Promise<CryptoKey> {
-  if (_hmacKey) return _hmacKey
-  _hmacKey = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode('goalzone-hmac-key-for-passwords'),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  return _hmacKey
-}
-
-function generateSalt(): string {
-  const arr = new Uint8Array(16)
-  crypto.getRandomValues(arr)
-  return Array.from(arr)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
+/**
+ * Hash password using bcryptjs (pure JS, no native compilation issues)
+ * Uses 12 salt rounds for good security/performance balance
+ */
 export async function hashPassword(password: string): Promise<string> {
-  const salt = generateSalt()
-  const hash = await hmacHash(password, salt)
-  return `${salt}:${hash}`
+  return bcrypt.hash(password, 12)
 }
 
+/**
+ * Compare plain password against bcrypt hash
+ */
 export async function comparePassword(password: string, storedHash: string): Promise<boolean> {
+  try {
+    // Support legacy HMAC-SHA256 format (salt:hash) during migration
+    if (storedHash.includes(':') && storedHash.length < 100) {
+      // Old HMAC format — verify using legacy method, then upgrade hash on next login
+      const legacyMatch = await compareLegacyHmac(password, storedHash)
+      return legacyMatch
+    }
+    return bcrypt.compare(password, storedHash)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Legacy HMAC-SHA256 comparison for migrating old password hashes
+ * This allows users with old-format hashes to still log in
+ */
+async function compareLegacyHmac(password: string, storedHash: string): Promise<boolean> {
   try {
     const colonIndex = storedHash.indexOf(':')
     if (colonIndex === -1) return false
     const salt = storedHash.substring(0, colonIndex)
     const hash = storedHash.substring(colonIndex + 1)
-    const computedHash = await hmacHash(password, salt)
+    const hmacKey = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode('goalzone-hmac-key-for-passwords'),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    const data = new TextEncoder().encode(salt + password)
+    const hashBuffer = await crypto.subtle.sign('HMAC', hmacKey, data)
+    const computedHash = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
     return computedHash === hash
   } catch {
     return false
