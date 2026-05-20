@@ -1,12 +1,16 @@
 import bcrypt from 'bcryptjs'
 import { jwtVerify, SignJWT } from 'jose'
-import { db } from '@/lib/db'
+import { db, ensureDbConnection } from '@/lib/db'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'goalzone-jwt-secret-key-change-in-production'
 )
 
-const SALT_ROUNDS = 12
+/**
+ * bcrypt salt rounds — 10 for Vercel serverless compatibility
+ * 12 rounds can timeout on cold starts with limited CPU
+ */
+const SALT_ROUNDS = 10
 
 // ===== Password Hashing with bcryptjs =====
 
@@ -69,6 +73,7 @@ export function validatePassword(password: string): { valid: boolean; message: s
 // ===== User Lookup =====
 
 export async function getUserByEmail(email: string) {
+  await ensureDbConnection(2)
   return db.user.findUnique({ where: { email } })
 }
 
@@ -80,6 +85,7 @@ export async function createUser(data: {
   provider: string
   providerAccountId?: string
 }) {
+  await ensureDbConnection(2)
   return db.user.create({
     data: {
       name: data.name,

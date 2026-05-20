@@ -77,7 +77,37 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
 
     setLoading(true);
     try {
-      // Try NextAuth credentials login
+      // STEP 1: Try admin auth first (for AdminUser table)
+      // Admin users are in the AdminUser table, not the regular User table
+      try {
+        const adminRes = await fetch("/api/admin/auth?action=login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: username.trim(), password }),
+        });
+
+        const adminData = await adminRes.json();
+
+        if (adminRes.ok && adminData.token) {
+          // Admin login successful
+          toast.success(t("auth.welcomeBack"), {
+            icon: <LogIn className="w-4 h-4 text-neon" />,
+          });
+
+          onLoginSuccess(adminData.user, adminData.token);
+
+          // Reset form
+          setUsername("");
+          setPassword("");
+          setError("");
+          return; // Done!
+        }
+        // Admin auth failed — continue to try NextAuth for regular users
+      } catch {
+        // Admin auth request failed — continue to try NextAuth
+      }
+
+      // STEP 2: Try NextAuth credentials login (for regular User table)
       const result = await signIn("credentials", {
         redirect: false,
         email: username.trim(),
@@ -85,30 +115,12 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       });
 
       if (result?.error) {
+        // Both admin and NextAuth failed
         setError(result.error === "Configuration" ? t("auth.configError") : result.error);
         return;
       }
 
-      // Also try admin login as fallback for admin users
-      if (!result?.ok) {
-        const res = await fetch("/api/admin/auth?action=login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: username.trim(), password }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || t("auth.loginFailed"));
-        }
-
-        toast.success(t("auth.welcomeBack"), {
-          icon: <LogIn className="w-4 h-4 text-neon" />,
-        });
-
-        onLoginSuccess(data.user, data.token);
-      } else {
+      if (result?.ok) {
         toast.success(t("auth.loginSuccess"), {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
@@ -271,9 +283,9 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 h-4" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 h-4" />
                   )}
                 </button>
               </div>

@@ -2,7 +2,8 @@ import NextAuth, { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { comparePassword, getUserByEmail, createUser, signUserToken } from '@/lib/user-auth'
-import { db } from '@/lib/db'
+import { db, ensureDbConnection } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,6 +21,7 @@ export const authOptions: NextAuthOptions = {
     }),
 
     // ===== Credentials Provider =====
+    // Checks BOTH User table (regular users) AND AdminUser table (admin users)
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -31,7 +33,68 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email dan password harus diisi')
         }
 
-        const email = credentials.email.trim().toLowerCase()
+        const emailOrUsername = credentials.email.trim()
+        const password = credentials.password
+
+        // Ensure DB connection (critical for Vercel serverless cold starts)
+        await ensureDbConnection(2)
+
+        // ===== Try AdminUser table first =====
+        try {
+          const adminUser = await db.adminUser.findFirst({
+            where: {
+              OR: [
+                { username: emailOrUsername },
+                { email: emailOrUsername.toLowerCase() },
+              ],
+            },
+          })
+
+          if (adminUser) {
+            if (!adminUser.isActive) {
+              throw new Error('Akun Anda dinonaktifkan')
+            }
+
+            // Check if passwordHash is empty (shouldn't be for admin)
+            if (!adminUser.passwordHash) {
+              throw new Error('Akun admin tidak memiliki password. Hubungi superadmin.')
+            }
+
+            const isValid = await comparePassword(password, adminUser.passwordHash)
+
+            if (isValid) {
+              // Update last login (non-blocking)
+              db.adminUser.update({
+                where: { id: adminUser.id },
+                data: { lastLoginAt: new Date() },
+              }).catch(() => { })
+
+              return {
+                id: adminUser.id,
+                email: adminUser.email,
+                name: adminUser.displayName || adminUser.username,
+                image: adminUser.avatarUrl,
+                role: adminUser.role,
+                provider: 'admin',
+              }
+            }
+            // Admin found but wrong password — don't reveal this
+            // Fall through to check regular User table
+          }
+        } catch (error) {
+          // If it's a user-facing error (like "Akun dinonaktifkan"), re-throw it
+          if (error instanceof Error && error.message !== 'Akun admin tidak memiliki password. Hubungi superadmin.') {
+            // Only re-throw if it's not a generic error
+            const msg = error.message
+            if (msg === 'Akun Anda dinonaktifkan') {
+              throw error
+            }
+          }
+          // For other errors (DB connection, etc.), continue to try User table
+        }
+
+        // ===== Try regular User table =====
+        const email = emailOrUsername.toLowerCase()
         const user = await getUserByEmail(email)
 
         if (!user) {
@@ -47,7 +110,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Akun ini terdaftar via Google. Silakan login dengan Google.')
         }
 
-        const isValid = await comparePassword(credentials.password, user.passwordHash)
+        const isValid = await comparePassword(password, user.passwordHash)
 
         if (!isValid) {
           throw new Error('Email atau password salah')
