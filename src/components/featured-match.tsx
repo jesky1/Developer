@@ -71,7 +71,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
         />
       )}
       {/* Header */}
-      <div className="px-6 pt-5 pb-3 flex items-center justify-between">
+      <div className="px-4 sm:px-6 pt-5 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-neon uppercase tracking-wider">
             {match.league}
@@ -122,7 +122,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
       </div>
 
       {/* Teams & Score */}
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex items-center justify-between">
           {/* Home Team */}
           <div className="flex flex-col items-center gap-2 flex-1">
@@ -138,7 +138,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
           </div>
 
           {/* Score */}
-          <div className="flex flex-col items-center gap-2 px-6">
+          <div className="flex flex-col items-center gap-2 px-3 sm:px-6">
             <div className="flex items-center gap-3">
               <motion.span
                 key={`home-${match.homeScore}`}
@@ -185,7 +185,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
 
       {/* Goal Timeline Bar */}
       {goalEvents.length > 0 && (
-        <div className="px-6 pb-4">
+        <div className="px-4 sm:px-6 pb-4">
           <div className="text-xs font-medium text-muted-foreground mb-2">
             Match Timeline
           </div>
@@ -219,7 +219,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
 
       {/* Events List */}
       {match.events.length > 0 && (
-        <div className="px-6 pb-5 max-h-48 overflow-y-auto">
+        <div className="px-4 sm:px-6 pb-5 max-h-48 overflow-y-auto">
           <div className="space-y-2">
             {match.events.map((event, i) => (
               <motion.div
@@ -227,22 +227,20 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: i * 0.08 }}
-                className={`flex items-center gap-2 text-xs ${
-                  event.team === "home" ? "" : "flex-row-reverse text-right"
-                }`}
+                className={`flex items-center gap-2 text-xs ${event.team === "home" ? "" : "flex-row-reverse text-right"
+                  }`}
               >
                 <span className="text-muted-foreground w-8 shrink-0">
                   {event.minute}&apos;
                 </span>
-                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${
-                  event.type === "goal"
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${event.type === "goal"
                     ? "bg-neon/20 text-neon"
                     : event.type === "yellow"
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : event.type === "red"
-                    ? "bg-red-500/20 text-red-400"
-                    : "bg-surface-light text-muted-foreground"
-                }`}>
+                      ? "bg-yellow-500/20 text-yellow-400"
+                      : event.type === "red"
+                        ? "bg-red-500/20 text-red-400"
+                        : "bg-surface-light text-muted-foreground"
+                  }`}>
                   {event.type === "goal" ? "⚽" : event.type === "yellow" ? "🟨" : event.type === "red" ? "🟥" : "•"}
                 </span>
                 <span className={`${event.type === "goal" ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
@@ -255,7 +253,7 @@ export function FeaturedMatch({ match, goalFlash }: FeaturedMatchProps) {
       )}
 
       {/* Stadium */}
-      <div className="px-6 py-3 border-t border-white/5 flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="px-4 sm:px-6 py-3 border-t border-white/5 flex items-center gap-2 text-xs text-muted-foreground">
         <MapPin className="w-3 h-3" />
         <span>{match.stadium}</span>
       </div>

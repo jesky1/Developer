@@ -13,12 +13,12 @@ const websiteLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "GOALZONE",
-  url: "https://goalzone.app",
+  url: "https://goalzone-live.vercel.app",
   description:
     "Real-time live football scores, standings, and match updates.",
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://goalzone.app/search?q={search_term_string}",
+    target: "https://goalzone-live.vercel.app/search?q={search_term_string}",
     "query-input": "required name=search_term_string",
   },
 };

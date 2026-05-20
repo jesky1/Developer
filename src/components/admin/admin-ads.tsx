@@ -292,7 +292,7 @@ export function AdminAds() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -321,7 +321,7 @@ export function AdminAds() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {kpiCards.map((kpi) => {
           const Icon = kpi.icon
           return (
@@ -355,7 +355,7 @@ export function AdminAds() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-48 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dailyStats} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -440,10 +440,10 @@ export function AdminAds() {
                           <TableCell className="text-right text-sm tabular-nums hidden lg:table-cell">{unit.ctr.toFixed(2)}%</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="size-7 opacity-0 group-hover:opacity-100" onClick={() => handleEdit(unit)}>
+                              <Button variant="ghost" size="icon" className="size-7 opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => handleEdit(unit)}>
                                 <Pencil className="size-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="size-7 text-destructive opacity-0 group-hover:opacity-100" onClick={() => { setDeletingUnit(unit); setDeleteDialogOpen(true) }}>
+                              <Button variant="ghost" size="icon" className="size-7 text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100" onClick={() => { setDeletingUnit(unit); setDeleteDialogOpen(true) }}>
                                 <Trash2 className="size-3.5" />
                               </Button>
                             </div>
@@ -475,7 +475,7 @@ export function AdminAds() {
               <Label>Slot ID</Label>
               <Input placeholder="e.g. div-gpt-ad-123" value={formData.slotId} onChange={(e) => setFormData((f) => ({ ...f, slotId: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Placement</Label>
                 <Select value={formData.placement} onValueChange={(v) => setFormData((f) => ({ ...f, placement: v }))}>

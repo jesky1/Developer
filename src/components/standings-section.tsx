@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { cn } from "@/lib/utils";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useTranslation } from "@/lib/i18n";
 
 // === Types ===
 
@@ -180,19 +181,20 @@ function StandingsSkeleton() {
 // === Zone Legend ===
 
 function ZoneLegend() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-4 text-[10px] text-muted-foreground mt-3 px-1">
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-neon" />
-        Champions League
+        {t("standings.championsLeague")}
       </div>
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-        Europa League
+        {t("standings.europaLeague")}
       </div>
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-        Relegation
+        {t("standings.relegation")}
       </div>
     </div>
   );
@@ -211,6 +213,7 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(true);
   const { navigate } = useNavigation();
+  const { t } = useTranslation();
 
   // Respond to external league selection (e.g. from footer)
   useEffect(() => {
@@ -273,7 +276,7 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
           className="flex items-center gap-2 text-lg font-bold text-foreground"
         >
           <Trophy className="w-5 h-5 text-neon" />
-          League Standings
+          {t("standings.title")}
         </motion.h2>
 
         <button
@@ -281,9 +284,9 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           {isExpanded ? (
-            <>Collapse <ChevronUp className="w-3 h-3" /></>
+            <>{t("standings.collapse")} <ChevronUp className="w-3 h-3" /></>
           ) : (
-            <>Expand <ChevronDown className="w-3 h-3" /></>
+            <>{t("standings.expand")} <ChevronDown className="w-3 h-3" /></>
           )}
         </button>
       </div>
@@ -341,16 +344,16 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
                 <thead>
                   <tr className="text-[10px] text-muted-foreground uppercase tracking-wider border-b border-white/5 bg-white/[0.02]">
                     <th className="text-left py-3 px-1 w-8">#</th>
-                    <th className="text-left py-3 px-1">Team</th>
-                    <th className="text-center py-3 px-1 w-8">P</th>
-                    <th className="text-center py-3 px-1 w-8">W</th>
-                    <th className="text-center py-3 px-1 w-8">D</th>
-                    <th className="text-center py-3 px-1 w-8">L</th>
-                    <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">GF</th>
-                    <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">GA</th>
-                    <th className="text-center py-3 px-1 w-10 hidden md:table-cell">GD</th>
-                    <th className="text-center py-3 px-1 w-10 font-bold">Pts</th>
-                    <th className="text-center py-3 px-1 w-24 hidden lg:table-cell">Form</th>
+                    <th className="text-left py-3 px-1">{t("standings.team")}</th>
+                    <th className="text-center py-3 px-1 w-8">{t("standings.played")}</th>
+                    <th className="text-center py-3 px-1 w-8">{t("standings.won")}</th>
+                    <th className="text-center py-3 px-1 w-8">{t("standings.drawn")}</th>
+                    <th className="text-center py-3 px-1 w-8">{t("standings.lost")}</th>
+                    <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">{t("standings.goalsFor")}</th>
+                    <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">{t("standings.goalsAgainst")}</th>
+                    <th className="text-center py-3 px-1 w-10 hidden md:table-cell">{t("standings.goalDiff")}</th>
+                    <th className="text-center py-3 px-1 w-10 font-bold">{t("standings.points")}</th>
+                    <th className="text-center py-3 px-1 w-24 hidden lg:table-cell">{t("standings.form")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -368,11 +371,11 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
             </div>
           ) : !isExpanded ? (
             <div className="p-5 text-center text-muted-foreground text-xs">
-              Table collapsed. Click &quot;Expand&quot; to view.
+              {t("standings.tableCollapsed")}
             </div>
           ) : (
             <div className="p-8 text-center">
-              <p className="text-sm text-muted-foreground">No standings data available for {activeLeague}</p>
+              <p className="text-sm text-muted-foreground">{t("standings.noData")} {activeLeague}</p>
             </div>
           )}
         </motion.div>

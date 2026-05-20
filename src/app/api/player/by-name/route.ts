@@ -73,9 +73,9 @@ export async function GET(request: NextRequest) {
       ...player,
       stats: player.stats
         ? {
-            ...player.stats,
-            matchRatings: JSON.parse(player.stats.matchRatings),
-          }
+          ...player.stats,
+          matchRatings: JSON.parse(player.stats.matchRatings),
+        }
         : null,
     }
 

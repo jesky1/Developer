@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { MatchCard } from "@/components/match-card";
 import type { MatchCardProps } from "@/components/match-card";
+import { useTranslation } from "@/lib/i18n";
 
 interface LiveMatchesListProps {
   matches: MatchCardProps['match'][];
@@ -12,6 +13,8 @@ interface LiveMatchesListProps {
 }
 
 export function LiveMatchesList({ matches, onMatchClick, goalMatchIds, isLoading }: LiveMatchesListProps) {
+  const { t } = useTranslation();
+
   // Loading skeleton
   if (isLoading || matches.length === 0) {
     return (
@@ -23,11 +26,11 @@ export function LiveMatchesList({ matches, onMatchClick, goalMatchIds, isLoading
       >
         <div className="px-5 pt-5 pb-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground">Live & Recent Matches</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('match.liveAndRecent')}</h3>
             {isLoading && (
               <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon live-pulse" />
-                Connecting...
+                {t('status.connecting')}
               </span>
             )}
           </div>
@@ -64,7 +67,7 @@ export function LiveMatchesList({ matches, onMatchClick, goalMatchIds, isLoading
       {/* Header */}
       <div className="px-5 pt-5 pb-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">Live & Recent Matches</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t('match.liveAndRecent')}</h3>
           {liveCount > 0 && (
             <span className="flex items-center gap-1.5 text-[10px] font-medium text-green-400">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-pulse" />
@@ -76,9 +79,9 @@ export function LiveMatchesList({ matches, onMatchClick, goalMatchIds, isLoading
 
       {/* Column Headers */}
       <div className="grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-5 pb-2 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-        <span>Home</span>
-        <span className="w-16 text-center">Score</span>
-        <span>Away</span>
+        <span>{t('match.home')}</span>
+        <span className="w-16 text-center">{t('match.score')}</span>
+        <span>{t('match.away')}</span>
         <span className="w-18" />
       </div>
 

@@ -489,9 +489,8 @@ function StartingXIList({
                 {player.position}
               </Badge>
               {player.rating > 0 && (
-                <span className={`text-[9px] sm:text-[10px] font-bold tabular-nums min-w-[24px] text-right ${
-                  player.rating >= 8 ? "text-green-400" : player.rating >= 7 ? "text-lime-400" : player.rating >= 6 ? "text-yellow-400" : "text-red-400"
-                }`}>
+                <span className={`text-[9px] sm:text-[10px] font-bold tabular-nums min-w-[24px] text-right ${player.rating >= 8 ? "text-green-400" : player.rating >= 7 ? "text-lime-400" : player.rating >= 6 ? "text-yellow-400" : "text-red-400"
+                  }`}>
                   {formatRating(player.rating)}
                 </span>
               )}

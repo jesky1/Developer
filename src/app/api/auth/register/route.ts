@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     db.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
-    }).catch(() => {})
+    }).catch(() => { })
 
     // Return user data without passwordHash
     const { passwordHash: _ph, ...userWithoutPassword } = user

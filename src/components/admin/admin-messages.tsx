@@ -300,7 +300,7 @@ export function AdminMessages() {
         {/* Left Panel: Message List */}
         <div className="lg:col-span-2">
           <Card className="glass-card overflow-hidden">
-            <ScrollArea className="h-[500px] lg:h-[560px]">
+            <ScrollArea className="h-[400px] sm:h-[500px] lg:h-[560px]">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4">
                   <Inbox className="w-10 h-10 text-muted-foreground/40 mb-3" />
@@ -326,15 +326,13 @@ export function AdminMessages() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.2, delay: idx * 0.03 }}
                           onClick={() => handleSelect(msg)}
-                          className={`cursor-pointer transition-all duration-200 border-l-4 ${
-                            statusCfg.borderColor
-                          } ${
-                            isSelected
+                          className={`cursor-pointer transition-all duration-200 border-l-4 ${statusCfg.borderColor
+                            } ${isSelected
                               ? 'bg-neon/5'
                               : msg.status === 'unread'
-                              ? 'bg-background/80 hover:bg-neon/[0.03]'
-                              : 'hover:bg-surface-light/50'
-                          }`}
+                                ? 'bg-background/80 hover:bg-neon/[0.03]'
+                                : 'hover:bg-surface-light/50'
+                            }`}
                           role="button"
                           tabIndex={0}
                           onKeyDown={(e) => {
@@ -346,11 +344,10 @@ export function AdminMessages() {
                               <div className="flex-1 min-w-0 space-y-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span
-                                    className={`text-sm font-semibold ${
-                                      msg.status === 'unread'
+                                    className={`text-sm font-semibold ${msg.status === 'unread'
                                         ? 'text-foreground'
                                         : 'text-foreground/80'
-                                    }`}
+                                      }`}
                                   >
                                     {msg.name}
                                   </span>
@@ -379,11 +376,10 @@ export function AdminMessages() {
                                   {formatDate(msg.createdAt)}
                                 </span>
                                 <ChevronRight
-                                  className={`w-3.5 h-3.5 transition-colors ${
-                                    isSelected
+                                  className={`w-3.5 h-3.5 transition-colors ${isSelected
                                       ? 'text-neon'
                                       : 'text-muted-foreground/40'
-                                  }`}
+                                    }`}
                                 />
                               </div>
                             </div>
@@ -400,7 +396,7 @@ export function AdminMessages() {
 
         {/* Right Panel: Message Detail */}
         <div className="lg:col-span-3">
-          <Card className="glass-card h-[500px] lg:h-[560px] flex flex-col">
+          <Card className="glass-card h-[400px] sm:h-[500px] lg:h-[560px] flex flex-col">
             {selectedMessage ? (
               <>
                 {/* Detail Header */}
@@ -413,11 +409,10 @@ export function AdminMessages() {
                         </h3>
                         <Badge
                           variant="outline"
-                          className={`text-[10px] px-1.5 py-0 ${
-                            STATUS_CONFIG[
+                          className={`text-[10px] px-1.5 py-0 ${STATUS_CONFIG[
                               selectedMessage.status as keyof typeof STATUS_CONFIG
                             ].color
-                          }`}
+                            }`}
                         >
                           {
                             STATUS_CONFIG[

@@ -29,9 +29,9 @@ export async function GET(
       ...player,
       stats: player.stats
         ? {
-            ...player.stats,
-            matchRatings: JSON.parse(player.stats.matchRatings),
-          }
+          ...player.stats,
+          matchRatings: JSON.parse(player.stats.matchRatings),
+        }
         : null,
     }
 

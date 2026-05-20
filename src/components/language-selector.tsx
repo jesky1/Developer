@@ -61,11 +61,10 @@ export function LanguageSelector() {
                       setLocale(lang.code);
                       setOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${isActive
                         ? "bg-neon/10 text-neon"
                         : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
-                    }`}
+                      }`}
                   >
                     <span className="text-base leading-none">{lang.flag}</span>
                     <span className="text-xs font-medium flex-1">{lang.label}</span>

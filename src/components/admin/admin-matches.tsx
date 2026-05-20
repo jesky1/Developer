@@ -294,11 +294,11 @@ export default function AdminMatches() {
   // Filter matches by search query (client-side)
   const filteredMatches = searchQuery.trim()
     ? matches.filter(
-        (m) =>
-          m.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          m.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          m.league.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (m) =>
+        m.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.league.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : matches
 
   return (
@@ -325,15 +325,15 @@ export default function AdminMatches() {
             value={statusFilter || 'ALL'}
             onValueChange={(v) => setStatusFilter(v === 'ALL' ? '' : v)}
           >
-            <TabsList>
-              <TabsTrigger value="ALL">All</TabsTrigger>
-              <TabsTrigger value="LIVE" className="gap-1">
+            <TabsList className="flex-wrap h-auto gap-1">
+              <TabsTrigger value="ALL" className="text-xs">All</TabsTrigger>
+              <TabsTrigger value="LIVE" className="gap-1 text-xs">
                 <span className="size-1.5 rounded-full bg-emerald-500 live-pulse" />
                 Live
               </TabsTrigger>
-              <TabsTrigger value="HT">HT</TabsTrigger>
-              <TabsTrigger value="FT">FT</TabsTrigger>
-              <TabsTrigger value="UPCOMING">Upcoming</TabsTrigger>
+              <TabsTrigger value="HT" className="text-xs">HT</TabsTrigger>
+              <TabsTrigger value="FT" className="text-xs">FT</TabsTrigger>
+              <TabsTrigger value="UPCOMING" className="text-xs">Upcoming</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -374,127 +374,136 @@ export default function AdminMatches() {
 
       {/* Matches Table */}
       <div className="glass-card rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-border">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider">Home Team</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-center">Score</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider">Away Team</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider">Status</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider">League</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-center">Min</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-center">Hot</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              // Loading skeletons
-              Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-5 w-full max-w-24" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : filteredMatches.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-muted-foreground text-sm">No matches found</p>
-                    <Button variant="outline" size="sm" onClick={handleCreate} className="gap-1">
-                      <Plus className="size-3" />
-                      Add a match
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-border">
+                <TableHead className="text-xs font-semibold uppercase tracking-wider">Match</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider">Status</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider hidden md:table-cell">League</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-center hidden sm:table-cell">Min</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-center hidden sm:table-cell">Hot</TableHead>
+                <TableHead className="text-xs font-semibold uppercase tracking-wider text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                {filteredMatches.map((match) => {
-                  const statusCfg = STATUS_CONFIG[match.status] || STATUS_CONFIG.UPCOMING
-                  const isLive = match.status === 'LIVE'
-                  const isHot = match.isHot
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                // Loading skeletons
+                Array.from({ length: 8 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-5 w-full max-w-24" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : filteredMatches.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-muted-foreground text-sm">No matches found</p>
+                      <Button variant="outline" size="sm" onClick={handleCreate} className="gap-1">
+                        <Plus className="size-3" />
+                        Add a match
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {filteredMatches.map((match) => {
+                    const statusCfg = STATUS_CONFIG[match.status] || STATUS_CONFIG.UPCOMING
+                    const isLive = match.status === 'LIVE'
+                    const isHot = match.isHot
 
-                  return (
-                    <motion.tr
-                      key={match.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
-                      className={`border-b border-border transition-colors hover:bg-muted/30 ${
-                        isLive ? 'border-l-2 border-l-emerald-500' : ''
-                      } ${isHot ? 'border-l-2 border-l-orange-500' : ''}`}
-                    >
-                      <TableCell className="font-medium">{match.homeTeam}</TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-lg font-bold tabular-nums tracking-wide">
-                          {match.homeScore} - {match.awayScore}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-medium">{match.awayTeam}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`gap-1.5 text-xs ${statusCfg.className}`}
-                        >
-                          <span className={`size-1.5 rounded-full ${statusCfg.dotClass}`} />
-                          {statusCfg.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-muted-foreground text-sm">{match.league}</span>
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {match.status === 'LIVE' || match.status === 'HT' ? (
-                          <span className="text-sm font-medium">{match.minute}&apos;</span>
-                        ) : match.kickoff ? (
-                          <span className="text-muted-foreground text-xs">{match.kickoff}</span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {isHot ? (
-                          <Flame className="size-4 text-orange-500 mx-auto" />
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => handleEdit(match)}
+                    return (
+                      <motion.tr
+                        key={match.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className={`border-b border-border transition-colors hover:bg-muted/30 group ${isLive ? 'border-l-2 border-l-emerald-500' : ''
+                          } ${isHot ? 'border-l-2 border-l-orange-500' : ''}`}
+                      >
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{match.homeTeam}</span>
+                              <span className="text-lg font-bold tabular-nums tracking-wide">{match.homeScore}</span>
+                              <span className="text-muted-foreground text-xs">-</span>
+                              <span className="text-lg font-bold tabular-nums tracking-wide">{match.awayScore}</span>
+                              <span className="font-medium text-sm">{match.awayTeam}</span>
+                            </div>
+                            <div className="flex items-center gap-2 sm:hidden">
+                              {isHot && <Flame className="size-3 text-orange-500" />}
+                              {(match.status === 'LIVE' || match.status === 'HT') && (
+                                <span className="text-xs text-muted-foreground">{match.minute}&apos;</span>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={`gap-1.5 text-xs ${statusCfg.className}`}
                           >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(match)}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  )
-                })}
-              </AnimatePresence>
-            )}
-          </TableBody>
-        </Table>
+                            <span className={`size-1.5 rounded-full ${statusCfg.dotClass}`} />
+                            {statusCfg.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <span className="text-muted-foreground text-sm">{match.league}</span>
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums hidden sm:table-cell">
+                          {match.status === 'LIVE' || match.status === 'HT' ? (
+                            <span className="text-sm font-medium">{match.minute}&apos;</span>
+                          ) : match.kickoff ? (
+                            <span className="text-muted-foreground text-xs">{match.kickoff}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center hidden sm:table-cell">
+                          {isHot ? (
+                            <Flame className="size-4 text-orange-500 mx-auto" />
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleEdit(match)}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive hover:text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDelete(match)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    )
+                  })}
+                </AnimatePresence>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Pagination */}
         {!loading && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-border px-4 py-3 gap-3">
             <p className="text-muted-foreground text-sm">
               Showing {(page - 1) * 15 + 1}–{Math.min(page * 15, pagination.total)} of{' '}
               {pagination.total}
@@ -564,7 +573,7 @@ export default function AdminMatches() {
 
           <div className="grid gap-4 py-4">
             {/* Teams Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="homeTeam">Home Team *</Label>
                 <Input
@@ -586,7 +595,7 @@ export default function AdminMatches() {
             </div>
 
             {/* League + Status */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>League</Label>
                 <Select
@@ -626,7 +635,7 @@ export default function AdminMatches() {
             </div>
 
             {/* Scores */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="homeScore">Home Score</Label>
                 <Input
@@ -654,7 +663,7 @@ export default function AdminMatches() {
             </div>
 
             {/* Minute + Stadium */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="minute">Minute</Label>
                 <Input

@@ -137,7 +137,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // Translation function with fallback
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      if (!translations) return replaceParams(key, params);
+      if (!translations) return key;
 
       // Try current locale
       const value = getNestedValue(translations[locale], key);
@@ -150,7 +150,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Return the key as last resort
-      return replaceParams(key, params);
+      return key;
     },
     [locale, translations]
   );
@@ -160,17 +160,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [locale, setLocale, t]
   );
 
-  // Always wrap children in the provider so context is available
-  // When translations aren't loaded yet, the t() function returns the key as fallback
+  // Don't render children until translations are loaded
+  // This prevents flash of untranslated content
+  if (!mounted || !translations) {
+    return null;
+  }
+
   return (
     <I18nContext.Provider value={contextValue}>
-      {mounted && translations ? children : (
-        <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        </div>
-      )}
+      {children}
     </I18nContext.Provider>
   );
 }
@@ -180,12 +178,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 export function useTranslation() {
   const context = useContext(I18nContext);
   if (!context) {
-    // Return safe fallback instead of throwing — prevents crash during SSR/hydration
-    return {
-      locale: DEFAULT_LOCALE as Locale,
-      setLocale: (_locale: Locale) => { },
-      t: (key: string, _params?: Record<string, string | number>) => key,
-    };
+    throw new Error("useTranslation must be used within an I18nProvider");
   }
   return context;
 }

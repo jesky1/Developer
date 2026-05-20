@@ -101,11 +101,10 @@ function ChatBubble({ message }: { message: ChatMessage }) {
     >
       {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${
-          isUser
+        className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${isUser
             ? 'bg-primary/20 border border-primary/30'
             : 'bg-neon/10 border border-neon/20'
-        }`}
+          }`}
       >
         {isUser ? (
           <span className="text-[10px] font-bold text-primary">You</span>
@@ -116,23 +115,20 @@ function ChatBubble({ message }: { message: ChatMessage }) {
 
       {/* Bubble */}
       <div
-        className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
-          isUser
+        className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${isUser
             ? 'bg-neon text-neon-foreground rounded-br-sm font-medium'
             : 'glass-card rounded-bl-sm'
-        }`}
+          }`}
       >
         <p
-          className={`text-sm whitespace-pre-wrap leading-relaxed ${
-            isUser ? 'text-neon-foreground' : 'text-foreground/90'
-          }`}
+          className={`text-sm whitespace-pre-wrap leading-relaxed ${isUser ? 'text-neon-foreground' : 'text-foreground/90'
+            }`}
         >
           {message.content}
         </p>
         <p
-          className={`text-[10px] mt-1.5 ${
-            isUser ? 'text-neon-foreground/50' : 'text-muted-foreground/40'
-          }`}
+          className={`text-[10px] mt-1.5 ${isUser ? 'text-neon-foreground/50' : 'text-muted-foreground/40'
+            }`}
         >
           {formatTime(message.timestamp)}
         </p>

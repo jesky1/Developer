@@ -326,14 +326,13 @@ export function AdminSettings() {
                       transition={{ duration: 0.2, delay: idx * 0.04 }}
                     >
                       <Card
-                        className={`glass-card transition-all duration-200 ${
-                          setting.isDirty
+                        className={`glass-card transition-all duration-200 ${setting.isDirty
                             ? 'border-neon/30 shadow-[0_0_12px_var(--neon-glow)]'
                             : ''
-                        }`}
+                          }`}
                       >
                         <CardContent className="p-4 sm:p-5">
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                             {/* Left: Label + Description */}
                             <div className="flex-1 min-w-0 space-y-1">
                               <div className="flex items-center gap-2">
@@ -388,7 +387,7 @@ export function AdminSettings() {
                                   onChange={(e) =>
                                     updateSetting(setting.key, e.target.value)
                                   }
-                                  className="w-24 h-8 text-sm text-right bg-background/50 border-border focus:border-neon/50 focus:ring-neon/20"
+                                  className="w-full sm:w-24 h-8 text-sm text-right bg-background/50 border-border focus:border-neon/50 focus:ring-neon/20"
                                 />
                               ) : (
                                 <Input
@@ -397,7 +396,7 @@ export function AdminSettings() {
                                   onChange={(e) =>
                                     updateSetting(setting.key, e.target.value)
                                   }
-                                  className="w-48 sm:w-64 h-8 text-sm bg-background/50 border-border focus:border-neon/50 focus:ring-neon/20"
+                                  className="w-full sm:w-48 md:w-64 h-8 text-sm bg-background/50 border-border focus:border-neon/50 focus:ring-neon/20"
                                   placeholder={`Enter ${prettyKey(setting.key).toLowerCase()}`}
                                 />
                               )}

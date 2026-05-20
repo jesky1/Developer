@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useTranslation } from "@/lib/i18n";
 
 interface LoginUser {
   id: string;
@@ -57,6 +58,7 @@ function GoogleIcon() {
 }
 
 export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister }: LoginModalProps) {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +71,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
     setError("");
 
     if (!username.trim() || !password.trim()) {
-      setError("Masukkan username/email dan password");
+      setError(t("auth.fillCredentials"));
       return;
     }
 
@@ -83,7 +85,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       });
 
       if (result?.error) {
-        setError(result.error === "Configuration" ? "Terjadi kesalahan konfigurasi" : result.error);
+        setError(result.error === "Configuration" ? t("auth.configError") : result.error);
         return;
       }
 
@@ -98,16 +100,16 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Username atau password salah");
+          throw new Error(data.error || t("auth.loginFailed"));
         }
 
-        toast.success(`Selamat datang, ${data.user?.displayName || data.user?.username || "Admin"}!`, {
+        toast.success(t("auth.welcomeBack"), {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
 
         onLoginSuccess(data.user, data.token);
       } else {
-        toast.success("Login berhasil!", {
+        toast.success(t("auth.loginSuccess"), {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
 
@@ -120,7 +122,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       setPassword("");
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login gagal");
+      setError(err instanceof Error ? err.message : t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
     try {
       await signIn("google", { callbackUrl: "/" });
     } catch {
-      setError("Gagal login dengan Google");
+      setError(t("auth.googleFailed"));
       setGoogleLoading(false);
     }
   };
@@ -178,7 +180,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
                   GOAL<span className="text-neon">ZONE</span>
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground mt-1">
-                  Masuk ke akun Anda
+                  {t("auth.loginTitle")}
                 </DialogDescription>
               </div>
             </div>
@@ -200,7 +202,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             ) : (
               <GoogleIcon />
             )}
-            Masuk dengan Google
+            {t("auth.signInWithGoogle")}
           </Button>
 
           {/* Divider */}
@@ -209,7 +211,7 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               <div className="w-full border-t border-border/50" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-background text-muted-foreground">atau</span>
+              <span className="px-3 bg-background text-muted-foreground">{t("auth.or")}</span>
             </div>
           </div>
 
@@ -231,12 +233,12 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Username/Email field */}
             <div className="space-y-2">
               <Label htmlFor="login-username" className="text-sm font-medium text-foreground">
-                Username / Email
+                {t("auth.usernameEmail")}
               </Label>
               <Input
                 id="login-username"
                 type="text"
-                placeholder="Masukkan username atau email"
+                placeholder={t("auth.enterUsername")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loading || googleLoading}
@@ -249,13 +251,13 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Password field */}
             <div className="space-y-2">
               <Label htmlFor="login-password" className="text-sm font-medium text-foreground">
-                Password
+                {t("auth.password")}
               </Label>
               <div className="relative">
                 <Input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Masukkan password"
+                  placeholder={t("auth.enterPassword")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading || googleLoading}
@@ -286,12 +288,12 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Masuk...
+                  {t("auth.signingIn")}
                 </>
               ) : (
                 <>
                   <LogIn className="h-4 w-4" />
-                  Masuk
+                  {t("auth.signIn")}
                 </>
               )}
             </Button>
@@ -299,13 +301,13 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {/* Switch to Register */}
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">
-                Belum punya akun?{" "}
+                {t("auth.noAccount")}{" "}
                 <button
                   type="button"
                   onClick={handleSwitchToRegister}
                   className="text-neon hover:underline font-medium"
                 >
-                  Daftar di sini
+                  {t("auth.registerHere")}
                 </button>
               </p>
             </div>

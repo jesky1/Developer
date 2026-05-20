@@ -30,10 +30,10 @@ export async function GET() {
         awayForm: JSON.parse(match.awayForm),
         poll: match.poll
           ? {
-              homeVotes: match.poll.homeVotes,
-              drawVotes: match.poll.drawVotes,
-              awayVotes: match.poll.awayVotes,
-            }
+            homeVotes: match.poll.homeVotes,
+            drawVotes: match.poll.drawVotes,
+            awayVotes: match.poll.awayVotes,
+          }
           : null,
       }
     })

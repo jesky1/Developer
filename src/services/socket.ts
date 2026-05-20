@@ -37,7 +37,6 @@ export interface Match {
 }
 
 export interface Scorer {
-  id?: string;
   name: string;
   team: string;
   teamLogo?: string;
@@ -132,7 +131,7 @@ export function isWebSocketDisabled(): boolean {
 }
 
 const SOCKET_OPTIONS: Parameters<typeof io>[1] = {
-  path: '/socket.io/',
+  path: '/',
   // HTTP Polling first, then upgrade to WebSocket if supported.
   // This is critical for Vercel which doesn't support raw WebSocket
   // but may allow long-polling through its edge network.

@@ -20,9 +20,7 @@
     "offline": "Offline",
     "refresh": "Segarkan",
     "liveApi": "LIVE · API",
-    "staticData": "Online (Data Statis)",
-    "noData": "Data Tidak Tersedia",
-    "noDataDesc": "Gagal memuat data pertandingan. Pastikan database sudah dikonfigurasi dan server WebSocket berjalan. Klik segarkan untuk mencoba lagi."
+    "staticData": "Online (Data Statis)"
   },
   "match": {
     "hotMatch": "Pertandingan Panas",

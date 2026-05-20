@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 interface Match {
   id: string;
@@ -19,6 +20,7 @@ interface LiveTickerProps {
 
 export function LiveTicker({ matches }: LiveTickerProps) {
   const [isPaused, setIsPaused] = useState(false);
+  const { t } = useTranslation();
 
   const liveMatches = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
   const otherMatches = matches.filter((m) => m.status !== "LIVE" && m.status !== "HT");
@@ -63,7 +65,7 @@ export function LiveTicker({ matches }: LiveTickerProps) {
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-pulse" />
                     <span className="text-[10px] font-bold text-green-400 uppercase">
-                      Live {match.minute}&apos;
+                      {t("status.live")} {match.minute}&apos;
                     </span>
                   </span>
                 )}
@@ -75,7 +77,7 @@ export function LiveTicker({ matches }: LiveTickerProps) {
                 )}
                 {match.status === "UPCOMING" && (
                   <span className="text-[10px] font-bold text-blue-400 uppercase">
-                    Upcoming
+                    {t("status.upcoming")}
                   </span>
                 )}
               </div>

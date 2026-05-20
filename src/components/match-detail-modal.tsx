@@ -290,9 +290,8 @@ export function MatchDetailModal({
                               initial={{ x: -20, opacity: 0 }}
                               animate={{ x: 0, opacity: 1 }}
                               transition={{ delay: i * 0.05 }}
-                              className={`flex items-center gap-2.5 text-xs p-2.5 rounded-lg hover:bg-surface-light/50 transition-colors ${
-                                event.team === "away" ? "flex-row-reverse text-right" : ""
-                              }`}
+                              className={`flex items-center gap-2.5 text-xs p-2.5 rounded-lg hover:bg-surface-light/50 transition-colors ${event.team === "away" ? "flex-row-reverse text-right" : ""
+                                }`}
                             >
                               <span className="text-muted-foreground w-7 shrink-0 font-medium tabular-nums text-center">
                                 {event.minute}&apos;
@@ -303,11 +302,10 @@ export function MatchDetailModal({
                                 {getEventIcon(event.type)}
                               </span>
                               <span
-                                className={`${
-                                  event.type === "goal"
+                                className={`${event.type === "goal"
                                     ? "font-semibold text-foreground"
                                     : "text-muted-foreground"
-                                }`}
+                                  }`}
                               >
                                 {event.player}
                               </span>

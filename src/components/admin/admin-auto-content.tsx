@@ -792,51 +792,53 @@ function TrendingTab() {
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Keyword</TableHead>
-              <TableHead className="hidden sm:table-cell">Source</TableHead>
-              <TableHead className="hidden md:table-cell">Volume</TableHead>
-              <TableHead className="hidden lg:table-cell">Category</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={6}><Skeleton className="h-5 w-full" /></TableCell>
-                </TableRow>
-              ))
-            ) : (
-              topics.map((topicItem) => (
-                <TableRow key={topicItem.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium text-sm">{topicItem.keyword}</TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <span className="text-xs text-muted-foreground">{topicItem.source}</span>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm tabular-nums">{topicItem.volume.toLocaleString()}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Badge variant="outline" className="text-[10px]">{topicItem.category}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn('text-[10px]', topicItem.processed ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30')}>
-                      {topicItem.processed ? 'Posted' : 'Pending'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="ghost" onClick={() => handleGenerateArticle(topicItem)} disabled={topicItem.processed} className="text-xs gap-1">
-                      <Zap className="size-3" />
-                      Generate
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Keyword</TableHead>
+                <TableHead className="hidden sm:table-cell">Source</TableHead>
+                <TableHead className="hidden md:table-cell">Volume</TableHead>
+                <TableHead className="hidden lg:table-cell">Category</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={6}><Skeleton className="h-5 w-full" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                topics.map((topicItem) => (
+                  <TableRow key={topicItem.id} className="hover:bg-muted/30">
+                    <TableCell className="font-medium text-sm">{topicItem.keyword}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <span className="text-xs text-muted-foreground">{topicItem.source}</span>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm tabular-nums">{topicItem.volume.toLocaleString()}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Badge variant="outline" className="text-[10px]">{topicItem.category}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn('text-[10px]', topicItem.processed ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30')}>
+                        {topicItem.processed ? 'Posted' : 'Pending'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="ghost" onClick={() => handleGenerateArticle(topicItem)} disabled={topicItem.processed} className="text-xs gap-1">
+                        <Zap className="size-3" />
+                        Generate
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   )
@@ -925,32 +927,34 @@ function InternalLinksTab() {
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Source Article</TableHead>
-              <TableHead className="hidden sm:table-cell">Target Article</TableHead>
-              <TableHead>Anchor Text</TableHead>
-              <TableHead className="hidden md:table-cell">Created</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
-              ))
-            ) : (
-              links.map((link) => (
-                <TableRow key={link.id} className="hover:bg-muted/30">
-                  <TableCell className="text-sm font-medium">{link.sourceArticle}</TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{link.targetArticle}</TableCell>
-                  <TableCell><code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded">{link.anchor}</code></TableCell>
-                  <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{timeAgo(link.createdAt)}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Source Article</TableHead>
+                <TableHead className="hidden sm:table-cell">Target Article</TableHead>
+                <TableHead>Anchor Text</TableHead>
+                <TableHead className="hidden md:table-cell">Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
+                ))
+              ) : (
+                links.map((link) => (
+                  <TableRow key={link.id} className="hover:bg-muted/30">
+                    <TableCell className="text-sm font-medium">{link.sourceArticle}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{link.targetArticle}</TableCell>
+                    <TableCell><code className="text-xs bg-muted/50 px-1.5 py-0.5 rounded">{link.anchor}</code></TableCell>
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{timeAgo(link.createdAt)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   )
@@ -1217,7 +1221,7 @@ export function AdminAutoContent() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="generate" className="w-full">
-        <TabsList className="w-full justify-start overflow-x-auto">
+        <TabsList className="w-full justify-start overflow-x-auto flex-wrap h-auto gap-1">
           <TabsTrigger value="generate" className="gap-1.5 text-xs">
             <Sparkles className="size-3.5" />
             AI Generator

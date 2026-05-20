@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-// AI Service port - separate process to prevent OOM from heavy SDK imports
-const AI_SERVICE_PORT = 3005
+// AI Service URL - separate process to prevent OOM from heavy SDK imports
+// In production, point to deployed AI service (e.g. https://goalzone-ai-service.onrender.com)
+// In local dev, uses localhost:3005 or XTransformPort query param
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || ''
 
 // Helper: proxy request to AI mini-service
 async function proxyToAIService(path: string, method: string, body?: string) {
-  const url = `http://localhost:${AI_SERVICE_PORT}${path}`
+  let url: string
+  if (AI_SERVICE_URL) {
+    // Production: direct URL to deployed AI service
+    url = `${AI_SERVICE_URL}${path}`
+  } else {
+    // Local dev: use XTransformPort for Caddy gateway, or direct localhost
+    url = `http://localhost:3005${path}`
+  }
   const options: RequestInit = {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -209,7 +218,7 @@ export async function POST(request: NextRequest) {
         if (newsId) {
           const article = await db.newsItem.findUnique({ where: { id: newsId } })
           if (!article) return NextResponse.json({ error: 'Article not found' }, { status: 404 })
-          finalMessage = `⚽ *${article.title}*\n\n${article.summary}\n\n🔗 https://goalzone.app/news/${article.slug || article.id}`
+          finalMessage = `⚽ *${article.title}*\n\n${article.summary}\n\n🔗 https://goalzone-live.vercel.app/news/${article.slug || article.id}`
         }
 
         if (!finalMessage) return NextResponse.json({ error: 'message or newsId is required' }, { status: 400 })

@@ -174,7 +174,7 @@ export function AdminAdSense() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -196,7 +196,7 @@ export function AdminAdSense() {
           </h2>
           <p className="text-muted-foreground text-sm">Revenue tracking and AdSense integration</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Integration Status */}
           <div className={cn(
             'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs',
@@ -222,7 +222,7 @@ export function AdminAdSense() {
       </div>
 
       {/* Earnings Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {earningsCards.map((card) => {
           const Icon = card.icon
           return (
@@ -256,7 +256,7 @@ export function AdminAdSense() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
+            <div className="h-48 sm:h-72">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>

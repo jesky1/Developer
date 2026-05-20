@@ -339,174 +339,175 @@ export function AdminUsers() {
 
       {/* Table */}
       <div className="glass-card rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>User</TableHead>
-              <TableHead className="hidden md:table-cell">Username</TableHead>
-              <TableHead className="hidden sm:table-cell">Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="hidden lg:table-cell">Last Login</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="size-8 rounded-full" />
-                      <Skeleton className="h-4 w-24" />
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>User</TableHead>
+                <TableHead className="hidden md:table-cell">Username</TableHead>
+                <TableHead className="hidden sm:table-cell">Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Last Login</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="size-8 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-14" />
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-16" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : paginatedUsers.length === 0 ? (
+                // Empty state
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                        <Users className="size-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">No users found</p>
+                        <p className="text-xs text-muted-foreground">
+                          {search || roleFilter !== 'all'
+                            ? 'Try adjusting your search or filter'
+                            : 'Add your first admin user to get started'}
+                        </p>
+                      </div>
+                      {!search && roleFilter === 'all' && (
+                        <Button onClick={handleAdd} size="sm" variant="outline" className="gap-1.5">
+                          <Plus className="size-3.5" />
+                          Add User
+                        </Button>
+                      )}
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-14" />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-4 w-28" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-16" />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : paginatedUsers.length === 0 ? (
-              // Empty state
-              <TableRow>
-                <TableCell colSpan={7} className="h-48 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                      <Users className="size-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">No users found</p>
-                      <p className="text-xs text-muted-foreground">
-                        {search || roleFilter !== 'all'
-                          ? 'Try adjusting your search or filter'
-                          : 'Add your first admin user to get started'}
-                      </p>
-                    </div>
-                    {!search && roleFilter === 'all' && (
-                      <Button onClick={handleAdd} size="sm" variant="outline" className="gap-1.5">
-                        <Plus className="size-3.5" />
-                        Add User
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              // User rows
-              <AnimatePresence mode="popLayout">
-                {paginatedUsers.map((user, i) => {
-                  const roleConfig = roleBadgeConfig[user.role] || roleBadgeConfig.viewer
-                  return (
-                    <motion.tr
-                      key={user.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, delay: i * 0.03 }}
-                      className="border-b transition-colors hover:bg-muted/50 group"
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-8">
-                            <AvatarFallback
-                              className={`${roleConfig.bg} ${roleConfig.text} text-xs font-semibold`}
-                            >
-                              {getInitials(user.displayName || user.username)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">
-                              {user.displayName || user.username}
-                            </p>
-                            <p className="truncate text-xs text-muted-foreground md:hidden">
-                              {user.email}
-                            </p>
+              ) : (
+                // User rows
+                <AnimatePresence mode="popLayout">
+                  {paginatedUsers.map((user, i) => {
+                    const roleConfig = roleBadgeConfig[user.role] || roleBadgeConfig.viewer
+                    return (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2, delay: i * 0.03 }}
+                        className="border-b transition-colors hover:bg-muted/50 group"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-8">
+                              <AvatarFallback
+                                className={`${roleConfig.bg} ${roleConfig.text} text-xs font-semibold`}
+                              >
+                                {getInitials(user.displayName || user.username)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {user.displayName || user.username}
+                              </p>
+                              <p className="truncate text-xs text-muted-foreground md:hidden">
+                                {user.email}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="text-sm text-muted-foreground">{user.username}</span>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <span className="text-sm text-muted-foreground">{user.email}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`${roleConfig.bg} ${roleConfig.text} ${roleConfig.border} text-[10px] uppercase tracking-wider`}
-                        >
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`size-2 rounded-full ${
-                              user.isActive
-                                ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]'
-                                : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]'
-                            }`}
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            {user.isActive ? 'Active' : 'Inactive'}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <span className="text-sm text-muted-foreground">{user.username}</span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <span className="text-sm text-muted-foreground">{user.email}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={`${roleConfig.bg} ${roleConfig.text} ${roleConfig.border} text-[10px] uppercase tracking-wider`}
+                          >
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`size-2 rounded-full ${user.isActive
+                                  ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]'
+                                  : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]'
+                                }`}
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <span className="text-xs text-muted-foreground" title={formatDate(user.lastLoginAt)}>
+                            {formatRelativeTime(user.lastLoginAt)}
                           </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <span className="text-xs text-muted-foreground" title={formatDate(user.lastLoginAt)}>
-                          {formatRelativeTime(user.lastLoginAt)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleEdit(user)}
-                            title="Edit user"
-                          >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
-                            onClick={() => handleDeleteClick(user)}
-                            title="Delete user"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  )
-                })}
-              </AnimatePresence>
-            )}
-          </TableBody>
-        </Table>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleEdit(user)}
+                              title="Edit user"
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:text-destructive"
+                              onClick={() => handleDeleteClick(user)}
+                              title="Delete user"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    )
+                  })}
+                </AnimatePresence>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredUsers.length)} of {filteredUsers.length} users
           </p>

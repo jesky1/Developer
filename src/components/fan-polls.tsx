@@ -87,13 +87,12 @@ export function FanPolls({ match, poll }: FanPollsProps) {
             key={option.key}
             onClick={() => handleVote(option.key)}
             disabled={!!voted}
-            className={`w-full relative overflow-hidden rounded-lg border transition-all ${
-              voted === option.key
+            className={`w-full relative overflow-hidden rounded-lg border transition-all ${voted === option.key
                 ? "border-neon/50 neon-glow"
                 : voted
-                ? "border-white/5 opacity-60"
-                : "border-white/10 hover:border-neon/30 cursor-pointer"
-            }`}
+                  ? "border-white/5 opacity-60"
+                  : "border-white/10 hover:border-neon/30 cursor-pointer"
+              }`}
             whileHover={!voted ? { scale: 1.02 } : {}}
             whileTap={!voted ? { scale: 0.98 } : {}}
           >

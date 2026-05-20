@@ -190,13 +190,16 @@ function generateSchemaOrg(article: {
   league: string
   slug: string
   createdAt: Date
+  seoDescription?: string
+  keywords?: string
+  tags?: string[]
 }, match: {
   homeTeam: string
   awayTeam: string
   stadium: string
   kickoff: string
 }) {
-  const baseUrl = 'https://goalzone.app'
+  const baseUrl = 'https://goalzone-live.vercel.app'
   const articleUrl = `${baseUrl}/berita/${article.slug}`
 
   return {

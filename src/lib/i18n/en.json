@@ -20,9 +20,7 @@
     "offline": "Offline",
     "refresh": "Refresh",
     "liveApi": "LIVE · API",
-    "staticData": "Online (Static Data)",
-    "noData": "No Data Available",
-    "noDataDesc": "Unable to load match data. Make sure the database is configured and the WebSocket server is running. Click refresh to try again."
+    "staticData": "Online (Static Data)"
   },
   "match": {
     "hotMatch": "Hot Match",

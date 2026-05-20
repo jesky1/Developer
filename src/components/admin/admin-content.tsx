@@ -377,11 +377,10 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
                 key={cat}
                 variant={isActive ? 'default' : 'ghost'}
                 size="sm"
-                className={`shrink-0 gap-1.5 text-xs ${
-                  isActive && config
+                className={`shrink-0 gap-1.5 text-xs ${isActive && config
                     ? `${config.bg} ${config.text} hover:${config.bg}`
                     : ''
-                }`}
+                  }`}
                 onClick={() => {
                   setActiveCategory(cat)
                   setCurrentPage(1)
@@ -389,8 +388,7 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
               >
                 {cat !== 'All' && config && (
                   <span
-                    className={`size-2 rounded-full ${
-                      cat === 'Breaking'
+                    className={`size-2 rounded-full ${cat === 'Breaking'
                         ? 'bg-red-500'
                         : cat === 'Match Report'
                           ? 'bg-emerald-500'
@@ -401,7 +399,7 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
                               : cat === 'Preview'
                                 ? 'bg-purple-500'
                                 : 'bg-yellow-500'
-                    }`}
+                      }`}
                   />
                 )}
                 {cat}
@@ -443,180 +441,182 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
 
       {/* Table */}
       <div className="glass-card rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="min-w-[200px]">Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="hidden md:table-cell">Source</TableHead>
-              <TableHead className="hidden sm:table-cell">AI</TableHead>
-              <TableHead className="hidden lg:table-cell">League</TableHead>
-              <TableHead className="hidden sm:table-cell">Published</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="space-y-1.5">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-32" />
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="min-w-[200px]">Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="hidden md:table-cell">Source</TableHead>
+                <TableHead className="hidden sm:table-cell">AI</TableHead>
+                <TableHead className="hidden lg:table-cell">League</TableHead>
+                <TableHead className="hidden sm:table-cell">Published</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-20" />
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Skeleton className="h-5 w-10" />
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-16" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : articles.length === 0 ? (
+                // Empty state
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                        <Newspaper className="size-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">No articles found</p>
+                        <p className="text-xs text-muted-foreground">
+                          {search || activeCategory !== 'All'
+                            ? 'Try adjusting your search or category filter'
+                            : 'Create your first article or generate one with AI'}
+                        </p>
+                      </div>
+                      {!search && activeCategory === 'All' && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => onNavigateToAI?.()}
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 bg-neon/10 text-neon border-neon/30 hover:bg-neon/20"
+                          >
+                            <Zap className="size-3.5" />
+                            AI Generator
+                          </Button>
+                          <Button onClick={handleAdd} size="sm" className="gap-1.5">
+                            <Plus className="size-3.5" />
+                            Add Article
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Skeleton className="h-5 w-10" />
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-16" />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : articles.length === 0 ? (
-              // Empty state
-              <TableRow>
-                <TableCell colSpan={7} className="h-48 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                      <Newspaper className="size-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">No articles found</p>
-                      <p className="text-xs text-muted-foreground">
-                        {search || activeCategory !== 'All'
-                          ? 'Try adjusting your search or category filter'
-                          : 'Create your first article or generate one with AI'}
-                      </p>
-                    </div>
-                    {!search && activeCategory === 'All' && (
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => onNavigateToAI?.()}
-                          size="sm"
-                          variant="outline"
-                          className="gap-1.5 bg-neon/10 text-neon border-neon/30 hover:bg-neon/20"
-                        >
-                          <Zap className="size-3.5" />
-                          AI Generator
-                        </Button>
-                        <Button onClick={handleAdd} size="sm" className="gap-1.5">
-                          <Plus className="size-3.5" />
-                          Add Article
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              // Article rows
-              <AnimatePresence mode="popLayout">
-                {articles.map((article, i) => {
-                  const config = categoryConfig[article.category] || categoryConfig.Transfer
-                  return (
-                    <motion.tr
-                      key={article.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, delay: i * 0.03 }}
-                      className={`border-b transition-colors hover:bg-muted/50 group border-l-4 ${config.accent}`}
-                    >
-                      <TableCell>
-                        <div className="min-w-0 space-y-0.5">
-                          <p className="truncate text-sm font-medium text-foreground max-w-[280px]">
-                            {article.title}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground max-w-[240px]">
-                            {article.summary}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`${config.bg} ${config.text} ${config.border} text-[10px] whitespace-nowrap`}
-                        >
-                          {article.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="text-xs text-muted-foreground">{article.source}</span>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {article.isAiGenerated ? (
+              ) : (
+                // Article rows
+                <AnimatePresence mode="popLayout">
+                  {articles.map((article, i) => {
+                    const config = categoryConfig[article.category] || categoryConfig.Transfer
+                    return (
+                      <motion.tr
+                        key={article.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2, delay: i * 0.03 }}
+                        className={`border-b transition-colors hover:bg-muted/50 group border-l-4 ${config.accent}`}
+                      >
+                        <TableCell>
+                          <div className="min-w-0 space-y-0.5">
+                            <p className="truncate text-sm font-medium text-foreground max-w-[200px] sm:max-w-[280px]">
+                              {article.title}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground max-w-[180px] sm:max-w-[240px]">
+                              {article.summary}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant="outline"
-                            className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1 text-[10px]"
+                            className={`${config.bg} ${config.text} ${config.border} text-[10px] whitespace-nowrap`}
                           >
-                            <Zap className="size-3" />
-                            AI
+                            {article.category}
                           </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                            Manual
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <span className="text-xs text-muted-foreground">{article.league || '-'}</span>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <span
-                          className="text-xs text-muted-foreground"
-                          title={formatDate(article.publishedAt || article.createdAt)}
-                        >
-                          {formatRelativeTime(article.publishedAt || article.createdAt)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleEdit(article)}
-                            title="Edit article"
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <span className="text-xs text-muted-foreground">{article.source}</span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {article.isAiGenerated ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1 text-[10px]"
+                            >
+                              <Zap className="size-3" />
+                              AI
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                              Manual
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <span className="text-xs text-muted-foreground">{article.league || '-'}</span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <span
+                            className="text-xs text-muted-foreground"
+                            title={formatDate(article.publishedAt || article.createdAt)}
                           >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
-                            onClick={() => handleDeleteClick(article)}
-                            title="Delete article"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  )
-                })}
-              </AnimatePresence>
-            )}
-          </TableBody>
-        </Table>
+                            {formatRelativeTime(article.publishedAt || article.createdAt)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleEdit(article)}
+                              title="Edit article"
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:text-destructive"
+                              onClick={() => handleDeleteClick(article)}
+                              title="Delete article"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    )
+                  })}
+                </AnimatePresence>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalArticles)} of{' '}
             {totalArticles} articles
@@ -742,8 +742,7 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
                         <SelectItem key={cat} value={cat}>
                           <span className="flex items-center gap-2">
                             <span
-                              className={`size-2 rounded-full ${
-                                cat === 'Breaking'
+                              className={`size-2 rounded-full ${cat === 'Breaking'
                                   ? 'bg-red-500'
                                   : cat === 'Match Report'
                                     ? 'bg-emerald-500'
@@ -754,7 +753,7 @@ export function AdminContent({ onNavigateToAI }: AdminContentProps) {
                                         : cat === 'Preview'
                                           ? 'bg-purple-500'
                                           : 'bg-yellow-500'
-                              }`}
+                                }`}
                             />
                             {cat}
                           </span>

@@ -7,7 +7,7 @@
  *
  * Usage: node scripts/prisma-switch.js
  * This is called as part of the Vercel build command:
- *   node scripts/prisma-switch.js && npx prisma generate && next build
+ *   node scripts/prisma-switch.js && prisma generate && prisma db push && prisma db seed && next build
  */
 
 const fs = require('fs');
@@ -32,13 +32,27 @@ function main() {
             /provider\s*=\s*"sqlite"/,
             'provider = "postgresql"'
         );
+
+        // Ensure directUrl is present for Neon Postgres (required for migrations)
+        if (!schema.includes('directUrl')) {
+            schema = schema.replace(
+                /(url\s*=\s*env\("DATABASE_URL"\))/,
+                '$1\n  directUrl = env("DIRECT_URL")'
+            );
+        }
+
         console.log('✅ Switched Prisma provider to PostgreSQL (DATABASE_URL detected)');
+        console.log(`   URL: ${databaseUrl.substring(0, 30)}...`);
     } else {
-        // Ensure SQLite provider (default)
+        // Switch to SQLite provider (default for local development)
         schema = schema.replace(
             /provider\s*=\s*"postgresql"/,
             'provider = "sqlite"'
         );
+
+        // Remove directUrl line (not needed for SQLite)
+        schema = schema.replace(/\n\s*directUrl\s*=\s*env\("DIRECT_URL"\)/, '');
+
         console.log('✅ Using Prisma provider: SQLite (no PostgreSQL URL detected)');
     }
 

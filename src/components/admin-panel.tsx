@@ -943,7 +943,7 @@ function ArticlesTab() {
                     </div>
                   </motion.div>
                 )}
-                </AnimatePresence>
+              </AnimatePresence>
 
               {/* Inline Edit Mode */}
               <AnimatePresence>
@@ -1090,7 +1090,7 @@ function AutoGenerateTab({ stats, loading, onRefresh }: {
             })))
           }
         })
-        .catch(() => {})
+        .catch(() => { })
     }
   }, [loading])
 
@@ -1214,11 +1214,10 @@ function AutoGenerateTab({ stats, loading, onRefresh }: {
                   <button
                     key={n}
                     onClick={() => setBatchCount(n)}
-                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                      batchCount === n
+                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors cursor-pointer ${batchCount === n
                         ? 'bg-neon/20 text-neon border border-neon/30'
                         : 'bg-surface/50 text-muted-foreground border border-border/30 hover:border-neon/20'
-                    }`}
+                      }`}
                   >
                     {n}
                   </button>
@@ -1477,12 +1476,11 @@ function AnalyticsTab({ stats, loading }: {
                 key={article.id}
                 className="flex items-center gap-3 p-3 rounded-lg bg-surface/50 border border-border/30"
               >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  i === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                  i === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
-                  i === 2 ? 'bg-amber-600/20 text-amber-500 border border-amber-600/30' :
-                  'bg-surface/50 text-muted-foreground border border-border/30'
-                }`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                    i === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
+                      i === 2 ? 'bg-amber-600/20 text-amber-500 border border-amber-600/30' :
+                        'bg-surface/50 text-muted-foreground border border-border/30'
+                  }`}>
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">

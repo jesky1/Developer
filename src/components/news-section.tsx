@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, Zap, Clock, Tag, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 // === Types ===
 
@@ -63,9 +64,20 @@ function getCategoryColor(category: string): CategoryColor {
 const FILTER_TABS = ['All', 'Breaking', 'Match Report', 'Analysis', 'Transfer'] as const;
 type FilterTab = (typeof FILTER_TABS)[number];
 
+const FILTER_TAB_TRANSLATION_KEYS: Record<FilterTab, string> = {
+  'All': 'news.all',
+  'Breaking': 'news.breaking',
+  'Match Report': 'news.matchReport',
+  'Analysis': 'news.analysis',
+  'Transfer': 'news.transfer',
+};
+
 // === Helpers ===
 
-function getRelativeTime(dateStr: string): string {
+function getRelativeTime(
+  dateStr: string,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
   try {
     const date = new Date(dateStr);
     const now = new Date();
@@ -75,10 +87,10 @@ function getRelativeTime(dateStr: string): string {
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
 
-    if (diffSec < 60) return 'just now';
-    if (diffMin < 60) return `${diffMin} min ago`;
-    if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
-    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    if (diffSec < 60) return t('news.justNow');
+    if (diffMin < 60) return `${diffMin} ${t('news.minAgo')}`;
+    if (diffHour < 24) return `${diffHour} ${diffHour > 1 ? t('news.hoursAgoPlural') : t('news.hoursAgo')}`;
+    if (diffDay < 7) return `${diffDay} ${diffDay > 1 ? t('news.daysAgo') : t('news.dayAgo')}`;
     return date.toLocaleDateString();
   } catch {
     return '';
@@ -124,6 +136,8 @@ function NewsCard({
   index: number;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
+
   const isNew = (() => {
     try {
       const d = new Date(article.publishedAt || article.createdAt)
@@ -195,7 +209,7 @@ function NewsCard({
         <LeagueBadge league={article.league} />
         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
           <Clock className="w-2.5 h-2.5" />
-          {getRelativeTime(article.publishedAt || article.createdAt)}
+          {getRelativeTime(article.publishedAt || article.createdAt, t)}
         </span>
         <span className="text-[10px] text-muted-foreground/70 ml-auto">
           {article.source}
@@ -242,6 +256,8 @@ function NewsSkeleton() {
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -252,8 +268,8 @@ function EmptyState() {
         <Newspaper className="w-8 h-8 text-muted-foreground/50" />
       </div>
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-foreground">No news articles yet</p>
-        <p className="text-xs text-muted-foreground">Articles will appear here when generated from the admin panel</p>
+        <p className="text-sm font-medium text-foreground">{t('news.noArticles')}</p>
+        <p className="text-xs text-muted-foreground">{t('news.noArticlesDesc')}</p>
       </div>
     </motion.div>
   );
@@ -262,6 +278,7 @@ function EmptyState() {
 // === Main Component ===
 
 export function NewsSection({ onArticleClick }: NewsSectionProps) {
+  const { t } = useTranslation();
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
@@ -327,14 +344,14 @@ export function NewsSection({ onArticleClick }: NewsSectionProps) {
           className="flex items-center gap-2 text-lg font-bold text-foreground"
         >
           <Newspaper className="w-5 h-5 text-neon" />
-          Latest News
+          {t('news.title')}
         </motion.h2>
 
         <div className="flex items-center gap-2">
           {/* Auto-refresh indicator */}
           <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
             <RefreshCw className="w-3 h-3" />
-            Auto-refresh
+            {t('news.autoRefresh')}
           </span>
         </div>
       </div>
@@ -345,13 +362,12 @@ export function NewsSection({ onArticleClick }: NewsSectionProps) {
           <button
             key={tab}
             onClick={() => setActiveFilter(tab)}
-            className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === tab
+            className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap ${activeFilter === tab
                 ? 'bg-neon/15 text-neon border border-neon/30 shadow-sm'
                 : 'bg-muted/20 text-muted-foreground border border-transparent hover:bg-muted/30 hover:text-foreground'
-            }`}
+              }`}
           >
-            {tab}
+            {t(FILTER_TAB_TRANSLATION_KEYS[tab])}
           </button>
         ))}
       </div>

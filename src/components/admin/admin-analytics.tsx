@@ -286,7 +286,7 @@ export default function AdminAnalytics() {
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-9 w-36" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
@@ -326,7 +326,7 @@ export default function AdminAnalytics() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
             title: 'Total Page Views',
@@ -382,16 +382,14 @@ export default function AdminAnalytics() {
                   <p className="text-2xl font-bold tabular-nums">{card.value}</p>
                   <Badge
                     variant="outline"
-                    className={`text-xs gap-0.5 ${
-                      card.trend === 'up'
+                    className={`text-xs gap-0.5 ${card.trend === 'up'
                         ? 'text-emerald-500 border-emerald-500/30 bg-emerald-500/10'
                         : 'text-rose-500 border-rose-500/30 bg-rose-500/10'
-                    }`}
+                      }`}
                   >
                     <ArrowUpRight
-                      className={`size-3 ${
-                        card.trend === 'down' ? 'rotate-90' : ''
-                      }`}
+                      className={`size-3 ${card.trend === 'down' ? 'rotate-90' : ''
+                        }`}
                     />
                     {card.change}
                   </Badge>
@@ -414,9 +412,9 @@ export default function AdminAnalytics() {
             <CardTitle className="text-base font-semibold">Traffic Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
+            <div className="h-48 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trafficData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={trafficData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.3} />
@@ -517,7 +515,7 @@ export default function AdminAnalytics() {
             </CardHeader>
             <CardContent>
               {deviceData.length > 0 ? (
-                <div className="h-64">
+                <div className="h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -602,7 +600,7 @@ export default function AdminAnalytics() {
             </CardHeader>
             <CardContent>
               {browserData.length > 0 ? (
-                <div className="h-64">
+                <div className="h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={browserData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />

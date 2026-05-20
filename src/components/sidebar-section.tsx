@@ -10,7 +10,6 @@ import { useTranslation } from "@/lib/i18n";
 // === Types ===
 
 interface Scorer {
-  id?: string;
   name: string;
   team: string;
   teamLogo?: string;
@@ -83,11 +82,8 @@ function TopScorers({
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
-      // Deduplicate by name+team+league to prevent duplicate entries from DB
-      const seen = new Set<string>();
-      const deduped = data
-        .map((s: Record<string, unknown>) => ({
-          id: (s.id as string) || undefined,
+      setLeagueScorers(
+        data.map((s: Record<string, unknown>) => ({
           name: (s.name as string) || "",
           team: (s.team as string) || "",
           teamLogo: (s.teamLogo as string) || undefined,
@@ -97,13 +93,7 @@ function TopScorers({
           league: (s.league as string) || undefined,
           photoUrl: (s.photoUrl as string) || undefined,
         }))
-        .filter((s: Scorer) => {
-          const key = `${s.name}-${s.team}-${s.league || ''}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-      setLeagueScorers(deduped);
+      );
     } catch {
       // Fallback: use the original scorers prop filtered by league
       if (league) {
@@ -121,17 +111,9 @@ function TopScorers({
   }, [selectedLeague, fetchScorers]);
 
   // Update when parent scorers change (for "All" view)
-  // Deduplicate by name+team+league to prevent duplicate entries
   useEffect(() => {
     if (!selectedLeague) {
-      const seen = new Set<string>();
-      const deduped = scorers.filter((s) => {
-        const key = `${s.name}-${s.team}-${s.league || ''}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      setLeagueScorers(deduped);
+      setLeagueScorers(scorers);
     }
   }, [scorers, selectedLeague]);
 
@@ -242,7 +224,7 @@ function TopScorers({
             >
               {leagueScorers.map((scorer, i) => (
                 <motion.div
-                  key={scorer.id || `scorer-${i}-${scorer.name}-${scorer.team}-${scorer.league || ''}`}
+                  key={`${scorer.name}-${scorer.team}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
@@ -361,7 +343,7 @@ function LeagueTable({
           <tbody>
             {standings.map((team, i) => (
               <motion.tr
-                key={`standings-${i}-${team.team}-${team.league || ''}`}
+                key={team.team}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.04 }}
@@ -439,7 +421,7 @@ function LeagueTable({
                     {Array.isArray(team.form) &&
                       team.form.map((r, fi) => (
                         <span
-                          key={`form-${i}-${fi}`}
+                          key={fi}
                           className={cn(
                             "w-4 h-4 rounded-sm flex items-center justify-center text-[8px] font-bold",
                             r === "W"

@@ -596,12 +596,12 @@ export function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="h-[280px] w-full">
+              <div className="h-[220px] sm:h-[280px] w-full">
                 {trafficData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={trafficData}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                     >
                       <defs>
                         <linearGradient id="trafficGradient" x1="0" y1="0" x2="0" y2="1">
@@ -717,7 +717,7 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-col items-center">
-                <div className="h-[200px] w-full">
+                <div className="h-[160px] sm:h-[200px] w-full">
                   {deviceData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>

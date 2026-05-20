@@ -7,7 +7,7 @@
 const API_KEY = process.env.FOOTBALL_API_KEY || ''
 const API_HOST = process.env.FOOTBALL_API_HOST || 'v3.football.api-sports.io'
 const API_BASE = process.env.FOOTBALL_API_BASE || 'https://v3.football.api-sports.io'
-const DATA_MODE = process.env.DATA_MODE || 'mock'
+const DATA_MODE = process.env.DATA_MODE || 'real'
 
 export const isRealDataMode = DATA_MODE === 'real' && API_KEY.length > 0
 
@@ -288,3 +288,10 @@ export function transformScorers(scorers: FootballScorer[]) {
     photoUrl: s.player.photo,
   }))
 }
+
+// --- Player Statistics Functions ---
+// Re-exported from player-stats-api.ts for backward compatibility.
+// New code should import directly from '@/lib/player-stats-api'
+
+export { getPlayersStatistics, transformPlayerStatsToDb } from './player-stats-api'
+export type { FootballPlayerStats } from './player-stats-api'

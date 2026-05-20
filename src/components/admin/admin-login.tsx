@@ -78,7 +78,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-sm sm:max-w-md relative z-10"
       >
         <Card className="glass-card neon-glow border-neon/10 overflow-hidden">
           {/* Header with branding */}
@@ -103,7 +103,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
             </motion.div>
           </CardHeader>
 
-          <CardContent className="px-8 pb-8 pt-4">
+          <CardContent className="px-6 sm:px-8 pb-8 pt-4">
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Error message */}
               <AnimatePresence>

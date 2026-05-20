@@ -5,6 +5,7 @@ import { ChevronRight, Clock, Flame } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ClubLogo } from '@/components/ui/club-logo';
 import { useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ interface MatchCardProps {
 // ─── Status Badge Component ─────────────────────────────────────────────────
 
 function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minute: number; isHot: boolean; kickoff?: string }) {
+  const { t } = useTranslation();
+
   if (isHot && status === 'LIVE') {
     return (
       <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30 text-[10px] px-1.5 py-0 h-5 gap-0.5">
@@ -65,7 +68,7 @@ function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minut
   return (
     <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] px-1.5 py-0 h-5 gap-0.5">
       <Clock className="w-2.5 h-2.5" />
-      {kickoff || 'Upcoming'}
+      {kickoff || t('status.upcoming')}
     </Badge>
   );
 }
@@ -89,6 +92,8 @@ function GoalFlashOverlay({ variant }: { variant: 'list' | 'card' }) {
 // ─── Goal Badge ─────────────────────────────────────────────────────────────
 
 function GoalBadge({ variant }: { variant: 'list' | 'card' }) {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0, rotate: -12 }}
@@ -98,17 +103,16 @@ function GoalBadge({ variant }: { variant: 'list' | 'card' }) {
       className={variant === 'card' ? 'absolute top-2 right-2 z-10' : 'relative z-10'}
     >
       <span
-        className={`inline-flex items-center gap-0.5 font-black text-neon border border-neon/30 rounded-full goal-pulse-text ${
-          variant === 'card'
+        className={`inline-flex items-center gap-0.5 font-black text-neon border border-neon/30 rounded-full goal-pulse-text ${variant === 'card'
             ? 'text-[10px] bg-neon/20 px-2 py-0.5'
             : 'text-[8px] bg-neon/15 px-1.5 py-px'
-        }`}
+          }`}
         style={{
           textShadow:
             '0 0 8px color-mix(in oklch, var(--neon) 60%, transparent), 0 0 16px color-mix(in oklch, var(--neon) 30%, transparent)',
         }}
       >
-        ⚽ GOAL!
+        ⚽ {t('match.goal')}
       </span>
     </motion.div>
   );
@@ -139,15 +143,14 @@ function AnimatedScore({
           ? { type: 'spring', stiffness: 300, damping: 15, mass: 0.6 }
           : { duration: 0 }
       }
-      className={`font-bold tabular-nums inline-block ${
-        hasGoal ? 'text-neon' : ''
-      }`}
+      className={`font-bold tabular-nums inline-block ${hasGoal ? 'text-neon' : ''
+        }`}
       style={
         hasGoal
           ? {
-              textShadow:
-                '0 0 10px color-mix(in oklch, var(--neon) 50%, transparent), 0 0 20px color-mix(in oklch, var(--neon) 25%, transparent)',
-            }
+            textShadow:
+              '0 0 10px color-mix(in oklch, var(--neon) 50%, transparent), 0 0 20px color-mix(in oklch, var(--neon) 25%, transparent)',
+          }
           : undefined
       }
     >
@@ -202,9 +205,8 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
         opacity: { duration: 0.3 },
         x: { duration: 0.3 },
       }}
-      className={`relative grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-5 py-2.5 items-center hover:bg-white/[0.03] transition-colors cursor-pointer group h-12 ${getLeftBorderStyle(match.status, match.isHot)} ${
-        hasGoal ? 'goal-flash-bg' : ''
-      }`}
+      className={`relative grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-5 py-2.5 items-center hover:bg-white/[0.03] transition-colors cursor-pointer group h-12 ${getLeftBorderStyle(match.status, match.isHot)} ${hasGoal ? 'goal-flash-bg' : ''
+        }`}
     >
       {/* Goal flash overlay */}
       <AnimatePresence>
@@ -213,9 +215,8 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
 
       {/* Home Team */}
       <span
-        className={`text-xs truncate relative z-[1] ${
-          match.status === 'LIVE' ? 'font-semibold' : 'text-muted-foreground'
-        }`}
+        className={`text-xs truncate relative z-[1] ${match.status === 'LIVE' ? 'font-semibold' : 'text-muted-foreground'
+          }`}
       >
         {match.homeTeam}
         {match.isHot && match.status === 'LIVE' && (
@@ -237,9 +238,8 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
 
       {/* Away Team */}
       <span
-        className={`text-xs truncate relative z-[1] ${
-          match.status === 'LIVE' ? 'font-semibold' : 'text-muted-foreground'
-        }`}
+        className={`text-xs truncate relative z-[1] ${match.status === 'LIVE' ? 'font-semibold' : 'text-muted-foreground'
+          }`}
       >
         {match.awayTeam}
       </span>
@@ -261,6 +261,8 @@ function MatchCardList({ match, hasGoal, onClick }: MatchCardProps) {
 // ─── Card Variant ───────────────────────────────────────────────────────────
 
 function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
+  const { t } = useTranslation();
+
   const handleClick = useCallback(() => {
     onClick?.(match);
   }, [onClick, match]);
@@ -296,9 +298,8 @@ function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
         y: { duration: 0.4 },
       }}
       whileHover={{ scale: hasGoal ? 1.05 : 1.03, y: -2 }}
-      className={`glass-card glass-card-hover rounded-xl p-4 cursor-pointer transition-all relative overflow-hidden ${
-        match.isHot && match.status === 'LIVE' ? 'border-orange-500/40 neon-glow' : ''
-      } ${hasGoal ? 'goal-flash-border' : ''}`}
+      className={`glass-card glass-card-hover rounded-xl p-4 cursor-pointer transition-all relative overflow-hidden ${match.isHot && match.status === 'LIVE' ? 'border-orange-500/40 neon-glow' : ''
+        } ${hasGoal ? 'goal-flash-border' : ''}`}
     >
       {/* Goal flash background pulse */}
       <AnimatePresence>
@@ -381,7 +382,7 @@ function MatchCardCard({ match, hasGoal, onClick }: MatchCardProps) {
         <div className="mt-3 pt-2 border-t border-orange-500/20 relative z-[1]">
           <div className="flex items-center gap-1 text-[9px] text-orange-400 font-semibold uppercase tracking-wider">
             <Flame className="w-2.5 h-2.5" />
-            Hot Match
+            {t('match.hotMatch')}
           </div>
         </div>
       )}
