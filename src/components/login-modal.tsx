@@ -77,37 +77,48 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
 
     setLoading(true);
     try {
-      // STEP 1: Try admin auth first (for AdminUser table)
-      // Admin users are in the AdminUser table, not the regular User table
-      try {
-        const adminRes = await fetch("/api/admin/auth?action=login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: username.trim(), password }),
+      // ===== UNIFIED LOGIN: Try admin auth first, then NextAuth =====
+      // Admin users exist in AdminUser table (not the regular User table)
+      // So we must check admin auth endpoint FIRST
+
+      const adminRes = await fetch("/api/admin/auth?action=login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+
+      const adminData = await adminRes.json();
+
+      if (adminRes.ok && adminData.token) {
+        // ===== Admin login successful =====
+        toast.success(t("auth.welcomeBack"), {
+          icon: <LogIn className="w-4 h-4 text-neon" />,
         });
 
-        const adminData = await adminRes.json();
+        onLoginSuccess(adminData.user, adminData.token);
 
-        if (adminRes.ok && adminData.token) {
-          // Admin login successful
-          toast.success(t("auth.welcomeBack"), {
-            icon: <LogIn className="w-4 h-4 text-neon" />,
-          });
-
-          onLoginSuccess(adminData.user, adminData.token);
-
-          // Reset form
-          setUsername("");
-          setPassword("");
-          setError("");
-          return; // Done!
-        }
-        // Admin auth failed — continue to try NextAuth for regular users
-      } catch {
-        // Admin auth request failed — continue to try NextAuth
+        // Reset form
+        setUsername("");
+        setPassword("");
+        setError("");
+        return; // Done!
       }
 
-      // STEP 2: Try NextAuth credentials login (for regular User table)
+      // Admin auth returned an error — check if it's a "user not found" type error
+      // (meaning this might be a regular user trying to login)
+      const adminError = adminData.error || "";
+      const isUserNotFound =
+        adminError === "Invalid credentials" ||
+        adminRes.status === 401;
+
+      if (!isUserNotFound && adminRes.status >= 500) {
+        // Server error (DB connection, etc.) — show the error and stop
+        setError(adminError || "Server error — please try again");
+        return;
+      }
+
+      // ===== Admin auth failed (user not found or wrong password) =====
+      // Try NextAuth for regular User table login
       const result = await signIn("credentials", {
         redirect: false,
         email: username.trim(),
@@ -116,7 +127,9 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
 
       if (result?.error) {
         // Both admin and NextAuth failed
-        setError(result.error === "Configuration" ? t("auth.configError") : result.error);
+        setError(result.error === "Configuration"
+          ? t("auth.configError")
+          : result.error);
         return;
       }
 
@@ -124,8 +137,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
         toast.success(t("auth.loginSuccess"), {
           icon: <LogIn className="w-4 h-4 text-neon" />,
         });
-
-        // Refresh to get the session
         window.location.reload();
       }
 
@@ -171,7 +182,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
       <DialogContent className="sm:max-w-md glass-card border-neon/10 p-0 overflow-hidden">
         {/* Header */}
         <div className="relative px-8 pt-8 pb-2">
-          {/* Decorative background */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
             backgroundImage: `linear-gradient(var(--neon) 1px, transparent 1px), linear-gradient(90deg, var(--neon) 1px, transparent 1px)`,
             backgroundSize: '40px 40px',
@@ -201,7 +211,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
 
         {/* Form */}
         <div className="px-8 pb-8 pt-2">
-          {/* Google Login Button */}
           <Button
             type="button"
             variant="outline"
@@ -217,7 +226,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
             {t("auth.signInWithGoogle")}
           </Button>
 
-          {/* Divider */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border/50" />
@@ -228,7 +236,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Error message */}
             <AnimatePresence>
               {error && (
                 <motion.div
@@ -242,7 +249,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               )}
             </AnimatePresence>
 
-            {/* Username/Email field */}
             <div className="space-y-2">
               <Label htmlFor="login-username" className="text-sm font-medium text-foreground">
                 {t("auth.usernameEmail")}
@@ -260,7 +266,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               />
             </div>
 
-            {/* Password field */}
             <div className="space-y-2">
               <Label htmlFor="login-password" className="text-sm font-medium text-foreground">
                 {t("auth.password")}
@@ -283,15 +288,14 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 h-4" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 h-4" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Submit button */}
             <Button
               type="submit"
               disabled={loading || googleLoading}
@@ -310,7 +314,6 @@ export function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchToRegister
               )}
             </Button>
 
-            {/* Switch to Register */}
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">
                 {t("auth.noAccount")}{" "}

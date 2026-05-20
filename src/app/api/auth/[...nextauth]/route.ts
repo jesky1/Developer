@@ -3,7 +3,6 @@ import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { comparePassword, getUserByEmail, createUser, signUserToken } from '@/lib/user-auth'
 import { db, ensureDbConnection } from '@/lib/db'
-import bcrypt from 'bcryptjs'
 
 export const authOptions: NextAuthOptions = {
   providers: [
