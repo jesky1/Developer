@@ -1,10 +1,19 @@
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { jwtVerify, SignJWT } from 'jose'
-import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { db, ensureDbConnection } from '@/lib/db'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'goalzone-jwt-secret-key-change-in-production'
 )
+
+/**
+ * bcrypt salt rounds — 10 rounds for Vercel serverless compatibility
+ * 12 rounds can timeout on cold starts with limited CPU.
+ * 10 rounds still provides strong security (~100ms on modern hardware).
+ */
+const BCRYPT_ROUNDS = 10
 
 export async function signToken(payload: { userId: string; username: string; role: string }) {
   return new SignJWT(payload)
@@ -20,21 +29,20 @@ export async function verifyToken(token: string) {
 }
 
 /**
- * Hash password using bcryptjs (pure JS, no native compilation issues)
- * Uses 12 salt rounds for good security/performance balance
+ * Hash password using bcryptjs (pure JS, no native compilation issues on Vercel)
  */
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12)
+  return bcrypt.hash(password, BCRYPT_ROUNDS)
 }
 
 /**
- * Compare plain password against bcrypt hash
+ * Compare plain password against stored hash.
+ * Supports legacy HMAC-SHA256 format (salt:hash) for migration.
  */
 export async function comparePassword(password: string, storedHash: string): Promise<boolean> {
   try {
     // Support legacy HMAC-SHA256 format (salt:hash) during migration
     if (storedHash.includes(':') && storedHash.length < 100) {
-      // Old HMAC format — verify using legacy method, then upgrade hash on next login
       const legacyMatch = await compareLegacyHmac(password, storedHash)
       return legacyMatch
     }
@@ -46,7 +54,6 @@ export async function comparePassword(password: string, storedHash: string): Pro
 
 /**
  * Legacy HMAC-SHA256 comparison for migrating old password hashes
- * This allows users with old-format hashes to still log in
  */
 async function compareLegacyHmac(password: string, storedHash: string): Promise<boolean> {
   try {
@@ -72,17 +79,26 @@ async function compareLegacyHmac(password: string, storedHash: string): Promise<
   }
 }
 
-export async function getAuthUser(request: NextRequest) {
+/**
+ * Get authenticated user from request Authorization header.
+ * Ensures DB connection before querying (critical for Vercel serverless).
+ */
+export async function getAuthUser(request: Request) {
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
+
   try {
     const token = authHeader.substring(7)
     const payload = await verifyToken(token)
-    // Use dynamic import to avoid build-time PrismaClient initialization issues
-    const { db } = await import('@/lib/db')
+
+    // Ensure DB connection before querying (Vercel cold start)
+    const connected = await ensureDbConnection(2)
+    if (!connected) return null
+
     const user = await db.adminUser.findUnique({ where: { id: payload.userId } })
     return user
-  } catch {
+  } catch (error) {
+    console.error('getAuthUser error:', error)
     return null
   }
 }
@@ -90,12 +106,6 @@ export async function getAuthUser(request: NextRequest) {
 /**
  * Require admin authentication for API routes.
  * Returns the authenticated user or a 401 NextResponse.
- * Use in admin API route handlers to enforce auth.
- *
- * Usage:
- *   const authResult = await requireAdminAuth(request)
- *   if (authResult instanceof NextResponse) return authResult // 401
- *   const user = authResult // AdminUser object
  */
 export async function requireAdminAuth(request: NextRequest) {
   const user = await getAuthUser(request)

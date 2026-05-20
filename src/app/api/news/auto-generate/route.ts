@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import ZAI from 'z-ai-web-dev-sdk'
 import fs from 'fs'
 import path from 'path'
+import { safeNewsFindFirst, safeNewsCount, safeNewsFindMany, safeNewsFindUnique } from '@/lib/safe-query'
 
 // --- Constants ---
 
@@ -315,20 +316,20 @@ async function fetchPexelsImage(query: string): Promise<{
 
 export async function GET() {
   try {
-    const lastArticle = await db.newsItem.findFirst({
+    const lastArticle = await safeNewsFindFirst(db, {
       where: { isAiGenerated: true },
       orderBy: { createdAt: 'desc' },
     })
-    const totalAiArticles = await db.newsItem.count({
+    const totalAiArticles = await safeNewsCount(db, {
       where: { isAiGenerated: true },
     })
-    const totalArticles = await db.newsItem.count()
-    const totalHeadlines = await db.newsItem.count({
+    const totalArticles = await safeNewsCount(db)
+    const totalHeadlines = await safeNewsCount(db, {
       where: { isHeadline: true },
     })
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
-    const articlesToday = await db.newsItem.count({
+    const articlesToday = await safeNewsCount(db, {
       where: { createdAt: { gte: todayStart } },
     })
 
@@ -392,9 +393,8 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Deduplication check - skip if similar title exists in last 2 hours
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000)
-    const recentArticles = await db.newsItem.findMany({
+    const recentArticles = await safeNewsFindMany(db, {
       where: { createdAt: { gte: twoHoursAgo } },
-      select: { title: true },
     })
     const recentTitles = recentArticles.map((a) => a.title.toLowerCase())
 
@@ -480,7 +480,7 @@ Berdasarkan informasi di atas, tulis artikel berita sepak bola yang SEO-friendly
     const slug = toSlug(article.title)
     let finalSlug = slug
     try {
-      const existing = await db.newsItem.findUnique({ where: { slug: finalSlug } })
+      const existing = await safeNewsFindUnique(db, { where: { slug: finalSlug } })
       if (existing) finalSlug = `${slug}-${Date.now()}`
     } catch {
       finalSlug = `${slug}-${Date.now()}`

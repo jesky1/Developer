@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { searchFootballImage, isPexelsConfigured } from '@/lib/pexels-api'
 import { isRealDataMode } from '@/lib/football-api'
+import { safeNewsFindFirst, safeNewsCount, safeNewsFindMany } from '@/lib/safe-query'
 
 // --- Helpers ---
 
@@ -199,7 +200,7 @@ function generateSchemaOrg(article: {
   stadium: string
   kickoff: string
 }) {
-  const baseUrl = 'https://goalzone-live.vercel.app'
+  const baseUrl = 'https://goalzone.app'
   const articleUrl = `${baseUrl}/berita/${article.slug}`
 
   return {
@@ -257,11 +258,11 @@ function generateSchemaOrg(article: {
 
 export async function GET() {
   try {
-    const lastArticle = await db.newsItem.findFirst({
+    const lastArticle = await safeNewsFindFirst(db, {
       where: { isAiGenerated: true },
       orderBy: { createdAt: 'desc' },
     })
-    const totalAiArticles = await db.newsItem.count({
+    const totalAiArticles = await safeNewsCount(db, {
       where: { isAiGenerated: true },
     })
 
@@ -293,7 +294,7 @@ export async function POST() {
 
     // Dedup: skip jika sudah ada artikel untuk match+category dalam 2 jam terakhir
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000)
-    const recentArticles = await db.newsItem.findMany({
+    const recentArticles = await safeNewsFindMany(db, {
       where: { isAiGenerated: true, createdAt: { gte: twoHoursAgo } },
     })
     const dedupKey = (matchId: string, cat: string) => `${matchId}::${cat}`
@@ -341,7 +342,7 @@ export async function POST() {
         const slug = toSlug(articleData.title)
         let finalSlug = slug
         try {
-          const existing = await db.newsItem.findUnique({ where: { slug: finalSlug } })
+          const existing = await safeNewsFindUnique(db, { where: { slug: finalSlug } })
           if (existing) finalSlug = `${slug}-${Date.now()}`
         } catch {
           finalSlug = `${slug}-${Date.now()}`

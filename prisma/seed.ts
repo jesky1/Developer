@@ -33,7 +33,7 @@ async function main() {
 
     if (existingAdmin) {
       // Update existing admin: reset password hash to bcrypt + ensure active
-      const passwordHash = await bcrypt.hash(adminPassword, 12)
+      const passwordHash = await bcrypt.hash(adminPassword, 10)
       await prisma.adminUser.update({
         where: { id: existingAdmin.id },
         data: {
@@ -48,7 +48,7 @@ async function main() {
       console.log(`   Username: ${existingAdmin.username}`)
     } else {
       // Create new admin user
-      const passwordHash = await bcrypt.hash(adminPassword, 12)
+      const passwordHash = await bcrypt.hash(adminPassword, 10)
       await prisma.adminUser.create({
         data: {
           username: adminUsername,

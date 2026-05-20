@@ -1,36 +1,42 @@
-import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeNewsFindMany, safeNewsCount } from '@/lib/safe-query'
 
 export async function GET(request: NextRequest) {
   try {
+    const { db } = await import('@/lib/db')
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10', 10)
 
-    const articles = await db.newsItem.findMany({
-      where: {
-        isPublished: true,
-        viewCount: { gt: 0 },
-      },
-      orderBy: { viewCount: 'desc' },
-      take: Math.min(limit, 50), // Cap at 50 max
-    })
+    let articles: any[]
 
-    const parsed = articles.map((n) => {
-      // Parse tags JSON string
+    try {
+      articles = await db.newsItem.findMany({
+        where: {
+          isPublished: true,
+          viewCount: { gt: 0 },
+        },
+        orderBy: { viewCount: 'desc' },
+        take: Math.min(limit, 50),
+      })
+    } catch (error: any) {
+      // P2022 = column not synced yet
+      if (error?.code === 'P2022') {
+        console.warn('⚠️ NewsItem schema not fully synced for trending, using safe query')
+        articles = await safeNewsFindMany(db, {
+          orderBy: { createdAt: 'desc' },
+          take: Math.min(limit, 50),
+        })
+      } else {
+        throw error
+      }
+    }
+
+    const parsed = articles.map((n: any) => {
       let tags: string[] = []
-      try {
-        tags = JSON.parse(n.tags)
-      } catch {
-        tags = []
-      }
+      try { tags = JSON.parse(n.tags) } catch { tags = [] }
 
-      // Parse seoKeywords JSON string
       let seoKeywords: string[] = []
-      try {
-        seoKeywords = JSON.parse(n.seoKeywords)
-      } catch {
-        seoKeywords = []
-      }
+      try { seoKeywords = JSON.parse(n.seoKeywords) } catch { seoKeywords = [] }
 
       return {
         id: n.id,
@@ -40,12 +46,12 @@ export async function GET(request: NextRequest) {
         content: n.content,
         category: n.category,
         imageUrl: n.imageUrl,
-        imageAlt: n.imageAlt,
-        imageWidth: n.imageWidth,
-        imageHeight: n.imageHeight,
-        imageSource: n.imageSource,
+        imageAlt: n.imageAlt || '',
+        imageWidth: n.imageWidth || 0,
+        imageHeight: n.imageHeight || 0,
+        imageSource: n.imageSource || '',
         source: n.source,
-        sourceUrl: n.sourceUrl,
+        sourceUrl: n.sourceUrl || '',
         tags,
         seoTitle: n.seoTitle,
         seoDescription: n.seoDescription,
@@ -53,10 +59,10 @@ export async function GET(request: NextRequest) {
         league: n.league,
         matchId: n.matchId,
         isAiGenerated: n.isAiGenerated,
-        isHeadline: n.isHeadline,
-        isPublished: n.isPublished,
-        language: n.language,
-        viewCount: n.viewCount,
+        isHeadline: n.isHeadline || false,
+        isPublished: n.isPublished ?? true,
+        language: n.language || 'id',
+        viewCount: n.viewCount || 0,
         publishedAt: n.publishedAt,
         createdAt: n.createdAt,
         updatedAt: n.updatedAt,
@@ -69,9 +75,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching trending news:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch trending news' },
-      { status: 500 }
-    )
+    return NextResponse.json({ articles: [], limit: 10 })
   }
 }

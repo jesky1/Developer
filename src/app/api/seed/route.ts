@@ -3,8 +3,16 @@ import { db, ensureDbConnection } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
 /**
- * Admin seed endpoint — also available at /api/seed
- * Creates default admin user and site settings.
+ * GET /api/seed?secret=xxx
+ * POST /api/seed  body: { secret: "xxx" }
+ *
+ * Creates default admin user in AdminUser table:
+ *   username: "admin"
+ *   email:    "admin@goalzone.com"
+ *   password: "admin123" (bcrypt hashed)
+ *   role:     "superadmin"
+ *
+ * Protected by SEED_SECRET env var (default: "goalzone-seed-2024")
  *
  * Vercel serverless compatible:
  * - Static imports (no dynamic import)
@@ -14,9 +22,36 @@ import bcrypt from 'bcryptjs'
 
 const BCRYPT_ROUNDS = 10
 
+export async function GET(request: NextRequest) {
+    const seedSecret = request.nextUrl.searchParams.get('secret') || ''
+    const expectedSecret = process.env.SEED_SECRET || 'goalzone-seed-2024'
+
+    if (!seedSecret) {
+        return NextResponse.json({
+            message: 'GOALZONE Seed Endpoint',
+            usage: {
+                get: 'GET /api/seed?secret=goalzone-seed-2024',
+                post: 'POST /api/seed with body {"secret":"goalzone-seed-2024"}',
+                header: 'POST /api/seed with header x-seed-secret: goalzone-seed-2024',
+            },
+            usingCustomSecret: !!process.env.SEED_SECRET,
+        })
+    }
+
+    if (seedSecret !== expectedSecret) {
+        return NextResponse.json(
+            { error: 'Invalid seed secret.' },
+            { status: 403 }
+        )
+    }
+
+    return doSeed()
+}
+
 export async function POST(request: NextRequest) {
     let seedSecret = ''
 
+    // 1. Try JSON body
     try {
         const body = await request.json()
         seedSecret = body.secret || ''
@@ -24,9 +59,12 @@ export async function POST(request: NextRequest) {
         // Body parse failed
     }
 
+    // 2. Try query param
     if (!seedSecret) {
         seedSecret = request.nextUrl.searchParams.get('secret') || ''
     }
+
+    // 3. Try header
     if (!seedSecret) {
         seedSecret = request.headers.get('x-seed-secret') || ''
     }
@@ -57,33 +95,10 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    return doAdminSeed()
+    return doSeed()
 }
 
-export async function GET(request: NextRequest) {
-    const seedSecret = request.nextUrl.searchParams.get('secret') || ''
-    const expectedSecret = process.env.SEED_SECRET || 'goalzone-seed-2024'
-
-    if (!seedSecret) {
-        return NextResponse.json({
-            message: 'GOALZONE Admin Seed Endpoint (also available at /api/seed)',
-            usage: {
-                get: 'GET /api/admin/seed?secret=goalzone-seed-2024',
-                post: 'POST /api/admin/seed with body {"secret":"goalzone-seed-2024"}',
-                header: 'POST /api/admin/seed with header x-seed-secret: goalzone-seed-2024',
-            },
-            usingCustomSecret: !!process.env.SEED_SECRET,
-        })
-    }
-
-    if (seedSecret !== expectedSecret) {
-        return NextResponse.json({ error: 'Invalid seed secret.' }, { status: 403 })
-    }
-
-    return doAdminSeed()
-}
-
-async function doAdminSeed() {
+async function doSeed() {
     try {
         // Ensure DB connection (critical for Vercel serverless cold starts)
         const connected = await ensureDbConnection(3)
@@ -121,6 +136,7 @@ async function doAdminSeed() {
             })
             results.push('Created admin user (admin@goalzone.com / admin123 / superadmin)')
         } else {
+            // Update existing: ensure bcrypt hash + superadmin role + active
             await db.adminUser.update({
                 where: { id: existingAdmin.id },
                 data: {
