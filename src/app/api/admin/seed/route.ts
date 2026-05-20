@@ -6,13 +6,12 @@ import bcrypt from 'bcryptjs'
  * Admin seed endpoint — also available at /api/seed
  * Creates default admin user and site settings.
  *
- * Vercel serverless compatible:
- * - Static imports (no dynamic import)
- * - Explicit DB connection before queries
- * - bcrypt 10 rounds (serverless-friendly)
+ * CRITICAL: The bcrypt hash is generated AND verified in the SAME runtime.
+ * This ensures the hash works correctly on the platform where it's generated.
  */
 
 const BCRYPT_ROUNDS = 10
+const ADMIN_PASSWORD = 'admin123'
 
 export async function POST(request: NextRequest) {
     let seedSecret = ''
@@ -95,8 +94,27 @@ async function doAdminSeed() {
         }
 
         const results: string[] = []
+        const diagnostics: Record<string, unknown> = {}
 
-        // ===== 1. Create default admin user =====
+        // ===== 1. Generate password hash =====
+        const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, BCRYPT_ROUNDS)
+
+        // ===== 2. VERIFY the hash IMMEDIATELY (same runtime) =====
+        const preVerify = await bcrypt.compare(ADMIN_PASSWORD, passwordHash)
+        diagnostics.preStoreVerify = preVerify
+        diagnostics.hashPrefix = passwordHash.substring(0, 10)
+
+        if (!preVerify) {
+            return NextResponse.json(
+                {
+                    error: 'bcrypt hash generation broken — hash does not verify immediately after creation',
+                    diagnostics,
+                },
+                { status: 500 }
+            )
+        }
+
+        // ===== 3. Create or update admin user =====
         const existingAdmin = await db.adminUser.findFirst({
             where: {
                 OR: [
@@ -105,8 +123,6 @@ async function doAdminSeed() {
                 ],
             },
         })
-
-        const passwordHash = await bcrypt.hash('admin123', BCRYPT_ROUNDS)
 
         if (!existingAdmin) {
             await db.adminUser.create({
@@ -133,7 +149,21 @@ async function doAdminSeed() {
             results.push('Admin user already exists — password hash updated, role set to superadmin')
         }
 
-        // ===== 2. Create default site settings =====
+        // ===== 4. POST-STORE VERIFY =====
+        const storedAdmin = await db.adminUser.findFirst({ where: { username: 'admin' } })
+        if (storedAdmin) {
+            const postVerify = await bcrypt.compare(ADMIN_PASSWORD, storedAdmin.passwordHash)
+            diagnostics.postStoreVerify = postVerify
+            diagnostics.hashMatchesOriginal = storedAdmin.passwordHash === passwordHash
+
+            if (postVerify) {
+                results.push('✅ Password verification passed after storing to database')
+            } else {
+                results.push('⚠️ WARNING: Password verification failed after storing to database!')
+            }
+        }
+
+        // ===== 5. Create default site settings =====
         const settings = [
             { key: 'site_name', value: 'GOALZONE', category: 'general', description: 'Site name', isPublic: true },
             { key: 'site_description', value: 'Live Football Scores & News', category: 'general', description: 'Site description', isPublic: true },
@@ -153,10 +183,11 @@ async function doAdminSeed() {
         return NextResponse.json({
             message: 'Database seeded successfully',
             results,
+            diagnostics,
             credentials: {
                 username: 'admin',
                 email: 'admin@goalzone.com',
-                password: 'admin123',
+                password: ADMIN_PASSWORD,
                 role: 'superadmin',
                 note: 'Change the default password after first login!',
             },

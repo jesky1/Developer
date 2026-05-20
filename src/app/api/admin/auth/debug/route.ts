@@ -100,9 +100,31 @@ export async function GET(request: NextRequest) {
                 // 7. Test password verification
                 try {
                     const passwordMatch = await bcrypt.compare('admin123', admin.passwordHash)
-                    results.passwordTest = {
-                        success: true,
-                        matches: passwordMatch,
+
+                    // If match fails, generate a fresh hash and compare
+                    if (!passwordMatch) {
+                        const freshHash = await bcrypt.hash('admin123', 10)
+                        const freshVerify = await bcrypt.compare('admin123', freshHash)
+                        const freshVsStored = freshHash === admin.passwordHash
+
+                        results.passwordTest = {
+                            success: true,
+                            matches: false,
+                            diagnosis: {
+                                freshHashWorks: freshVerify,
+                                freshHashSameAsStored: freshVsStored,
+                                freshHashPrefix: freshHash.substring(0, 15),
+                                storedHashPrefix: admin.passwordHash.substring(0, 15),
+                                storedHashFull: admin.passwordHash,
+                                bcryptjsVersion: bcrypt.version || 'unknown',
+                                fix: 'Call /api/seed?secret=goalzone-seed-2024 to regenerate the password hash on this server',
+                            },
+                        }
+                    } else {
+                        results.passwordTest = {
+                            success: true,
+                            matches: true,
+                        }
                     }
                 } catch (bcryptError) {
                     results.passwordTest = {
