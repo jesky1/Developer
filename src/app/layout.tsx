@@ -141,6 +141,9 @@ export default function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone-live.vercel.app/api/news/rss" />
         <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone-live.vercel.app/api/sitemap" />
         {/* JSON-LD structured data — rendered server-side in <head> to avoid React script-tag warnings */}
+        <meta name="google-adsense-account" content="ca-pub-7385025232651253"></meta>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7385025232651253"
+          crossorigin="anonymous"></script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
