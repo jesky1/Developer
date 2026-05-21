@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useSyncExternalStore } from "react";
-import { useNavigation, hasSplashBeenShown, markSplashShown } from "@/hooks/use-navigation";
-import { AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, } from "react";
+import { useNavigation, } from "@/hooks/use-navigation";
 import { cn } from "@/lib/utils";
 import { Navbar, type LoginUser } from "@/components/navbar";
 import { LoginModal } from "@/components/login-modal";
@@ -42,19 +41,6 @@ const AdminPanel = dynamic(() => import("@/components/admin/admin-panel"), {
     </div>
   ),
 });
-
-// Lazy load splash screen with ssr: false to avoid hydration mismatch
-// The splash uses framer-motion animations + sessionStorage which are client-only
-const SplashScreen = dynamic(
-  () => import("@/components/splash-screen").then((mod) => ({ default: mod.SplashScreen })),
-  {
-    ssr: false,
-    loading: () => <div className="fixed inset-0 z-[100] bg-background" />,
-  }
-);
-
-// Empty subscribe function for useSyncExternalStore
-const emptySubscribe = () => () => { };
 
 const AUTH_KEY = "goalzone_admin_token";
 const USER_KEY = "goalzone_user";
@@ -116,21 +102,6 @@ function LiveScoresView({
     wsReconnectAttempts,
   } = useSocket();
 
-  // Use useSyncExternalStore to safely read sessionStorage without hydration mismatch.
-  // Server always returns false (no splash), client checks sessionStorage.
-  const shouldShowSplash = useSyncExternalStore(
-    emptySubscribe,
-    () => !hasSplashBeenShown(),
-    () => false // Server snapshot: never show splash during SSR
-  );
-
-  // Track whether splash has been dismissed via the onFinished callback.
-  // This is event-handler-based state (not effect-based), so it's lint-safe.
-  const [splashDismissed, setSplashDismissed] = useState(false);
-
-  // Show splash only when: should show (sessionStorage) AND not yet dismissed
-  const splashActive = shouldShowSplash && !splashDismissed;
-
   const { navigate, restoreScroll } = useNavigation();
   const { t } = useTranslation();
 
@@ -152,9 +123,6 @@ function LiveScoresView({
     navigate(`/team/${slug}`);
   }, [navigate]);
   const [footerSelectedLeague, setFooterSelectedLeague] = useState<string | undefined>(undefined);
-
-  // Goal notifications popup disabled by user request
-  // useGoalNotifications(matches);
 
   // Restore scroll position when component mounts
   useEffect(() => {
@@ -184,9 +152,15 @@ function LiveScoresView({
     }
   }, []);
 
-  const liveMatches = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
-  const featuredMatch = liveMatches[0] || matches[0] || null;
-  const otherMatches = matches.filter((m) => m.id !== featuredMatch?.id);
+  const liveMatches = matches.filter(
+    (m) =>
+      m.status === "LIVE" ||
+      m.status === "HT" ||
+      m.status === "UPCOMING" ||
+      m.status === "FT"
+  );
+  const featuredMatch = matches[0] || null;
+  const otherMatches = matches.slice(1);
   const featuredMatchPoll = featuredMatch?.poll || null;
 
   const featuredGoalEvent = featuredMatch
@@ -197,24 +171,8 @@ function LiveScoresView({
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Splash screen — only rendered on client after mount */}
-      <AnimatePresence>
-        {splashActive && (
-          <SplashScreen
-            onFinished={() => {
-              setSplashDismissed(true);
-              markSplashShown();
-            }}
-          />
-        )}
-      </AnimatePresence>
 
-      <div
-        className={cn(
-          "transition-opacity duration-500",
-          splashActive ? "opacity-0" : "opacity-100"
-        )}
-      >
+      <div className="transition-opacity duration-500 opacity-100">
         <Navbar
           currentUser={currentUser}
           onLoginClick={onLoginClick}
@@ -326,7 +284,7 @@ function LiveScoresView({
             ) : (
               <>
                 <section id="live">
-                  <LiveTicker matches={matches} />
+                  <LiveTicker matches={[...matches, ...matches]} />
                 </section>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -358,7 +316,7 @@ function LiveScoresView({
                     />
 
                     <FeaturedMatchesGrid
-                      matches={otherMatches}
+                      matches={otherMatches.slice(0, 12)}
                       onMatchClick={handleMatchClick}
                       goalMatchIds={goalMatchIds}
                       isLoading={isLoading}
