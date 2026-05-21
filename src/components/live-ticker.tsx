@@ -3,92 +3,41 @@
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 
-interface Match {
-  id: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number;
-  awayScore: number;
-  status: string;
-  minute: number;
-  league: string;
-}
-
-interface LiveTickerProps {
-  matches: Match[];
-}
-
-export function LiveTicker({ matches }: LiveTickerProps) {
+export function LiveTicker({ matches }: { matches: any[] }) {
   const [isPaused, setIsPaused] = useState(false);
   const { t } = useTranslation();
 
-  const liveMatches = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
-  const otherMatches = matches.filter((m) => m.status !== "LIVE" && m.status !== "HT");
-  const tickerMatches = [...liveMatches, ...otherMatches, ...liveMatches, ...otherMatches];
+  if (matches.length === 0) return null;
 
-  if (matches.length === 0) {
-    return (
-      <div className="glass-card rounded-xl p-4 overflow-hidden">
-        <div className="flex items-center gap-3 h-10">
-          <div className="w-48 h-6 bg-surface-light rounded animate-pulse" />
-          <div className="w-48 h-6 bg-surface-light rounded animate-pulse" />
-          <div className="w-48 h-6 bg-surface-light rounded animate-pulse" />
-        </div>
-      </div>
-    );
-  }
+  // Duplikasi data agar tidak putus di tengah jalan saat berputar
+  const tickerMatches = [...matches, ...matches, ...matches];
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden relative">
-      {/* Fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
+    <div className="glass-card rounded-xl overflow-hidden relative py-3 px-2">
+      {/* SUNTIKAN CSS INSTAN UNTUK MEMPERLAMBAT TEKS */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes pelan { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-33.33%,0,0); } }
+        .ticker-slow { animation: pelan 60s linear infinite !important; }
+      `}} />
 
       <div
-        className="flex items-center gap-6 py-3 px-2 overflow-hidden"
+        className="flex items-center gap-6 overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         <div
-          className="flex items-center gap-6 whitespace-nowrap ticker-animate"
-          style={{
-            animationPlayState: isPaused ? "paused" : "running",
-            animationDuration: "90s",
-          }}
+          className="flex items-center gap-6 whitespace-nowrap ticker-slow"
+          style={{ animationPlayState: isPaused ? "paused" : "running" }}
         >
           {tickerMatches.map((match, i) => (
-            <div
-              key={`${match.id}-${i}`}
-              className="flex items-center gap-3 px-4 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                {match.status === "LIVE" && (
-                  <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-pulse" />
-                    <span className="text-[10px] font-bold text-green-400 uppercase">
-                      {t("status.live")} {match.minute}&apos;
-                    </span>
-                  </span>
-                )}
-                {match.status === "HT" && (
-                  <span className="text-[10px] font-bold text-yellow-400 uppercase">HT</span>
-                )}
-                {match.status === "FT" && (
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">FT</span>
-                )}
-                {match.status === "UPCOMING" && (
-                  <span className="text-[10px] font-bold text-blue-400 uppercase">
-                    {t("status.upcoming")}
-                  </span>
-                )}
-              </div>
+            <div key={i} className="flex items-center gap-3 px-4 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer text-sm font-medium">
+              <span className="text-[10px] font-bold uppercase text-neon">
+                {match.status === "LIVE" ? `${t("status.live")} ${match.minute}'` : match.status}
+              </span>
               <span className="text-xs text-muted-foreground">{match.league}</span>
-              <span className="text-sm font-medium text-foreground">
-                {match.homeTeam}{" "}
-                <span className={`font-bold ${match.status === "LIVE" ? "text-neon" : "text-foreground"}`}>
-                  {match.homeScore} - {match.awayScore}
-                </span>{" "}
-                {match.awayTeam}
+              <span>
+                {match.homeTeam} <span className="font-bold text-neon">{match.homeScore} - {match.awayScore}</span> {match.awayTeam}
               </span>
             </div>
           ))}

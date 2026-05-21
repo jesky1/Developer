@@ -223,7 +223,7 @@
 }
 
 .ticker-animate {
-  animation: ticker-scroll 90s linear infinite;
+  animation: ticker-scroll 60s linear infinite;
 }
 
 .ticker-animate:hover {
