@@ -53,7 +53,7 @@ export function LiveTicker({ matches }: LiveTickerProps) {
           className="flex items-center gap-6 whitespace-nowrap ticker-animate"
           style={{
             animationPlayState: isPaused ? "paused" : "running",
-            animationDuration: "60s",
+            animationDuration: "90s",
           }}
         >
           {tickerMatches.map((match, i) => (
