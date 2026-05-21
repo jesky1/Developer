@@ -1,8 +1,13 @@
-import { db } from '@/lib/db'
+import { db, ensureDbConnection } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    const connected = await ensureDbConnection(2)
+    if (!connected) {
+      return NextResponse.json({ error: 'Database temporarily unavailable' }, { status: 503 })
+    }
+
     const { searchParams } = new URL(request.url)
     const league = searchParams.get('league') || 'Premier League'
 
@@ -27,7 +32,7 @@ export async function GET(request: NextRequest) {
       ga: s.ga,
       gd: s.gd,
       points: s.points,
-      form: JSON.parse(s.form),
+      form: (() => { try { return JSON.parse(s.form) } catch { return [] } })(),
       league: s.league,
     }))
 

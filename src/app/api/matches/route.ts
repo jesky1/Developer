@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, ensureDbConnection } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 type MatchStatus = 'LIVE' | 'HT' | 'UPCOMING' | 'FT'
@@ -10,11 +10,27 @@ const STATUS_ORDER: Record<MatchStatus, number> = {
   FT: 3,
 }
 
+function safeJSONParse(str: string, fallback: unknown = []) {
+  if (!str) return fallback
+  try { return JSON.parse(str) } catch { return fallback }
+}
+
 export async function GET(request: NextRequest) {
   try {
+    // Ensure DB connection (critical for serverless)
+    const connected = await ensureDbConnection(2)
+    if (!connected) {
+      return NextResponse.json(
+        { error: 'Database temporarily unavailable' },
+        { status: 503 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const league = searchParams.get('league')
     const status = searchParams.get('status')
+    const limit = Math.min(Number(searchParams.get('limit') || 100), 200)
+    const offset = Number(searchParams.get('offset') || 0)
 
     const where: {
       league?: string
@@ -33,6 +49,8 @@ export async function GET(request: NextRequest) {
       include: {
         poll: true,
       },
+      take: limit,
+      skip: offset,
     })
 
     // Sort: LIVE first, then HT, then UPCOMING, then FT
@@ -42,12 +60,12 @@ export async function GET(request: NextRequest) {
       return orderA - orderB
     })
 
-    // Parse JSON string fields
+    // Parse JSON string fields with safe parsing
     const parsed = sorted.map((m) => ({
       ...m,
-      events: JSON.parse(m.events),
-      homeForm: JSON.parse(m.homeForm),
-      awayForm: JSON.parse(m.awayForm),
+      events: safeJSONParse(m.events, []),
+      homeForm: safeJSONParse(m.homeForm, []),
+      awayForm: safeJSONParse(m.awayForm, []),
       poll: m.poll
         ? {
           homeVotes: m.poll.homeVotes,
