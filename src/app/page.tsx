@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { Navbar, type LoginUser } from "@/components/navbar";
 import { LoginModal } from "@/components/login-modal";
 import { RegisterModal, type RegisterUser } from "@/components/register-modal";
-import { ChangePasswordModal } from "@/components/change-password-modal";
 import { LiveTicker } from "@/components/live-ticker";
 import { FeaturedMatch } from "@/components/featured-match";
 import { MatchTimeline } from "@/components/match-timeline";
