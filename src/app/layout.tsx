@@ -141,6 +141,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone-live.vercel.app/api/news/rss" />
         <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone-live.vercel.app/api/sitemap" />
+        {/* Third-party ad scripts are loaded client-side via AdSenseLoader to prevent hydration mismatches */}
         {/* JSON-LD structured data — rendered server-side in <head> to avoid React script-tag warnings */}
         <script
           type="application/ld+json"
@@ -173,18 +174,6 @@ export default function RootLayout({
             }}
           />
         </ThemeProvider>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7385025232651253"
-          crossorigin="anonymous"></script>
-        <!-- Advertisement -->
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-7385025232651253"
-          data-ad-slot="3439860209"
-          data-ad-format="auto"
-          data-full-width-responsive="true"></ins>
-        <script>
-          (adsbygoogle = window.adsbygoogle || []).push({ });
-        </script>
       </body>
     </html>
   );

@@ -20,6 +20,7 @@ import { NewsSection } from "@/components/news-section";
 import { NewsDetailModal } from "@/components/news-detail-modal";
 import { StandingsSection } from "@/components/standings-section";
 import { AdSlot } from "@/components/ad-slot";
+import { AdSenseUnit } from "@/components/adsense-unit";
 import type { NewsArticle } from "@/components/news-section";
 // Goal notifications disabled — import commented out
 // import { useGoalNotifications } from "@/hooks/use-goal-notifications";
@@ -326,8 +327,8 @@ function LiveScoresView({
                   <LiveTicker matches={matches} />
                 </section>
 
-                {/* Ad: Header Banner — after live ticker */}
-                <AdSlot placement="header" format="horizontal" className="rounded-xl overflow-hidden" />
+                {/* Ad: Header Banner — after live ticker (Google AdSense Unit) */}
+                <AdSenseUnit adSlot="3439860209" className="rounded-xl overflow-hidden" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                   <div className="lg:col-span-2 space-y-5">

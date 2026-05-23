@@ -121,14 +121,14 @@ export function AdSlot({
         );
     }
 
-    // Determine ad style based on format
-    const formatStyle: Record<AdFormat, string> = {
-        auto: "display:block",
-        horizontal: "display:block",
-        vertical: "display:block",
-        rectangle: "display:inline-block;width:336px;height:280px",
-        "in-feed": "display:block",
-        "in-article": "display:block;text-align:center",
+    // Determine ad style based on format — React style prop requires an object, not a string
+    const formatStyle: Record<AdFormat, React.CSSProperties> = {
+        auto: { display: "block" },
+        horizontal: { display: "block" },
+        vertical: { display: "block" },
+        rectangle: { display: "inline-block", width: "336px", height: "280px" },
+        "in-feed": { display: "block" },
+        "in-article": { display: "block", textAlign: "center" },
     };
 
     const containerClasses: Record<AdFormat, string> = {
