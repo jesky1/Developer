@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { I18nProvider } from "@/lib/i18n";
+import { AdSenseLoader } from "@/components/adsense-loader";
 
 // JSON-LD structured data rendered server-side to avoid React 19 script-tag warnings
 const websiteLd = {
@@ -141,9 +142,6 @@ export default function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="GOALZONE Football News RSS" href="https://goalzone-live.vercel.app/api/news/rss" />
         <link rel="sitemap" type="application/xml" title="Sitemap" href="https://goalzone-live.vercel.app/api/sitemap" />
         {/* JSON-LD structured data — rendered server-side in <head> to avoid React script-tag warnings */}
-        <meta name="google-adsense-account" content="ca-pub-7385025232651253"></meta>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7385025232651253"
-          crossorigin="anonymous"></script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
@@ -164,6 +162,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             <I18nProvider>
+              <AdSenseLoader />
               {children}
             </I18nProvider>
           </AuthProvider>
@@ -174,6 +173,18 @@ export default function RootLayout({
             }}
           />
         </ThemeProvider>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7385025232651253"
+          crossorigin="anonymous"></script>
+        <!-- Advertisement -->
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-7385025232651253"
+          data-ad-slot="3439860209"
+          data-ad-format="auto"
+          data-full-width-responsive="true"></ins>
+        <script>
+          (adsbygoogle = window.adsbygoogle || []).push({ });
+        </script>
       </body>
     </html>
   );

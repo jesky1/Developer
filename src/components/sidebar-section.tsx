@@ -332,12 +332,12 @@ function LeagueTable({
               <th className="text-left py-2 w-6">#</th>
               <th className="text-left py-2">{t("standings.team")}</th>
               <th className="text-center py-2 w-7">{t("standings.played")}</th>
-              <th className="text-center py-2 w-7">{t("standings.won")}</th>
-              <th className="text-center py-2 w-7">{t("standings.drawn")}</th>
-              <th className="text-center py-2 w-7">{t("standings.lost")}</th>
-              <th className="text-center py-2 w-8">{t("standings.goalDiff")}</th>
+              <th className="text-center py-2 w-7 hidden md:table-cell">{t("standings.won")}</th>
+              <th className="text-center py-2 w-7 hidden md:table-cell">{t("standings.drawn")}</th>
+              <th className="text-center py-2 w-7 hidden md:table-cell">{t("standings.lost")}</th>
+              <th className="text-center py-2 w-8 hidden sm:table-cell">{t("standings.goalDiff")}</th>
               <th className="text-center py-2 w-8 font-bold">{t("standings.points")}</th>
-              <th className="text-center py-2 w-16">{t("standings.form")}</th>
+              <th className="text-center py-2 w-16 hidden lg:table-cell">{t("standings.form")}</th>
             </tr>
           </thead>
           <tbody>
@@ -401,22 +401,22 @@ function LeagueTable({
                 <td className="py-2 text-center text-muted-foreground">
                   {team.played}
                 </td>
-                <td className="py-2 text-center text-muted-foreground">
+                <td className="py-2 text-center text-muted-foreground hidden md:table-cell">
                   {team.won}
                 </td>
-                <td className="py-2 text-center text-muted-foreground">
+                <td className="py-2 text-center text-muted-foreground hidden md:table-cell">
                   {team.drawn}
                 </td>
-                <td className="py-2 text-center text-muted-foreground">
+                <td className="py-2 text-center text-muted-foreground hidden md:table-cell">
                   {team.lost}
                 </td>
-                <td className="py-2 text-center text-muted-foreground">
+                <td className="py-2 text-center text-muted-foreground hidden sm:table-cell">
                   {team.gd > 0 ? `+${team.gd}` : team.gd}
                 </td>
                 <td className="py-2 text-center font-bold text-foreground">
                   {team.points}
                 </td>
-                <td className="py-2">
+                <td className="py-2 hidden lg:table-cell">
                   <div className="flex items-center justify-center gap-0.5">
                     {Array.isArray(team.form) &&
                       team.form.map((r, fi) => (

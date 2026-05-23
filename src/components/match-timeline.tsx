@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useTranslation } from "@/lib/i18n";
 
 interface MatchTimelineProps {
   match: {
@@ -14,6 +15,7 @@ interface MatchTimelineProps {
 }
 
 export function MatchTimeline({ match }: MatchTimelineProps) {
+  const { t } = useTranslation();
   if (!match) {
     return (
       <div className="glass-card rounded-2xl p-5 animate-pulse">
@@ -62,8 +64,8 @@ export function MatchTimeline({ match }: MatchTimelineProps) {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="glass-card rounded-2xl p-5"
     >
-      <h3 className="text-sm font-semibold text-foreground mb-1">Match Performance</h3>
-      <p className="text-[10px] text-muted-foreground mb-3">Pressure index by 15-min interval</p>
+      <h3 className="text-sm font-semibold text-foreground mb-1">{t("match.matchPerformance")}</h3>
+      <p className="text-[10px] text-muted-foreground mb-3">{t("match.pressureIndex")}</p>
 
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">

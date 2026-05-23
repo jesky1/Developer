@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 // In production, point to deployed AI service (e.g. https://goalzone-ai-service.onrender.com)
 // In local dev, uses localhost:3005 or XTransformPort query param
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || ''
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY || ''
 
 // Helper: proxy request to AI mini-service
 async function proxyToAIService(path: string, method: string, body?: string) {
@@ -25,6 +26,47 @@ async function proxyToAIService(path: string, method: string, body?: string) {
     options.body = body
   }
   return fetch(url, options)
+}
+
+// Helper: fetch Pexels image (uses remote URL - image download handled by AI service)
+async function fetchPexelsImage(query: string): Promise<{
+  imageUrl: string
+  imageAlt: string
+  imageSource: string
+} | null> {
+  if (!PEXELS_API_KEY) return null
+  try {
+    console.log(`[Pexels] Searching for: "${query}"`)
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`
+    const response = await fetch(url, {
+      headers: { Authorization: PEXELS_API_KEY },
+    })
+    if (!response.ok) return null
+
+    const data = await response.json() as { photos: { id: number; alt: string; photographer: string; src: { large: string } }[] }
+    if (!data.photos || data.photos.length === 0) return null
+
+    const photo = data.photos[Math.floor(Math.random() * Math.min(3, data.photos.length))]
+    return {
+      imageUrl: photo.src.large,
+      imageAlt: photo.alt || `${query} - football`,
+      imageSource: `Pexels - ${photo.photographer}`,
+    }
+  } catch (err) {
+    console.error('[Pexels] Error:', err)
+    return null
+  }
+}
+
+// Helper: generate slug
+function toSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 export async function GET(request: NextRequest) {
@@ -71,52 +113,84 @@ export async function POST(request: NextRequest) {
         // Proxy to AI mini-service (handles web search, LLM, image gen, DB write)
         try {
           const aiRes = await proxyToAIService('/generate', 'POST', bodyStr)
-          const data = await aiRes.json()
-          return NextResponse.json(data, { status: aiRes.ok ? 201 : aiRes.status })
+          if (aiRes.ok) {
+            const data = await aiRes.json()
+            return NextResponse.json(data, { status: 201 })
+          }
+          // AI service returned an error - fall through to fallback
+          console.warn('AI service returned non-OK status, falling back')
         } catch (aiError) {
-          console.error('AI service unavailable:', aiError)
-
-          // Fallback: create basic article template via Prisma
-          let parsedBody: Record<string, unknown> = {}
-          try { parsedBody = JSON.parse(bodyStr) } catch { /* empty */ }
-
-          const topic = (parsedBody.topic as string) || 'football trending news today'
-          const category = (parsedBody.category as string) || 'Breaking'
-          const league = (parsedBody.league as string) || 'General'
-
-          const slug = topic.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-          let finalSlug = slug
-          const existing = await db.newsItem.findUnique({ where: { slug: finalSlug } })
-          if (existing) finalSlug = `${slug}-${Date.now()}`
-
-          const article = await db.newsItem.create({
-            data: {
-              title: topic.slice(0, 60),
-              slug: finalSlug,
-              summary: `Latest updates on ${topic}. Stay tuned for more football news on GOALZONE.`,
-              content: `This article covers the latest developments regarding ${topic}. Check back soon for full AI-generated analysis.\n\nFollow GOALZONE for real-time football scores, news, and analysis.`,
-              category,
-              tags: JSON.stringify([topic.split(' ').slice(0, 2).join(' '), league, category]),
-              league,
-              isAiGenerated: true,
-              source: 'GOALZONE AI',
-            },
-          })
-
-          try {
-            await db.activityLog.create({
-              data: { userId: null, action: 'generate', resource: 'article', resourceId: article.id, details: JSON.stringify({ title: article.title, method: 'fallback' }) },
-            })
-          } catch { /* non-blocking */ }
-
-          let parsedTags: string[] = []
-          try { parsedTags = JSON.parse(article.tags) } catch { parsedTags = [] }
-
-          return NextResponse.json({
-            article: { ...article, tags: parsedTags },
-            meta: { generationTime: 0, hasImage: false, telegramResult: null, relatedArticlesLinked: 0, searchResultsUsed: false, note: 'AI service unavailable - created template article' },
-          }, { status: 201 })
+          console.warn('AI service unavailable, using fallback:', aiError instanceof Error ? aiError.message : String(aiError))
         }
+
+        // Fallback: create article with Pexels image (no ZAI SDK - keeps Next.js lightweight)
+        let parsedBody: Record<string, unknown> = {}
+        try { parsedBody = JSON.parse(bodyStr) } catch { /* empty */ }
+
+        const topic = (parsedBody.topic as string) || 'football trending news today'
+        const category = (parsedBody.category as string) || 'Breaking'
+        const league = (parsedBody.league as string) || 'General'
+        const language = (parsedBody.language as string) || 'en'
+        const generateImage = parsedBody.generateImage !== false
+
+        const slug = toSlug(topic)
+        let finalSlug = slug
+        const existing = await db.newsItem.findUnique({ where: { slug: finalSlug } })
+        if (existing) finalSlug = `${slug}-${Date.now()}`
+
+        // Fetch Pexels image for the article (remote URL, no ZAI SDK needed)
+        let imageUrl = ''
+        let imageAlt = ''
+        let imageSource = ''
+        if (generateImage) {
+          const pexelsQuery = `${league !== 'General' ? league + ' ' : ''}${category} football soccer`
+          const pexelsResult = await fetchPexelsImage(pexelsQuery)
+          if (pexelsResult) {
+            imageUrl = pexelsResult.imageUrl
+            imageAlt = pexelsResult.imageAlt
+            imageSource = pexelsResult.imageSource
+          }
+        }
+
+        const article = await db.newsItem.create({
+          data: {
+            title: topic.slice(0, 60),
+            slug: finalSlug,
+            summary: `Latest updates on ${topic}. Stay tuned for more football news on GOALZONE.`,
+            content: `This article covers the latest developments regarding ${topic}. Check back soon for full AI-generated analysis.\n\nFollow GOALZONE for real-time football scores, news, and analysis.`,
+            category,
+            imageUrl,
+            imageAlt,
+            imageSource,
+            tags: JSON.stringify([topic.split(' ').slice(0, 2).join(' '), league, category]),
+            league,
+            isAiGenerated: true,
+            isPublished: true,
+            language,
+            source: 'GOALZONE AI',
+          },
+        })
+
+        try {
+          await db.activityLog.create({
+            data: { userId: null, action: 'generate', resource: 'article', resourceId: article.id, details: JSON.stringify({ title: article.title, method: 'fallback-pexels', hasImage: !!imageUrl }) },
+          })
+        } catch { /* non-blocking */ }
+
+        let parsedTags: string[] = []
+        try { parsedTags = JSON.parse(article.tags) } catch { parsedTags = [] }
+
+        return NextResponse.json({
+          article: { ...article, tags: parsedTags },
+          meta: {
+            generationTime: 0,
+            hasImage: !!imageUrl,
+            telegramResult: null,
+            relatedArticlesLinked: 0,
+            searchResultsUsed: false,
+            note: imageUrl ? 'AI service unavailable - created article with Pexels cover image' : 'AI service unavailable - created template article (no Pexels key configured)',
+          },
+        }, { status: 201 })
       }
 
       case 'trending': {

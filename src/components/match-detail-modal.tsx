@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MapPin, Clock, Play, Trophy, Flame } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ClubLogo, LeagueLogo } from "@/components/ui/club-logo";
@@ -65,6 +66,7 @@ export function MatchDetailModal({
   onClose,
   onPlayerClick,
 }: MatchDetailModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("overview");
   const [prevMatchId, setPrevMatchId] = useState<string | null>(null);
 
@@ -87,7 +89,7 @@ export function MatchDetailModal({
         className="p-0 gap-0 bg-transparent border-none shadow-none max-w-4xl w-full overflow-hidden"
       >
         <DialogTitle className="sr-only">
-          {match ? `${match.homeTeam} vs ${match.awayTeam} Match Details` : "Match Details"}
+          {match ? `${match.homeTeam} vs ${match.awayTeam} ${t("match.matchDetails")}` : t("match.matchDetails")}
         </DialogTitle>
         <AnimatePresence>
           {isOpen && (
@@ -107,7 +109,7 @@ export function MatchDetailModal({
                   <button
                     onClick={onClose}
                     className="w-8 h-8 rounded-full bg-surface-light/80 border border-white/10 flex items-center justify-center hover:bg-neon/10 hover:border-neon/30 transition-colors"
-                    aria-label="Close modal"
+                    aria-label={t("player.close")}
                   >
                     <X className="w-4 h-4 text-muted-foreground" />
                   </button>
@@ -125,7 +127,7 @@ export function MatchDetailModal({
                     {match.isHot && (
                       <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500/20 text-red-400 rounded-md uppercase">
                         <Flame className="w-3 h-3" />
-                        Hot
+                        {t("match.hotBadge")}
                       </span>
                     )}
                   </div>
@@ -179,7 +181,7 @@ export function MatchDetailModal({
                     {match.status === "LIVE" && (
                       <div className="flex items-center gap-1.5 mt-1">
                         <Play className="w-3 h-3 text-neon" />
-                        <span className="text-[10px] text-muted-foreground">Match in progress</span>
+                        <span className="text-[10px] text-muted-foreground">{t("match.inProgress")}</span>
                       </div>
                     )}
                   </div>
@@ -197,7 +199,7 @@ export function MatchDetailModal({
                 <div className="flex items-center justify-center gap-4 pb-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-3 h-3 text-neon/50" />
-                    <span>{match.stadium || "TBD"}</span>
+                    <span>{match.stadium || t("match.tbd")}</span>
                   </div>
                   <div className="w-px h-3 bg-white/10" />
                   <div className="flex items-center gap-1.5">
@@ -216,7 +218,7 @@ export function MatchDetailModal({
                       className="flex-1 h-10 rounded-lg data-[state=active]:bg-neon/10 data-[state=active]:text-neon data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-neon/50 transition-all text-xs sm:text-sm"
                     >
                       <Trophy className="w-3.5 h-3.5 mr-1.5" />
-                      Overview
+                      {t("matchDetail.overview")}
                     </TabsTrigger>
                     <TabsTrigger
                       value="lineup"
@@ -226,7 +228,7 @@ export function MatchDetailModal({
                         <rect x="2" y="4" width="20" height="16" rx="2" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
-                      Lineup
+                      {t("matchDetail.lineup")}
                     </TabsTrigger>
                     <TabsTrigger
                       value="stats"
@@ -235,7 +237,7 @@ export function MatchDetailModal({
                       <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M18 20V10M12 20V4M6 20v-6" />
                       </svg>
-                      Stats
+                      {t("matchDetail.stats")}
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -247,7 +249,7 @@ export function MatchDetailModal({
                     {goalEvents.length > 0 && (
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2">
-                          Match Timeline
+                          {t("match.matchTimeline")}
                         </div>
                         <div className="relative h-2 bg-surface-light rounded-full overflow-hidden">
                           <div className="absolute inset-0 flex">
@@ -281,7 +283,7 @@ export function MatchDetailModal({
                     {match.events.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                          Match Events
+                          {t("match.matchEvents")}
                         </div>
                         <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                           {match.events.map((event, i) => (
@@ -356,6 +358,7 @@ function StatusBadge({
   minute: number;
   kickoff: string;
 }) {
+  const { t } = useTranslation();
   if (status === "LIVE") {
     return (
       <motion.div
@@ -365,7 +368,7 @@ function StatusBadge({
       >
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         <span className="text-xs font-bold text-green-400">
-          LIVE {minute}&apos;
+          {t("status.live")} {minute}&apos;
         </span>
       </motion.div>
     );
@@ -374,7 +377,7 @@ function StatusBadge({
   if (status === "HT") {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-500/15 border border-yellow-500/30 rounded-full">
-        <span className="text-xs font-bold text-yellow-400">Half Time</span>
+        <span className="text-xs font-bold text-yellow-400">{t("match.halfTime")}</span>
       </div>
     );
   }
@@ -382,7 +385,7 @@ function StatusBadge({
   if (status === "FT") {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1 bg-surface-light border border-white/10 rounded-full">
-        <span className="text-xs font-bold text-muted-foreground">Full Time</span>
+        <span className="text-xs font-bold text-muted-foreground">{t("match.fullTime")}</span>
       </div>
     );
   }

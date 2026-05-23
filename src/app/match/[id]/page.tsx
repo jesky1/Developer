@@ -9,6 +9,7 @@ import { ClubLogo, LeagueLogo } from "@/components/ui/club-logo";
 import { LineupTab } from "@/components/lineup-tab";
 import { StatsTab } from "@/components/stats-tab";
 import { PlayerDetailModal } from "@/components/player-detail-modal";
+import { AdSlot } from "@/components/ad-slot";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /* ================================================================== */
@@ -616,6 +617,11 @@ export default function MatchDetailPage({
         </div>
       </motion.div>
 
+      {/* Ad: Below hero — match detail top banner */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <AdSlot placement="article_top" format="horizontal" className="rounded-xl overflow-hidden" />
+      </div>
+
       {/* ===== TABS ===== */}
       <div className="max-w-4xl mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -711,9 +717,8 @@ export default function MatchDetailPage({
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: i * 0.05 }}
-                          className={`flex items-center gap-2.5 text-xs p-2.5 rounded-lg hover:bg-surface-light/50 transition-colors ${
-                            event.team === "away" ? "flex-row-reverse text-right" : ""
-                          }`}
+                          className={`flex items-center gap-2.5 text-xs p-2.5 rounded-lg hover:bg-surface-light/50 transition-colors ${event.team === "away" ? "flex-row-reverse text-right" : ""
+                            }`}
                         >
                           <span className="text-muted-foreground w-7 shrink-0 font-medium tabular-nums text-center">
                             {event.minute}&apos;
@@ -724,11 +729,10 @@ export default function MatchDetailPage({
                             {getEventIcon(event.type)}
                           </span>
                           <span
-                            className={`${
-                              event.type === "goal"
+                            className={`${event.type === "goal"
                                 ? "font-semibold text-foreground"
                                 : "text-muted-foreground"
-                            }`}
+                              }`}
                           >
                             {event.player}
                           </span>
@@ -784,6 +788,11 @@ export default function MatchDetailPage({
             />
           </TabsContent>
         </Tabs>
+      </div>
+
+      {/* Ad: Match detail bottom banner */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <AdSlot placement="article_bottom" format="horizontal" className="rounded-xl overflow-hidden" />
       </div>
 
       {/* ===== PLAYER DETAIL MODAL ===== */}

@@ -71,7 +71,7 @@ export function LiveMatchesList({ matches, onMatchClick, goalMatchIds, isLoading
           {liveCount > 0 && (
             <span className="flex items-center gap-1.5 text-[10px] font-medium text-green-400">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-pulse" />
-              {liveCount} LIVE
+              {liveCount} {t('status.live')}
             </span>
           )}
         </div>

@@ -100,11 +100,21 @@ function getRelativeTime(
 // === Sub-Components ===
 
 function CategoryBadge({ category }: { category: string }) {
+  const { t } = useTranslation();
   const color = getCategoryColor(category);
+  const categoryKeyMap: Record<string, string> = {
+    'Breaking': 'news.breaking',
+    'Match Report': 'news.matchReport',
+    'Analysis': 'news.analysis',
+    'Transfer': 'news.transfer',
+    'Preview': 'news.preview',
+    'Rumor': 'news.rumor',
+  };
+  const displayText = categoryKeyMap[category] ? t(categoryKeyMap[category]) : category;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-md uppercase border ${color.bg} ${color.text} ${color.border}`}>
       {category === 'Breaking' && <Zap className="w-2.5 h-2.5" />}
-      {category}
+      {displayText}
     </span>
   );
 }

@@ -2,20 +2,21 @@
  * GOALZONE AI Service
  * Runs on port 3005 - handles AI article generation, trending scraping, etc.
  * Separated from main Next.js to prevent OOM from z-ai-web-dev-sdk
+ *
+ * Uses Prisma ORM for database access (works with SQLite locally & PostgreSQL in production)
  */
 
 import { createServer } from 'http'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { Database } from 'bun:sqlite'
+import { writeFileSync, mkdirSync } from 'fs'
 import ZAI from 'z-ai-web-dev-sdk'
+import { db } from './db'
 
 const PORT = 3005
-const DB_PATH = process.env.DATABASE_URL?.replace('file:', '') || join(dirname(fileURLToPath(import.meta.url)), '../../../db/custom.db')
-
-// Open database with Bun's built-in SQLite
-const db = new Database(DB_PATH)
-db.exec('PRAGMA journal_mode = WAL')
+const GENERATED_IMAGES_DIR = process.env.GENERATED_IMAGES_DIR || join(dirname(fileURLToPath(import.meta.url)), '../../public/generated')
+const NEWS_IMAGES_DIR = process.env.NEWS_IMAGES_DIR || join(dirname(fileURLToPath(import.meta.url)), '../../public/news-images')
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY || ''
 
 // Helper: generate slug
 function toSlug(title: string): string {
@@ -31,27 +32,6 @@ function toSlug(title: string): string {
 // Helper: parse JSON safely
 function safeJsonParse(str: string, fallback: any = {}) {
   try { return JSON.parse(str) } catch { return fallback }
-}
-
-// Helper: run SQL and return results
-function runQuery(sql: string, params: any[] = []): any[] {
-  try {
-    const stmt = db.query(sql)
-    return stmt.all(...params) as any[]
-  } catch (err) {
-    console.error('SQL Error:', err)
-    return []
-  }
-}
-
-function runRun(sql: string, params: any[] = []): any {
-  try {
-    const stmt = db.query(sql)
-    return stmt.run(...params)
-  } catch (err) {
-    console.error('SQL Run Error:', err)
-    return null
-  }
 }
 
 // Initialize ZAI client (lazy)
@@ -131,34 +111,71 @@ IMPORTANT:
       { role: 'system', content: 'You are a professional football journalist who writes high-quality SEO-optimized articles.' },
       { role: 'user', content: prompt },
     ],
+    max_tokens: 4096,
   })
 
   const rawText = response.choices?.[0]?.message?.content ?? ''
 
   // Parse JSON from LLM response
   let jsonStr = rawText.trim()
-  if (jsonStr.startsWith('```json')) jsonStr = jsonStr.slice(7)
-  if (jsonStr.startsWith('```')) jsonStr = jsonStr.slice(3)
-  if (jsonStr.endsWith('```')) jsonStr = jsonStr.slice(0, -3)
+  // Remove code fences (```json ... ``` or ``` ... ```)
+  jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '')
   jsonStr = jsonStr.trim()
 
+  // Try to extract JSON object if there's extra text
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+  if (jsonMatch) jsonStr = jsonMatch[0]
+
+  // Try to fix truncated JSON by closing open braces/brackets
   let parsed: any
   try {
     parsed = JSON.parse(jsonStr)
-  } catch {
-    return { error: 'Failed to parse AI response as JSON', raw: rawText.slice(0, 200) }
+  } catch (firstErr) {
+    // Try to fix truncated JSON
+    try {
+      let fixed = jsonStr
+      // Count unclosed braces and brackets
+      const openBraces = (fixed.match(/\{/g) || []).length
+      const closeBraces = (fixed.match(/\}/g) || []).length
+      const openBrackets = (fixed.match(/\[/g) || []).length
+      const closeBrackets = (fixed.match(/\]/g) || []).length
+
+      // Close any open strings (find last unescaped " and check if string is open)
+      const lastQuote = fixed.lastIndexOf('"')
+      if (lastQuote > 0) {
+        const before = fixed.substring(0, lastQuote)
+        const escapedQuotes = (before.match(/\\"/g) || []).length
+        const totalQuotes = (before.match(/"/g) || []).length
+        if ((totalQuotes - escapedQuotes) % 2 !== 0) {
+          fixed = fixed.substring(0, lastQuote) + '"'
+        }
+      }
+
+      // Close open brackets and braces
+      for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += ']'
+      for (let i = 0; i < openBraces - closeBraces; i++) fixed += '}'
+
+      parsed = JSON.parse(fixed)
+      console.log('[AI] Successfully recovered truncated JSON')
+    } catch (recoverErr) {
+      console.error('[AI] JSON parse error (unrecoverable):', firstErr)
+      console.error('[AI] Raw response (first 500 chars):', rawText.slice(0, 500))
+      return { error: 'Failed to parse AI response as JSON', raw: rawText.slice(0, 200) }
+    }
   }
 
   // Step 3: Generate slug
   const slug = toSlug(parsed.title || 'untitled')
   let finalSlug = slug
-  const existingSlug = runQuery('SELECT id FROM NewsItem WHERE slug = ?', [finalSlug])
-  if (existingSlug.length > 0) finalSlug = `${slug}-${Date.now()}`
+  const existingSlug = await db.newsItem.findUnique({ where: { slug: finalSlug } })
+  if (existingSlug) finalSlug = `${slug}-${Date.now()}`
 
   // Step 4: Get existing articles for internal links
-  const existingArticles = runQuery(
-    'SELECT slug, title, category, tags, league FROM NewsItem ORDER BY createdAt DESC LIMIT 20'
-  )
+  const existingArticles = await db.newsItem.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+    select: { slug: true, title: true, category: true, tags: true, league: true },
+  })
 
   const articleTags = Array.isArray(parsed.tags) ? parsed.tags : []
   const relatedArticles = existingArticles.filter((a: any) => {
@@ -176,79 +193,130 @@ IMPORTANT:
     }
   }
 
-  // Step 5: Generate cover image with AI (optional)
+  // Step 5: Generate cover image (Pexels → AI generation fallback)
   let imageUrl = ''
+  let imageAlt = ''
+  let imageWidth = 0
+  let imageHeight = 0
+  let imageSource = ''
   if (generateImage !== false) {
-    try {
-      const imagePrompt = `Football news article cover image: ${parsed.title}, professional sports journalism style, dramatic lighting, stadium atmosphere`
-      const imageResponse = await client.images.generations.create({
-        prompt: imagePrompt,
-        size: '1344x768',
-      })
-      const imageBase64 = imageResponse.data[0]?.base64
-      if (imageBase64) {
-        const { writeFileSync, mkdirSync } = await import('fs')
-        const generatedDir = join(dirname(fileURLToPath(import.meta.url)), '../../../public/generated')
-        mkdirSync(generatedDir, { recursive: true })
-        const filename = `${finalSlug}-${Date.now()}.png`
-        const filePath = join(generatedDir, filename)
-        writeFileSync(filePath, Buffer.from(imageBase64, 'base64'))
-        imageUrl = `/generated/${filename}`
+    // Try Pexels first (faster and more realistic photos)
+    if (PEXELS_API_KEY) {
+      try {
+        const pexelsQuery = `${league && league !== 'General' ? league + ' ' : ''}${category} football soccer`
+        const pexelsUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(pexelsQuery)}&per_page=3&orientation=landscape`
+        const pexelsRes = await fetch(pexelsUrl, { headers: { Authorization: PEXELS_API_KEY } })
+        if (pexelsRes.ok) {
+          const pexelsData = await pexelsRes.json() as { photos: { id: number; width: number; height: number; alt: string; photographer: string; src: { large: string } }[] }
+          if (pexelsData.photos && pexelsData.photos.length > 0) {
+            const photo = pexelsData.photos[Math.floor(Math.random() * pexelsData.photos.length)]
+            const timestamp = Date.now()
+            const filename = `pexels-${photo.id}-${timestamp}.jpg`
+            mkdirSync(NEWS_IMAGES_DIR, { recursive: true })
+            const imgRes = await fetch(photo.src.large)
+            if (imgRes.ok) {
+              const imgBuffer = Buffer.from(await imgRes.arrayBuffer())
+              writeFileSync(join(NEWS_IMAGES_DIR, filename), imgBuffer)
+              imageUrl = `/news-images/${filename}`
+              imageAlt = photo.alt || `${pexelsQuery} - football`
+              imageWidth = photo.width
+              imageHeight = photo.height
+              imageSource = `Pexels - ${photo.photographer}`
+              console.log(`[AI] Image from Pexels: ${imageUrl}`)
+            }
+          }
+        }
+      } catch (pexelsErr) {
+        console.error('[AI] Pexels image fetch failed:', pexelsErr)
       }
-    } catch (imgError) {
-      console.error('Image generation failed (non-blocking):', imgError)
+    }
+
+    // Fallback to AI image generation
+    if (!imageUrl) {
+      try {
+        const imagePrompt = `Football news article cover image: ${parsed.title}, professional sports journalism style, dramatic lighting, stadium atmosphere`
+        const imageResponse = await client.images.generations.create({
+          prompt: imagePrompt,
+          size: '1344x768',
+        })
+        const imageBase64 = imageResponse.data[0]?.base64
+        if (imageBase64) {
+          mkdirSync(NEWS_IMAGES_DIR, { recursive: true })
+          const filename = `ai-${finalSlug}-${Date.now()}.png`
+          const filePath = join(NEWS_IMAGES_DIR, filename)
+          writeFileSync(filePath, Buffer.from(imageBase64, 'base64'))
+          imageUrl = `/news-images/${filename}`
+          imageAlt = `${parsed.title} - ilustrasi sepak bola`
+          imageWidth = 1344
+          imageHeight = 768
+          imageSource = 'AI Generated'
+          console.log(`[AI] Image from AI generation: ${imageUrl}`)
+        }
+      } catch (imgError) {
+        console.error('[AI] Image generation failed (non-blocking):', imgError)
+      }
     }
   }
 
   // Step 6: Save to database
   const id = `ai_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-  const now = new Date().toISOString()
   const tagsJson = JSON.stringify(articleTags)
 
-  runRun(
-    `INSERT INTO NewsItem (id, title, slug, summary, content, category, imageUrl, source, tags, seoTitle, seoDescription, keywords, league, matchId, isAiGenerated, publishedAt, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
+  await db.newsItem.create({
+    data: {
       id,
-      (parsed.title || 'Untitled').slice(0, 60),
-      finalSlug,
-      (parsed.summary || '').slice(0, 155),
+      title: (parsed.title || 'Untitled').slice(0, 60),
+      slug: finalSlug,
+      summary: (parsed.summary || '').slice(0, 155),
       content,
-      category || 'Breaking',
+      category: category || 'Breaking',
       imageUrl,
-      'GOALZONE AI',
-      tagsJson,
-      (parsed.seoTitle || parsed.title || '').slice(0, 60),
-      (parsed.seoDescription || parsed.summary || '').slice(0, 155),
-      parsed.keywords || '',
-      parsed.league || league || '',
-      null,
-      1, // isAiGenerated = true
-      now,
-      now,
-      now,
-    ]
-  )
+      imageAlt,
+      imageWidth,
+      imageHeight,
+      imageSource,
+      source: 'GOALZONE AI',
+      tags: tagsJson,
+      seoTitle: (parsed.seoTitle || parsed.title || '').slice(0, 60),
+      seoDescription: (parsed.seoDescription || parsed.summary || '').slice(0, 155),
+      keywords: parsed.keywords || '',
+      league: parsed.league || league || '',
+      isAiGenerated: true,
+      isPublished: true,
+      language: articleLang,
+    },
+  })
 
-  // Step 7: Create internal links
+  // Step 7: Create internal links (upsert to handle duplicates gracefully)
   for (const related of relatedArticles.slice(0, 3)) {
     if (related.slug) {
       try {
-        runRun(
-          `INSERT OR IGNORE INTO InternalLink (id, sourceSlug, targetSlug, anchorText, createdAt) VALUES (?, ?, ?, ?, ?)`,
-          [`il_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, finalSlug, related.slug, related.title, now]
-        )
+        await db.internalLink.upsert({
+          where: { sourceSlug_targetSlug: { sourceSlug: finalSlug, targetSlug: related.slug } },
+          update: {},
+          create: {
+            id: `il_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            sourceSlug: finalSlug,
+            targetSlug: related.slug,
+            anchorText: related.title,
+          },
+        })
       } catch { /* skip duplicates */ }
     }
   }
 
   // Step 8: Activity log
   try {
-    const logId = `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
-    runRun(
-      `INSERT INTO ActivityLog (id, userId, action, resource, resourceId, details, ip, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [logId, null, 'generate', 'article', id, JSON.stringify({ title: parsed.title, method: 'ai-service', hasImage: !!imageUrl }), '', now]
-    )
+    await db.activityLog.create({
+      data: {
+        id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        action: 'generate',
+        resource: 'article',
+        resourceId: id,
+        details: JSON.stringify({ title: parsed.title, method: 'ai-service', hasImage: !!imageUrl }),
+        ip: '',
+      },
+    })
   } catch { /* non-blocking */ }
 
   // Step 9: Auto-post to Telegram (optional)
@@ -276,6 +344,7 @@ IMPORTANT:
   }
 
   const generationTime = Date.now() - startTime
+  const now = new Date().toISOString()
 
   return {
     article: {
@@ -286,6 +355,10 @@ IMPORTANT:
       content,
       category: category || 'Breaking',
       imageUrl,
+      imageAlt,
+      imageWidth,
+      imageHeight,
+      imageSource,
       source: 'GOALZONE AI',
       tags: articleTags,
       seoTitle: (parsed.seoTitle || parsed.title || '').slice(0, 60),
@@ -341,17 +414,23 @@ async function handleTrending(): Promise<any> {
   }
 
   // Save to database
-  const now = new Date().toISOString()
   const createdTopics = []
   for (const topic of topics) {
     try {
-      const existing = runQuery('SELECT id FROM TrendingTopic WHERE keyword = ?', [topic.keyword])
-      if (existing.length === 0) {
+      const existing = await db.trendingTopic.findFirst({ where: { keyword: topic.keyword } })
+      if (!existing) {
         const id = `tt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
-        runRun(
-          'INSERT INTO TrendingTopic (id, keyword, source, volume, category, region, isProcessed, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, topic.keyword, topic.source, topic.volume, topic.category, 'global', 0, now, now]
-        )
+        await db.trendingTopic.create({
+          data: {
+            id,
+            keyword: topic.keyword,
+            source: topic.source,
+            volume: topic.volume,
+            category: topic.category,
+            region: 'global',
+            isProcessed: false,
+          },
+        })
         createdTopics.push({ id, ...topic })
       }
     } catch { /* skip duplicates */ }
@@ -373,23 +452,27 @@ async function handleTelegram(body: any): Promise<any> {
   let finalChatId = chatId || process.env.TELEGRAM_CHAT_ID || ''
 
   if (newsId) {
-    const articles = runQuery('SELECT * FROM NewsItem WHERE id = ?', [newsId])
-    if (articles.length === 0) return { error: 'Article not found' }
-    const article = articles[0]
+    const article = await db.newsItem.findUnique({ where: { id: newsId } })
+    if (!article) return { error: 'Article not found' }
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://goalzone.app'
     finalMessage = `⚽ *${article.title}*\n\n${article.summary}\n\n🔗 ${siteUrl}/news/${article.slug || article.id}`
   }
 
   if (!finalMessage) return { error: 'message or newsId is required' }
 
-  const now = new Date().toISOString()
   const postId = `tp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
 
   // Save to database
-  runRun(
-    'INSERT INTO TelegramPost (id, newsId, chatId, message, status, error, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [postId, newsId || null, finalChatId, finalMessage, 'pending', '', now, now]
-  )
+  await db.telegramPost.create({
+    data: {
+      id: postId,
+      newsId: newsId || null,
+      chatId: finalChatId,
+      message: finalMessage,
+      status: 'pending',
+      error: '',
+    },
+  })
 
   // Try to send via Telegram Bot API
   const botToken = process.env.TELEGRAM_BOT_TOKEN
@@ -404,9 +487,15 @@ async function handleTelegram(body: any): Promise<any> {
       const telegramResult = await telegramResponse.json() as any
 
       if (telegramResult.ok) {
-        runRun("UPDATE TelegramPost SET status = 'sent', sentAt = ? WHERE id = ?", [now, postId])
+        await db.telegramPost.update({
+          where: { id: postId },
+          data: { status: 'sent', sentAt: new Date() },
+        })
       } else {
-        runRun("UPDATE TelegramPost SET status = 'failed', error = ? WHERE id = ?", [telegramResult.description || 'Unknown error', postId])
+        await db.telegramPost.update({
+          where: { id: postId },
+          data: { status: 'failed', error: telegramResult.description || 'Unknown error' },
+        })
       }
 
       return {
@@ -414,7 +503,10 @@ async function handleTelegram(body: any): Promise<any> {
         post: { id: postId, status: telegramResult.ok ? 'sent' : 'failed', message: finalMessage },
       }
     } catch {
-      runRun("UPDATE TelegramPost SET status = 'failed', error = 'API unavailable' WHERE id = ?", [postId])
+      await db.telegramPost.update({
+        where: { id: postId },
+        data: { status: 'failed', error: 'API unavailable' },
+      })
       return { success: false, post: { id: postId, status: 'failed', message: finalMessage, error: 'API unavailable' } }
     }
   }
@@ -428,16 +520,21 @@ async function handleTelegram(body: any): Promise<any> {
 // ==========================================
 // HANDLER: Get Trending Topics
 // ==========================================
-function handleGetTrending(): any {
-  const topics = runQuery('SELECT * FROM TrendingTopic ORDER BY volume DESC LIMIT 20')
+async function handleGetTrending(): Promise<any> {
+  const topics = await db.trendingTopic.findMany({
+    orderBy: { volume: 'desc' },
+    take: 20,
+  })
   return { topics }
 }
 
 // ==========================================
 // HANDLER: Get Scheduled Tasks
 // ==========================================
-function handleGetSchedule(): any {
-  const tasks = runQuery('SELECT * FROM ScheduledTask ORDER BY createdAt DESC')
+async function handleGetSchedule(): Promise<any> {
+  const tasks = await db.scheduledTask.findMany({
+    orderBy: { createdAt: 'desc' },
+  })
   return { tasks }
 }
 
@@ -459,13 +556,12 @@ const server = createServer(async (req, res) => {
   // Parse URL
   const url = new URL(req.url || '/', `http://localhost:${PORT}`)
   const pathname = url.pathname
-  const action = url.searchParams.get('action') || ''
 
   try {
     // Route: Health check
     if (pathname === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ status: 'ok', service: 'goalzone-ai', port: PORT }))
+      res.end(JSON.stringify({ status: 'ok', service: 'goalzone-ai', port: PORT, db: 'prisma' }))
       return
     }
 
@@ -483,7 +579,7 @@ const server = createServer(async (req, res) => {
       return
     }
 
-    // Route: Trending
+    // Route: Trending (POST - scrape)
     if (pathname === '/trending' && req.method === 'POST') {
       const result = await handleTrending()
       res.writeHead(200, { 'Content-Type': 'application/json' })
@@ -491,9 +587,9 @@ const server = createServer(async (req, res) => {
       return
     }
 
-    // Route: Get trending
+    // Route: Trending (GET - list)
     if (pathname === '/trending' && req.method === 'GET') {
-      const result = handleGetTrending()
+      const result = await handleGetTrending()
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify(result))
       return
@@ -517,8 +613,11 @@ const server = createServer(async (req, res) => {
       const { topic } = body
       let scriptTopic = topic
       if (!scriptTopic) {
-        const trending = runQuery("SELECT keyword FROM TrendingTopic WHERE isProcessed = 0 ORDER BY volume DESC LIMIT 1")
-        scriptTopic = trending[0]?.keyword || 'football highlights'
+        const trending = await db.trendingTopic.findFirst({
+          where: { isProcessed: false },
+          orderBy: { volume: 'desc' },
+        })
+        scriptTopic = trending?.keyword || 'football highlights'
       }
 
       const client = await getZaiClient()
@@ -571,7 +670,7 @@ IMPORTANT:
 
     // Route: Schedule
     if (pathname === '/schedule' && req.method === 'GET') {
-      const result = handleGetSchedule()
+      const result = await handleGetSchedule()
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify(result))
       return
@@ -601,12 +700,14 @@ function parseBody(req: any): Promise<any> {
 
 server.listen(PORT, () => {
   console.log(`🤖 GOALZONE AI Service running on port ${PORT}`)
-  console.log(`   Database: ${DB_PATH}`)
+  console.log(`   Database: Prisma ORM (${process.env.DATABASE_URL ? 'configured' : 'default'})`)
+  console.log(`   Images dir: ${GENERATED_IMAGES_DIR}`)
   console.log(`   Endpoints:`)
-  console.log(`     POST /generate    - Generate AI article`)
-  console.log(`     POST /trending    - Scrape trending topics`)
-  console.log(`     GET  /trending    - Get trending topics`)
-  console.log(`     POST /telegram    - Send Telegram message`)
-  console.log(`     GET  /schedule    - Get scheduled tasks`)
-  console.log(`     GET  /health      - Health check`)
+  console.log(`     POST /generate      - Generate AI article`)
+  console.log(`     POST /trending      - Scrape trending topics`)
+  console.log(`     GET  /trending      - Get trending topics`)
+  console.log(`     POST /telegram      - Send Telegram message`)
+  console.log(`     POST /tiktok-script - Generate TikTok script`)
+  console.log(`     GET  /schedule      - Get scheduled tasks`)
+  console.log(`     GET  /health        - Health check`)
 })

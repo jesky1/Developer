@@ -121,9 +121,9 @@ function StandingRow({
 
       {/* P W D L */}
       <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums">{row.played}</td>
-      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums">{row.won}</td>
-      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums">{row.drawn}</td>
-      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums">{row.lost}</td>
+      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums hidden md:table-cell">{row.won}</td>
+      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums hidden md:table-cell">{row.drawn}</td>
+      <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums hidden md:table-cell">{row.lost}</td>
 
       {/* GF GA GD */}
       <td className="py-2.5 px-1 text-center text-xs text-muted-foreground tabular-nums hidden sm:table-cell">{row.gf}</td>
@@ -183,7 +183,7 @@ function StandingsSkeleton() {
 function ZoneLegend() {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-4 text-[10px] text-muted-foreground mt-3 px-1">
+    <div className="flex items-center gap-4 text-[10px] text-muted-foreground mt-3 px-1 flex-wrap">
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-neon" />
         {t("standings.championsLeague")}
@@ -346,9 +346,9 @@ export function StandingsSection({ selectedLeague }: StandingsSectionProps) {
                     <th className="text-left py-3 px-1 w-8">#</th>
                     <th className="text-left py-3 px-1">{t("standings.team")}</th>
                     <th className="text-center py-3 px-1 w-8">{t("standings.played")}</th>
-                    <th className="text-center py-3 px-1 w-8">{t("standings.won")}</th>
-                    <th className="text-center py-3 px-1 w-8">{t("standings.drawn")}</th>
-                    <th className="text-center py-3 px-1 w-8">{t("standings.lost")}</th>
+                    <th className="text-center py-3 px-1 w-8 hidden md:table-cell">{t("standings.won")}</th>
+                    <th className="text-center py-3 px-1 w-8 hidden md:table-cell">{t("standings.drawn")}</th>
+                    <th className="text-center py-3 px-1 w-8 hidden md:table-cell">{t("standings.lost")}</th>
                     <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">{t("standings.goalsFor")}</th>
                     <th className="text-center py-3 px-1 w-8 hidden sm:table-cell">{t("standings.goalsAgainst")}</th>
                     <th className="text-center py-3 px-1 w-10 hidden md:table-cell">{t("standings.goalDiff")}</th>

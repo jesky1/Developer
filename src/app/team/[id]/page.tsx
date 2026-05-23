@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClubLogo } from "@/components/ui/club-logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { AdSlot } from "@/components/ad-slot";
 
 /* ================================================================== */
 /*  INTERFACES                                                        */
@@ -282,9 +283,8 @@ function PlayerCard({
           />
         ) : null}
         <span
-          className={`text-xs font-bold text-foreground/70 ${
-            player.photoUrl ? "hidden" : ""
-          }`}
+          className={`text-xs font-bold text-foreground/70 ${player.photoUrl ? "hidden" : ""
+            }`}
         >
           {getInitials(player.name)}
         </span>
@@ -320,13 +320,12 @@ function PlayerCard({
       <div className="flex flex-col items-end gap-1 shrink-0">
         {player.rating > 0 && (
           <span
-            className={`text-xs font-bold px-2 py-0.5 rounded ${
-              player.rating >= 7.5
+            className={`text-xs font-bold px-2 py-0.5 rounded ${player.rating >= 7.5
                 ? "bg-neon/15 text-neon border border-neon/30"
                 : player.rating >= 6.5
-                ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30"
-                : "bg-surface-light text-muted-foreground border border-white/10"
-            }`}
+                  ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30"
+                  : "bg-surface-light text-muted-foreground border border-white/10"
+              }`}
           >
             {player.rating.toFixed(1)}
           </span>
@@ -787,10 +786,10 @@ export default function TeamDetailPage({
                 {stats.position === 1
                   ? "st"
                   : stats.position === 2
-                  ? "nd"
-                  : stats.position === 3
-                  ? "rd"
-                  : "th"}
+                    ? "nd"
+                    : stats.position === 3
+                      ? "rd"
+                      : "th"}
               </span>
               <span className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">
                 Position
@@ -855,6 +854,11 @@ export default function TeamDetailPage({
           )}
         </div>
       </motion.div>
+
+      {/* Ad: Below hero — team detail top banner */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <AdSlot placement="article_top" format="horizontal" className="rounded-xl overflow-hidden" />
+      </div>
 
       {/* ===== TABS ===== */}
       <div className="max-w-4xl mx-auto">
@@ -1082,22 +1086,22 @@ export default function TeamDetailPage({
               {squadGroups.every(
                 (g) => !squad[g.key] || squad[g.key].length === 0
               ) && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="rounded-xl p-8 sm:p-12 text-center bg-surface-light/30 border border-white/5"
-                >
-                  <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-white/20" />
-                  </div>
-                  <p className="text-white/40 text-sm font-medium">
-                    No squad data available
-                  </p>
-                  <p className="text-white/20 text-xs mt-1">
-                    Player information will appear here when available
-                  </p>
-                </motion.div>
-              )}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="rounded-xl p-8 sm:p-12 text-center bg-surface-light/30 border border-white/5"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                      <Users className="w-6 h-6 text-white/20" />
+                    </div>
+                    <p className="text-white/40 text-sm font-medium">
+                      No squad data available
+                    </p>
+                    <p className="text-white/20 text-xs mt-1">
+                      Player information will appear here when available
+                    </p>
+                  </motion.div>
+                )}
             </div>
           </TabsContent>
 
@@ -1184,6 +1188,11 @@ export default function TeamDetailPage({
             </div>
           </TabsContent>
         </Tabs>
+      </div>
+
+      {/* Ad: Team detail bottom banner */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <AdSlot placement="article_bottom" format="horizontal" className="rounded-xl overflow-hidden" />
       </div>
     </div>
   );

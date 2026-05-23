@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClubLogo } from "@/components/ui/club-logo";
+import { useTranslation } from "@/lib/i18n";
 
 interface MatchStatsData {
   id: string;
@@ -38,6 +39,7 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ matchId, homeTeam, awayTeam, homeLogo, awayLogo }: StatsTabProps) {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<MatchStatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function StatsTab({ matchId, homeTeam, awayTeam, homeLogo, awayLogo }: St
         const data = await res.json();
         setStats(data);
       } catch {
-        setError("Stats data unavailable");
+        setError(t("matchDetail.statsUnavailable"));
         setStats(null);
       } finally {
         setLoading(false);
@@ -81,22 +83,22 @@ export function StatsTab({ matchId, homeTeam, awayTeam, homeLogo, awayLogo }: St
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
         <BarChart3 className="w-10 h-10 mb-3 opacity-40" />
-        <p className="text-sm">Match statistics unavailable</p>
-        <p className="text-xs mt-1 opacity-60">Stats will appear once the match begins</p>
+        <p className="text-sm">{t("matchDetail.matchStatsUnavailable")}</p>
+        <p className="text-xs mt-1 opacity-60">{t("matchDetail.statsWillAppear")}</p>
       </div>
     );
   }
 
   const statRows: StatRow[] = [
-    { label: "Possession (%)", home: stats.homePossession, away: stats.awayPossession, isPercent: true },
-    { label: "Shots", home: stats.homeShots, away: stats.awayShots },
-    { label: "Shots on Target", home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget },
-    { label: "Pass Accuracy (%)", home: stats.homePassAccuracy, away: stats.awayPassAccuracy, isPercent: true },
-    { label: "Corners", home: stats.homeCorners, away: stats.awayCorners },
-    { label: "Fouls", home: stats.homeFouls, away: stats.awayFouls },
-    { label: "Offsides", home: stats.homeOffsides, away: stats.awayOffsides },
-    { label: "Yellow Cards", home: stats.homeYellowCards, away: stats.awayYellowCards },
-    { label: "Red Cards", home: stats.homeRedCards, away: stats.awayRedCards },
+    { label: t("matchDetail.possession"), home: stats.homePossession, away: stats.awayPossession, isPercent: true },
+    { label: t("matchDetail.shots"), home: stats.homeShots, away: stats.awayShots },
+    { label: t("matchDetail.shotsOnTarget"), home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget },
+    { label: t("matchDetail.passAccuracy"), home: stats.homePassAccuracy, away: stats.awayPassAccuracy, isPercent: true },
+    { label: t("matchDetail.corners"), home: stats.homeCorners, away: stats.awayCorners },
+    { label: t("matchDetail.fouls"), home: stats.homeFouls, away: stats.awayFouls },
+    { label: t("matchDetail.offsides"), home: stats.homeOffsides, away: stats.awayOffsides },
+    { label: t("matchDetail.yellowCards"), home: stats.homeYellowCards, away: stats.awayYellowCards },
+    { label: t("matchDetail.redCards"), home: stats.homeRedCards, away: stats.awayRedCards },
   ];
 
   return (
@@ -120,7 +122,7 @@ export function StatsTab({ matchId, homeTeam, awayTeam, homeLogo, awayLogo }: St
 
       {/* Stat Rows */}
       {statRows.map((row, i) => (
-        <StatBar key={row.label} stat={row} delay={i * 0.05} />
+        <StatBar key={i} stat={row} delay={i * 0.05} />
       ))}
     </motion.div>
   );

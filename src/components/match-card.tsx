@@ -53,14 +53,14 @@ function StatusBadge({ status, minute, isHot, kickoff }: { status: string; minut
   if (status === 'HT') {
     return (
       <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/30 text-[10px] px-1.5 py-0 h-5">
-        HT
+        {t('status.ht')}
       </Badge>
     );
   }
   if (status === 'FT') {
     return (
       <Badge className="bg-surface-light text-muted-foreground border-border text-[10px] px-1.5 py-0 h-5">
-        FT
+        {t('status.ft')}
       </Badge>
     );
   }

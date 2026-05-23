@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, } from "react";
-import { useNavigation, } from "@/hooks/use-navigation";
+import { useState, useCallback, useEffect, useSyncExternalStore } from "react";
+import { useNavigation, hasSplashBeenShown, markSplashShown } from "@/hooks/use-navigation";
+import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Navbar, type LoginUser } from "@/components/navbar";
 import { LoginModal } from "@/components/login-modal";
@@ -18,6 +19,7 @@ import { HotMatchHighlight } from "@/components/hot-match-highlight";
 import { NewsSection } from "@/components/news-section";
 import { NewsDetailModal } from "@/components/news-detail-modal";
 import { StandingsSection } from "@/components/standings-section";
+import { AdSlot } from "@/components/ad-slot";
 import type { NewsArticle } from "@/components/news-section";
 // Goal notifications disabled — import commented out
 // import { useGoalNotifications } from "@/hooks/use-goal-notifications";
@@ -40,6 +42,19 @@ const AdminPanel = dynamic(() => import("@/components/admin/admin-panel"), {
     </div>
   ),
 });
+
+// Lazy load splash screen with ssr: false to avoid hydration mismatch
+// The splash uses framer-motion animations + sessionStorage which are client-only
+const SplashScreen = dynamic(
+  () => import("@/components/splash-screen").then((mod) => ({ default: mod.SplashScreen })),
+  {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 z-[100] bg-background" />,
+  }
+);
+
+// Empty subscribe function for useSyncExternalStore
+const emptySubscribe = () => () => { };
 
 const AUTH_KEY = "goalzone_admin_token";
 const USER_KEY = "goalzone_user";
@@ -79,13 +94,11 @@ function LiveScoresView({
   onLoginClick,
   onLogout,
   onOpenAdmin,
-  onChangePassword,
 }: {
   currentUser: LoginUser | null;
   onLoginClick: () => void;
   onLogout: () => void;
   onOpenAdmin: () => void;
-  onChangePassword: () => void;
 }) {
   const {
     isConnected,
@@ -100,6 +113,21 @@ function LiveScoresView({
     dataSource,
     wsReconnectAttempts,
   } = useSocket();
+
+  // Use useSyncExternalStore to safely read sessionStorage without hydration mismatch.
+  // Server always returns false (no splash), client checks sessionStorage.
+  const shouldShowSplash = useSyncExternalStore(
+    emptySubscribe,
+    () => !hasSplashBeenShown(),
+    () => false // Server snapshot: never show splash during SSR
+  );
+
+  // Track whether splash has been dismissed via the onFinished callback.
+  // This is event-handler-based state (not effect-based), so it's lint-safe.
+  const [splashDismissed, setSplashDismissed] = useState(false);
+
+  // Show splash only when: should show (sessionStorage) AND not yet dismissed
+  const splashActive = shouldShowSplash && !splashDismissed;
 
   const { navigate, restoreScroll } = useNavigation();
   const { t } = useTranslation();
@@ -122,6 +150,9 @@ function LiveScoresView({
     navigate(`/team/${slug}`);
   }, [navigate]);
   const [footerSelectedLeague, setFooterSelectedLeague] = useState<string | undefined>(undefined);
+
+  // Goal notifications popup disabled by user request
+  // useGoalNotifications(matches);
 
   // Restore scroll position when component mounts
   useEffect(() => {
@@ -151,15 +182,9 @@ function LiveScoresView({
     }
   }, []);
 
-  const liveMatches = matches.filter(
-    (m) =>
-      m.status === "LIVE" ||
-      m.status === "HT" ||
-      m.status === "UPCOMING" ||
-      m.status === "FT"
-  );
-  const featuredMatch = matches[0] || null;
-  const otherMatches = matches.slice(1);
+  const liveMatches = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
+  const featuredMatch = liveMatches[0] || matches[0] || null;
+  const otherMatches = matches.filter((m) => m.id !== featuredMatch?.id);
   const featuredMatchPoll = featuredMatch?.poll || null;
 
   const featuredGoalEvent = featuredMatch
@@ -169,15 +194,30 @@ function LiveScoresView({
   const liveCount = matches.filter((m) => m.status === "LIVE").length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      {/* Splash screen — only rendered on client after mount */}
+      <AnimatePresence>
+        {splashActive && (
+          <SplashScreen
+            onFinished={() => {
+              setSplashDismissed(true);
+              markSplashShown();
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      <div className="transition-opacity duration-500 opacity-100">
+      <div
+        className={cn(
+          "transition-opacity duration-500",
+          splashActive ? "opacity-0" : "opacity-100"
+        )}
+      >
         <Navbar
           currentUser={currentUser}
           onLoginClick={onLoginClick}
           onLogout={onLogout}
           onOpenAdmin={onOpenAdmin}
-          onChangePassword={onChangePassword}
           matches={matches}
         />
 
@@ -283,8 +323,11 @@ function LiveScoresView({
             ) : (
               <>
                 <section id="live">
-                  <LiveTicker matches={[...matches, ...matches]} />
+                  <LiveTicker matches={matches} />
                 </section>
+
+                {/* Ad: Header Banner — after live ticker */}
+                <AdSlot placement="header" format="horizontal" className="rounded-xl overflow-hidden" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                   <div className="lg:col-span-2 space-y-5">
@@ -314,8 +357,11 @@ function LiveScoresView({
                       isLoading={isLoading}
                     />
 
+                    {/* Ad: Mid-content — between match list and featured grid */}
+                    <AdSlot placement="article_top" format="horizontal" className="rounded-xl overflow-hidden" />
+
                     <FeaturedMatchesGrid
-                      matches={otherMatches.slice(0, 12)}
+                      matches={otherMatches}
                       onMatchClick={handleMatchClick}
                       goalMatchIds={goalMatchIds}
                       isLoading={isLoading}
@@ -324,12 +370,20 @@ function LiveScoresView({
 
                   <div className="space-y-5">
                     <Sidebar scorers={scorers} standings={standings} onPlayerClick={handlePlayerClick} onTeamClick={handleTeamClick} />
+                    {/* Ad: Sidebar — below the sidebar content */}
+                    <AdSlot placement="sidebar" format="rectangle" />
                   </div>
                 </div>
 
                 <StandingsSection selectedLeague={footerSelectedLeague} />
 
+                {/* Ad: Pre-news — above news section */}
+                <AdSlot placement="article_bottom" format="horizontal" className="rounded-xl overflow-hidden" />
+
                 <NewsSection onArticleClick={handleArticleClick} />
+
+                {/* Ad: Footer — bottom of page content */}
+                <AdSlot placement="footer" format="horizontal" className="rounded-xl overflow-hidden" />
               </>
             )}
           </div>
@@ -367,7 +421,6 @@ export default function HomePage() {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   // Initialize auth from localStorage — uses lazy initializer so no effect needed
   const [authState, setAuthState] = useState(() => {
     // This runs once during initial render (client-only logic safe because ssr:false wrapper)
@@ -422,10 +475,6 @@ export default function HomePage() {
     setIsAdminMode(true);
   }, []);
 
-  const handleChangePassword = useCallback(() => {
-    setIsChangePasswordOpen(true);
-  }, []);
-
   // Wait for auth initialization to avoid flash
   if (!authState.initialized) {
     return (
@@ -447,7 +496,6 @@ export default function HomePage() {
           onLoginClick={() => setIsLoginOpen(true)}
           onLogout={handleLogout}
           onOpenAdmin={handleOpenAdmin}
-          onChangePassword={handleChangePassword}
         />
       )}
 
@@ -469,14 +517,6 @@ export default function HomePage() {
           setIsLoginOpen(true);
         }}
         onRegisterSuccess={handleLoginSuccess}
-      />
-
-      <ChangePasswordModal
-        isOpen={isChangePasswordOpen}
-        onClose={() => setIsChangePasswordOpen(false)}
-        userId={currentUser?.id || ""}
-        username={currentUser?.username || currentUser?.displayName || ""}
-        isAdmin={currentUser ? ADMIN_ROLES.includes(currentUser.role) : false}
       />
     </>
   );

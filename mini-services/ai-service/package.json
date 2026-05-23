@@ -3,15 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "bun --hot index.ts",
-    "postinstall": "prisma generate",
-    "start": "bun index.ts"
+    "dev": "bun --hot index.ts"
   },
   "dependencies": {
-    "z-ai-web-dev-sdk": "^0.0.18",
-    "@prisma/client": "6.7.0"
-  },
-  "devDependencies": {
-    "prisma": "6.7.0"
+    "z-ai-web-dev-sdk": "^0.0.18"
   }
 }

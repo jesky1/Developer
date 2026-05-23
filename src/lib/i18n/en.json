@@ -8,7 +8,6 @@
     "admin": "Admin Panel",
     "login": "Login",
     "logout": "Sign Out",
-    "changePassword": "Change Password",
     "search": "Search clubs, leagues...",
     "noMatchesFound": "No matches found for"
   },
@@ -25,6 +24,7 @@
   },
   "match": {
     "hotMatch": "Hot Match",
+    "hotBadge": "Hot",
     "goal": "GOAL!",
     "home": "Home",
     "away": "Away",
@@ -32,10 +32,19 @@
     "liveAndRecent": "Live & Recent Matches",
     "featuredMatch": "Featured Match",
     "matchTimeline": "Match Timeline",
+    "matchPerformance": "Match Performance",
+    "pressureIndex": "Pressure index by 15-min interval",
+    "moreMatches": "More Matches",
+    "matchDetails": "Match Details",
+    "matchEvents": "Match Events",
     "connectingData": "Connecting to live data...",
     "updated": "Updated",
     "liveMatch": "live match",
-    "liveMatches": "live matches"
+    "liveMatches": "live matches",
+    "halfTime": "Half Time",
+    "fullTime": "Full Time",
+    "inProgress": "Match in progress",
+    "tbd": "TBD"
   },
   "matchDetail": {
     "formation": "Formation",
@@ -61,7 +70,10 @@
     "startingXI": "Starting XI",
     "substitutes": "Substitutes",
     "coach": "Coach",
-    "noData": "No data available"
+    "noData": "No data available",
+    "statsUnavailable": "Stats data unavailable",
+    "matchStatsUnavailable": "Match statistics unavailable",
+    "statsWillAppear": "Stats will appear once the match begins"
   },
   "standings": {
     "title": "League Standings",
@@ -114,7 +126,19 @@
     "analysis": "Analysis",
     "transfer": "Transfer",
     "preview": "Preview",
-    "rumor": "Rumor"
+    "rumor": "Rumor",
+    "linkCopied": "Link copied to clipboard!",
+    "copyFailed": "Failed to copy link",
+    "copyLink": "Copy Link",
+    "shareOnX": "Share on X",
+    "shareOnFacebook": "Share on Facebook",
+    "shareOnWhatsApp": "Share on WhatsApp",
+    "contentComingSoon": "Full article content coming soon...",
+    "aiGenerated": "AI Generated",
+    "minRead": "min read",
+    "tags": "Tags",
+    "shareArticle": "Share this article",
+    "closeArticle": "Close article"
   },
   "footer": {
     "navigation": "Navigation",
@@ -179,39 +203,54 @@
     "confirmMismatch": "Confirm password does not match",
     "configError": "Configuration error occurred",
     "googleFailed": "Failed to sign in with Google",
-    "googleRegisterFailed": "Failed to sign up with Google",
-    "changePassword": {
-      "title": "Change Password",
-      "subtitle": "Update your account password",
-      "currentPassword": "Current Password",
-      "enterCurrentPassword": "Enter current password",
-      "newPassword": "New Password",
-      "enterNewPassword": "Enter new password",
-      "confirmNewPassword": "Confirm New Password",
-      "repeatNewPassword": "Repeat new password",
-      "submit": "Change Password",
-      "changing": "Changing password...",
-      "success": "Password changed successfully!",
-      "failed": "Failed to change password",
-      "allFieldsRequired": "All fields are required",
-      "samePassword": "New password must be different from current password"
-    }
+    "googleRegisterFailed": "Failed to sign up with Google"
   },
   "polls": {
     "title": "Fan Poll",
     "vote": "Vote",
     "votes": "votes",
-    "totalVotes": "Total Votes"
+    "totalVotes": "Total Votes",
+    "draw": "Draw",
+    "whoWillWin": "Who will win?"
   },
   "player": {
     "stats": "Stats",
     "transfers": "Transfers",
-    "noData": "No player data available"
+    "noData": "No player data available",
+    "personalInfo": "Personal Info",
+    "age": "Age",
+    "birthDate": "Birth Date",
+    "nationality": "Nationality",
+    "height": "Height",
+    "weight": "Weight",
+    "seasonStats": "Season Stats",
+    "matches": "Matches",
+    "goals": "Goals",
+    "assists": "Assists",
+    "shots": "Shots",
+    "onTarget": "On Target",
+    "passAcc": "Pass Acc.",
+    "tackles": "Tackles",
+    "interceptions": "Interceptions",
+    "matchRatings": "Match Ratings",
+    "rating": "Rating",
+    "transferHistory": "Transfer History",
+    "failedToLoad": "Failed to load player details",
+    "close": "Close"
   },
   "team": {
     "squad": "Squad",
     "matches": "Matches",
     "noData": "No team data available"
+  },
+  "lineup": {
+    "noData": "No lineup data available",
+    "WillAppearWhenAnnounced": "Lineups will appear here once announced",
+    "failedToLoad": "Failed to load lineup data"
+  },
+  "hotMatch": {
+    "dismiss": "Dismiss hot match notification",
+    "clickToJump": "Click to jump to live section"
   },
   "language": {
     "select": "Language",

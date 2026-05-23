@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ClubLogo } from "@/components/ui/club-logo";
+import { useTranslation } from "@/lib/i18n";
 
 interface PlayerDetailModalProps {
   playerId: string | null;
@@ -239,6 +240,8 @@ export function PlayerDetailModal({
   isOpen,
   onClose,
 }: PlayerDetailModalProps) {
+  const { t } = useTranslation();
+
   const [fetchState, setFetchState] = useState<FetchState>({
     player: null,
     error: null,
@@ -272,7 +275,7 @@ export function PlayerDetailModal({
       .catch((err) => {
         console.error("Error fetching player:", err);
         if (!cancelled) {
-          setFetchState({ player: null, error: "Failed to load player details", fetchingId: fetchId });
+          setFetchState({ player: null, error: "player.failedToLoad", fetchingId: fetchId });
         }
       });
 
@@ -329,7 +332,7 @@ export function PlayerDetailModal({
               <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-light/80 border border-white/10 text-muted-foreground hover:text-foreground hover:bg-surface-light transition-colors"
-                aria-label="Close"
+                aria-label={t("player.close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -344,8 +347,8 @@ export function PlayerDetailModal({
                   <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
                     <X className="w-6 h-6 text-red-400" />
                   </div>
-                  <p className="text-sm text-muted-foreground">{error}</p>
-                  <button onClick={onClose} className="text-xs text-neon hover:underline">Close</button>
+                  <p className="text-sm text-muted-foreground">{t(error)}</p>
+                  <button onClick={onClose} className="text-xs text-neon hover:underline">{t("player.close")}</button>
                 </div>
               )}
 
@@ -429,23 +432,23 @@ export function PlayerDetailModal({
                   <div className="p-5 space-y-3">
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                       <Award className="w-3.5 h-3.5" />
-                      Personal Info
+                      {t("player.personalInfo")}
                     </h3>
                     <div className="grid grid-cols-2 gap-2.5">
                       {player.age > 0 && (
-                        <InfoCard icon={Calendar} label="Age" value={String(player.age)} delay={0.05} />
+                        <InfoCard icon={Calendar} label={t("player.age")} value={String(player.age)} delay={0.05} />
                       )}
                       {player.birthDate && (
-                        <InfoCard icon={CalendarDays} label="Birth Date" value={player.birthDate} delay={0.08} />
+                        <InfoCard icon={CalendarDays} label={t("player.birthDate")} value={player.birthDate} delay={0.08} />
                       )}
                       {player.nationality && (
-                        <InfoCard icon={Flag} label="Nationality" value={player.nationality} delay={0.11} />
+                        <InfoCard icon={Flag} label={t("player.nationality")} value={player.nationality} delay={0.11} />
                       )}
                       {player.height && (
-                        <InfoCard icon={Ruler} label="Height" value={player.height} delay={0.14} />
+                        <InfoCard icon={Ruler} label={t("player.height")} value={player.height} delay={0.14} />
                       )}
                       {player.weight && (
-                        <InfoCard icon={Weight} label="Weight" value={player.weight} delay={0.17} />
+                        <InfoCard icon={Weight} label={t("player.weight")} value={player.weight} delay={0.17} />
                       )}
                     </div>
                   </div>
@@ -456,21 +459,21 @@ export function PlayerDetailModal({
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                           <TrendingUp className="w-3.5 h-3.5" />
-                          Season Stats
+                          {t("player.seasonStats")}
                         </h3>
                         <span className="text-[10px] text-muted-foreground bg-surface-light px-2 py-0.5 rounded-full">
                           {player.stats.season}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                        <StatCard label="Matches" value={player.stats.totalMatches} maxValue={40} delay={0.05} />
-                        <StatCard label="Goals" value={player.stats.goals} maxValue={30} icon={Target} delay={0.08} highlight={player.stats.goals > 10} />
-                        <StatCard label="Assists" value={player.stats.assists} maxValue={20} icon={TrendingUp} delay={0.11} highlight={player.stats.assists > 7} />
-                        <StatCard label="Shots" value={player.stats.shots} maxValue={120} delay={0.14} />
-                        <StatCard label="On Target" value={player.stats.shotsOnTarget} maxValue={70} delay={0.17} />
-                        <StatCard label="Pass Acc." value={Math.round(player.stats.passingAccuracy)} maxValue={100} suffix="%" delay={0.20} />
-                        <StatCard label="Tackles" value={player.stats.tackles} maxValue={60} icon={Shield} delay={0.23} />
-                        <StatCard label="Interceptions" value={player.stats.interceptions} maxValue={40} delay={0.26} />
+                        <StatCard label={t("player.matches")} value={player.stats.totalMatches} maxValue={40} delay={0.05} />
+                        <StatCard label={t("player.goals")} value={player.stats.goals} maxValue={30} icon={Target} delay={0.08} highlight={player.stats.goals > 10} />
+                        <StatCard label={t("player.assists")} value={player.stats.assists} maxValue={20} icon={TrendingUp} delay={0.11} highlight={player.stats.assists > 7} />
+                        <StatCard label={t("player.shots")} value={player.stats.shots} maxValue={120} delay={0.14} />
+                        <StatCard label={t("player.onTarget")} value={player.stats.shotsOnTarget} maxValue={70} delay={0.17} />
+                        <StatCard label={t("player.passAcc")} value={Math.round(player.stats.passingAccuracy)} maxValue={100} suffix="%" delay={0.20} />
+                        <StatCard label={t("player.tackles")} value={player.stats.tackles} maxValue={60} icon={Shield} delay={0.23} />
+                        <StatCard label={t("player.interceptions")} value={player.stats.interceptions} maxValue={40} delay={0.26} />
                         <StatCard label="Fouls" value={player.stats.fouls} maxValue={40} delay={0.29} />
                       </div>
 
@@ -481,7 +484,7 @@ export function PlayerDetailModal({
                             <div className="w-3 h-4 bg-yellow-400 rounded-sm" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-muted-foreground">Yellow Cards</p>
+                            <p className="text-[10px] text-muted-foreground">{t("matchDetail.yellowCards")}</p>
                             <p className="text-lg font-bold text-yellow-400">{player.stats.yellowCards}</p>
                           </div>
                         </div>
@@ -490,7 +493,7 @@ export function PlayerDetailModal({
                             <div className="w-3 h-4 bg-red-400 rounded-sm" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-muted-foreground">Red Cards</p>
+                            <p className="text-[10px] text-muted-foreground">{t("matchDetail.redCards")}</p>
                             <p className="text-lg font-bold text-red-400">{player.stats.redCards}</p>
                           </div>
                         </div>
@@ -503,7 +506,7 @@ export function PlayerDetailModal({
                     <div className="px-5 pb-4 space-y-3">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <TrendingUp className="w-3.5 h-3.5" />
-                        Match Ratings
+                        {t("player.matchRatings")}
                       </h3>
                       <div className="glass-card rounded-xl p-4">
                         <div className="h-52">
@@ -550,7 +553,7 @@ export function PlayerDetailModal({
                                 labelStyle={{ color: "oklch(0.60 0.02 260)", fontSize: "10px" }}
                                 formatter={(value: number, _name: string, props: any) => [
                                   `${value.toFixed(1)} vs ${props?.payload?.opponent ?? 'N/A'}`,
-                                  "Rating",
+                                  t("player.rating"),
                                 ]}
                               />
                               <Area
@@ -574,7 +577,7 @@ export function PlayerDetailModal({
                     <div className="px-5 pb-6 space-y-3">
                       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <ArrowRight className="w-3.5 h-3.5" />
-                        Transfer History
+                        {t("player.transferHistory")}
                       </h3>
                       <div className="relative pl-6">
                         {/* Timeline line */}

@@ -8,7 +8,6 @@
     "admin": "Panel Admin",
     "login": "Masuk",
     "logout": "Keluar",
-    "changePassword": "Ubah Password",
     "search": "Cari klub, liga...",
     "noMatchesFound": "Tidak ada pertandingan untuk"
   },
@@ -25,6 +24,7 @@
   },
   "match": {
     "hotMatch": "Pertandingan Panas",
+    "hotBadge": "Panas",
     "goal": "GOL!",
     "home": "Tuan Rumah",
     "away": "Tamu",
@@ -32,10 +32,19 @@
     "liveAndRecent": "Pertandingan Live & Terbaru",
     "featuredMatch": "Pertandingan Utama",
     "matchTimeline": "Linimasa Pertandingan",
+    "matchPerformance": "Performa Pertandingan",
+    "pressureIndex": "Indeks tekanan per interval 15 menit",
+    "moreMatches": "Pertandingan Lainnya",
+    "matchDetails": "Detail Pertandingan",
+    "matchEvents": "Kejadian Pertandingan",
     "connectingData": "Menghubungkan ke data live...",
     "updated": "Diperbarui",
     "liveMatch": "pertandingan live",
-    "liveMatches": "pertandingan live"
+    "liveMatches": "pertandingan live",
+    "halfTime": "Jeda",
+    "fullTime": "Selesai",
+    "inProgress": "Pertandingan berlangsung",
+    "tbd": "TBD"
   },
   "matchDetail": {
     "formation": "Formasi",
@@ -61,7 +70,10 @@
     "startingXI": "Pemain Awal",
     "substitutes": "Pemain Cadangan",
     "coach": "Pelatih",
-    "noData": "Data tidak tersedia"
+    "noData": "Data tidak tersedia",
+    "statsUnavailable": "Data statistik tidak tersedia",
+    "matchStatsUnavailable": "Statistik pertandingan tidak tersedia",
+    "statsWillAppear": "Statistik akan muncul setelah pertandingan dimulai"
   },
   "standings": {
     "title": "Klasemen Liga",
@@ -113,7 +125,19 @@
     "analysis": "Analisis",
     "transfer": "Transfer",
     "preview": "Pratinjau",
-    "rumor": "Rumor"
+    "rumor": "Rumor",
+    "linkCopied": "Link disalin ke clipboard!",
+    "copyFailed": "Gagal menyalin link",
+    "copyLink": "Salin Link",
+    "shareOnX": "Bagikan di X",
+    "shareOnFacebook": "Bagikan di Facebook",
+    "shareOnWhatsApp": "Bagikan di WhatsApp",
+    "contentComingSoon": "Konten artikel lengkap segera hadir...",
+    "aiGenerated": "Dibuat AI",
+    "minRead": "menit baca",
+    "tags": "Tag",
+    "shareArticle": "Bagikan artikel ini",
+    "closeArticle": "Tutup artikel"
   },
   "footer": {
     "navigation": "Navigasi",
@@ -178,39 +202,54 @@
     "confirmMismatch": "Konfirmasi password tidak cocok",
     "configError": "Terjadi kesalahan konfigurasi",
     "googleFailed": "Gagal login dengan Google",
-    "googleRegisterFailed": "Gagal mendaftar dengan Google",
-    "changePassword": {
-      "title": "Ubah Password",
-      "subtitle": "Perbarui password akun Anda",
-      "currentPassword": "Password Saat Ini",
-      "enterCurrentPassword": "Masukkan password saat ini",
-      "newPassword": "Password Baru",
-      "enterNewPassword": "Masukkan password baru",
-      "confirmNewPassword": "Konfirmasi Password Baru",
-      "repeatNewPassword": "Ulangi password baru",
-      "submit": "Ubah Password",
-      "changing": "Mengubah password...",
-      "success": "Password berhasil diubah!",
-      "failed": "Gagal mengubah password",
-      "allFieldsRequired": "Semua kolom harus diisi",
-      "samePassword": "Password baru harus berbeda dari password saat ini"
-    }
+    "googleRegisterFailed": "Gagal mendaftar dengan Google"
   },
   "polls": {
     "title": "Polling Penggemar",
     "vote": "Pilih",
     "votes": "suara",
-    "totalVotes": "Total Suara"
+    "totalVotes": "Total Suara",
+    "draw": "Seri",
+    "whoWillWin": "Siapa yang menang?"
   },
   "player": {
     "stats": "Statistik",
     "transfers": "Transfer",
-    "noData": "Data pemain tidak tersedia"
+    "noData": "Data pemain tidak tersedia",
+    "personalInfo": "Info Pribadi",
+    "age": "Usia",
+    "birthDate": "Tanggal Lahir",
+    "nationality": "Kewarganegaraan",
+    "height": "Tinggi",
+    "weight": "Berat",
+    "seasonStats": "Statistik Musim",
+    "matches": "Pertandingan",
+    "goals": "Gol",
+    "assists": "Assist",
+    "shots": "Tembakan",
+    "onTarget": "Tepat Sasaran",
+    "passAcc": "Akurasi Umpan",
+    "tackles": "Tekel",
+    "interceptions": "Intersepsi",
+    "matchRatings": "Rating Pertandingan",
+    "rating": "Rating",
+    "transferHistory": "Riwayat Transfer",
+    "failedToLoad": "Gagal memuat detail pemain",
+    "close": "Tutup"
   },
   "team": {
     "squad": "Skuat",
     "matches": "Pertandingan",
     "noData": "Data tim tidak tersedia"
+  },
+  "lineup": {
+    "noData": "Data susunan pemain tidak tersedia",
+    "WillAppearWhenAnnounced": "Susunan pemain akan muncul setelah diumumkan",
+    "failedToLoad": "Gagal memuat data susunan pemain"
+  },
+  "hotMatch": {
+    "dismiss": "Tutup notifikasi pertandingan panas",
+    "clickToJump": "Klik untuk ke bagian live"
   },
   "language": {
     "select": "Bahasa",
